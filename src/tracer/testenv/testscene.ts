@@ -4,7 +4,7 @@ import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
 import mapFile from './assets/map3.png';
 import {tracePath} from '../tracelib/tracer';
-import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks} from '../tracelib/getIsolated';
+import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk} from '../tracelib/getIsolated';
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     private ctx: CanvasRenderingContext2D;
@@ -73,9 +73,10 @@ export class TestScene {
     private map: Array<Array<number>>;
     private path: Array<IVector>;
     private startPoint = new Vector(10, 10);
-    private endPoint = new Vector(55, 55);
+    private endPoint = new Vector(85, 85);
     area: number[][];
     chunks: number[][][][];
+    chunkPath: IChunk[];
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render);
@@ -95,6 +96,21 @@ export class TestScene {
         this.area = getIsolated(this.map);//getAreaFromPoint(this.map, this.startPoint, 1);
         console.log(this.area);
         this.chunks = getIsolatedChunks(this.map)//getChunks(this.map);
+        const connections = getAllConnections(this.chunks);
+        console.log(connections);
+        const traceTree = getChunkTree(this.chunks);
+
+        const getHashByVector = (pos: Vector)=>{
+            const size =this.chunks[0][0][0].length;
+            const z = this.chunks[Math.floor(pos.y / size)][Math.floor(pos.x / size)][Math.floor(pos.y % size)][Math.floor(pos.x % size)];
+            return `${Math.floor(pos.x / size)}_${Math.floor(pos.y / size)}_${z}`
+        }
+
+        chunkIndexate(traceTree, [getHashByVector(this.startPoint)], 0); 
+        console.log(traceTree);
+
+        this.chunkPath = findChunkPath(traceTree, getHashByVector(this.endPoint));
+        console.log(this.chunkPath);
     }
 
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
@@ -141,6 +157,15 @@ export class TestScene {
             this.path.forEach((pos)=>{
                 ctx.fillStyle = '#9f99';
                 ctx.fillRect(pos.x * tileSize, pos.y * tileSize, tileSize, tileSize);
+            })
+        }
+
+        if (this.chunkPath){
+            this.chunkPath.forEach((chunk)=>{
+                const pos = chunk.original.pos;
+                ctx.fillStyle = '#f009';
+                const size = this.chunks[0][0][0].length;
+                ctx.fillRect(pos.x * tileSize * size, pos.y * tileSize * size, tileSize * size, tileSize * size);
             })
         }
 

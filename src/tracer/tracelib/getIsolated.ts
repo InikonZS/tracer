@@ -1,6 +1,13 @@
 import { Vector } from "../../common/vector";
 import { indexate } from "./tracer";
 
+export const steps = [
+    {x: -1, y: 0}, 
+    {x: 1, y: 0}, 
+    {x: 0, y: 1}, 
+    {x: 0, y: -1}
+]
+
 export function getIsolated(map: Array<Array<number>>){
     let mp = map.map(it=>it.map(jt=>jt==0?Number.MAX_SAFE_INTEGER:-1));
     let currentId = 0;
@@ -40,7 +47,7 @@ export function getAreaFromPoint(mp: Array<Array<number>>, indexPoint: Vector, a
 }
 
 export function getChunks(map: Array<Array<number>>){
-    const chunkSize = 32;
+    const chunkSize = 6;
     const chunks = [];
     for (let i = 0; i< map.length; i+=chunkSize){
         const chunksRow = [];
@@ -70,3 +77,143 @@ export function getIsolatedChunks(map: Array<Array<number>>){
         return ch;
     }));
 }
+
+export function getConnections(chunks:number[][][][], pos:Vector){
+    const chunk = chunks[pos.y][pos.x];
+    const connections: {pos:Vector, i:number, ci:number}[] = [];
+    const addConnection = (obj:any) => {
+        if (connections.find(it=>{
+          return it.pos.x == obj.pos.x && it.pos.y == obj.pos.y && it.i == obj.i  && it.ci == obj.ci 
+        }) == null){
+            connections.push(obj);
+        }
+    }
+    steps.forEach(step=>{
+        const nextVector = pos.clone().add(Vector.fromIVector(step));
+        const nextChunk = chunks[nextVector.y]?.[nextVector.x];
+        if (!nextChunk) return;
+        if (step.x == 1){
+            chunk.forEach((row, y)=>{
+                const cell = row[row.length-1];
+                const nextCell = nextChunk[y][0];
+                if (nextCell<-1 && cell<-1){
+                    addConnection({pos:nextVector, i: nextCell, ci: cell});
+                }
+            })
+        } else 
+        if (step.x == -1){
+            chunk.forEach((row, y)=>{
+                const cell = row[0];
+                const nextCell = nextChunk[y][row.length-1];
+                if (nextCell<-1 && cell<-1){
+                    addConnection({pos:nextVector, i: nextCell, ci: cell});
+                }
+            })
+        } else
+        if (step.y == 1){
+            chunk[chunk.length-1].forEach((cell, x)=>{
+                const nextCell = nextChunk[0][x];
+                if (nextCell<-1 && cell<-1){
+                    addConnection({pos:nextVector, i: nextCell, ci: cell});
+                }
+            })
+        } else 
+        if (step.y == -1){
+            chunk[0].forEach((cell, x)=>{
+                const nextCell = nextChunk[chunk.length-1][x];
+                if (nextCell<-1 && cell<-1){
+                    addConnection({pos:nextVector, i: nextCell, ci: cell});
+                }
+            })
+        }
+    });
+    return connections;
+}
+
+export function getAllConnections(chunks:number[][][][]){
+    return chunks.map((row, j)=> row.map((chunk, i)=>{
+        return getConnections(chunks, new Vector(i, j));
+    }));
+}
+
+export interface IChunk{
+    original: {
+        pos: Vector,
+        i: number
+    };
+    connections: string[];
+    index: number;
+}
+
+export function getChunkTree(chunks:number[][][][]){
+    const connections = getAllConnections(chunks);
+    const tree: Record<string, IChunk> = {}
+    chunks.forEach((row, i)=>{
+        row.forEach((chunk, j)=>{
+            connections[i][j].forEach(z=>{
+                tree[`${j}_${i}_${z.ci}`] = {
+                    index: Number.MAX_SAFE_INTEGER,
+                    original: {
+                        pos: new Vector(j, i),
+                        i: z.ci
+                    },
+                    connections: connections[i][j].filter(it=> it.ci == z.ci).map(it=> `${it.pos.x}_${it.pos.y}_${it.i}`)
+                }
+            })
+        })
+    })
+    return tree;
+}
+
+function iteration(tree: Record<string, IChunk>, points:Array<string>, generation:number){
+    const nextPoints: Array<string> = [];
+    if (!points.length) { return; }
+    points.forEach(point=>{
+      tree[point].connections.forEach(step=>{
+        //const px = point.x+step.x;
+        //const py = point.y+step.y;
+        //const row = map[py];
+       console.log(tree[step].index, generation);
+        if (tree[step].index>generation){   
+            tree[step].index = generation;
+            nextPoints.push(step);
+        }
+      })
+    });
+    return nextPoints;
+  }
+  
+  export function chunkIndexate(tree: Record<string, IChunk>, points:Array<string>, generation:number){
+    const nextPoints = iteration(tree, points, generation);
+    if (!points.length) { return generation; }
+    chunkIndexate(tree, nextPoints, generation+1);
+  }
+
+  export function findChunkPath(tree: Record<string, IChunk>, destHash:string){
+    let path:Array<IChunk> = [];
+    let currentValue = tree[destHash].index;
+    if (currentValue == Number.MAX_SAFE_INTEGER) {
+      return null;
+    }
+    let currentPoint: string = destHash;
+    let crashDetector = 1000;
+    while (currentValue != 0 && crashDetector>0){
+      crashDetector--;
+      let nextStep = tree[currentPoint].connections.find(step=>{
+        //let point = currentPoint.clone().add(Vector.fromIVector(step));
+        let result = tree[step].index == currentValue-1;
+        if (result){
+          currentPoint = step;
+          currentValue = tree[step].index;
+          path.push(tree[step]);
+        }
+        return result;
+      });
+      
+    }
+  if (crashDetector<0){
+      throw new Error('Infinity cycle');
+    }
+    return path;
+  }
+
