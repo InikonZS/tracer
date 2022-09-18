@@ -1,0 +1,16 @@
+*{
+    box-sizing: border-box;
+}
+body{
+    margin: 0px;
+    padding: 0px;
+}
+
+.screen{
+    height: 100vh;
+    overflow: hidden;
+}
+
+.canvas{
+    height: 100%;
+}
