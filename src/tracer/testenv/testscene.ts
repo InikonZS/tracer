@@ -4,6 +4,7 @@ import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
 import mapFile from './assets/map3.png';
 import {tracePath} from '../tracelib/tracer';
+import {getAreaFromPoint, getChunks, getIsolated} from '../tracelib/getIsolated';
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     private ctx: CanvasRenderingContext2D;
@@ -73,6 +74,8 @@ export class TestScene {
     private path: Array<IVector>;
     private startPoint = new Vector(10, 10);
     private endPoint = new Vector(55, 55);
+    area: number[][];
+    chunks: {map:number[][], pos: Vector}[];
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render);
@@ -88,6 +91,10 @@ export class TestScene {
             this.path = path;
         });
         this.map = map;
+
+        this.area = getIsolated(this.map);//getAreaFromPoint(this.map, this.startPoint, 1);
+        console.log(this.area);
+        this.chunks = getChunks(this.map);
     }
 
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
@@ -99,6 +106,32 @@ export class TestScene {
                     ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
                 })
             })
+        }
+
+        if (this.area){
+            this.area.forEach((row, y)=>{
+                //console.log(row[0])
+                row.forEach((cell, x)=>{
+                    if (cell != -1){
+                        ctx.fillStyle = ['#0909', '#ff09', '#f0f9'][-(cell + 2)] || '#0ff9';
+                        //ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    }
+                })
+            })
+        }
+
+        if (this.chunks){
+            this.chunks.forEach((chunk, i)=>{
+                chunk.map.forEach((row, y)=>{
+                    //console.log(row[0])
+                    row.forEach((cell, x)=>{
+                        if (cell != -1){
+                            ctx.fillStyle = ['#0909', '#ff09', '#f0f9', '#0ff9', '#5749'][i % 5];
+                            ctx.fillRect((chunk.pos.x + x) * tileSize, (chunk.pos.y + y) * tileSize, tileSize, tileSize);
+                        }
+                    })
+                })
+            });
         }
 
         if (this.path){
