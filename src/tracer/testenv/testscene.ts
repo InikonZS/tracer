@@ -1,65 +1,117 @@
 import Control from "../../common/control";
 import { IVector, Vector } from '../../common/vector';
 import { RenderTicker } from './ticker';
-import { render } from './render';
+import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
+import mapFile from './assets/map3.png';
+import {tracePath} from '../tracelib/tracer';
+export class Canvas extends Control {
+    private canvas: Control<HTMLCanvasElement>;
+    private ctx: CanvasRenderingContext2D;
+    private ticker = new RenderTicker();
+    private onRender: (ctx: CanvasRenderingContext2D, delta: number) => void;
 
-export class Canvas extends Control{
-  private canvas: Control<HTMLCanvasElement>;
-  private ctx: CanvasRenderingContext2D;
-  private ticker = new RenderTicker();
+    constructor(parentNode: HTMLElement, onRender: (ctx: CanvasRenderingContext2D, delta: number) => void) {
+        super(parentNode, 'div', 'canvas');
+        this.onRender = onRender;
 
-  constructor(parentNode: HTMLElement) {
-    super(parentNode, 'div', 'canvas');
+        this.canvas = new Control(this.node, 'canvas');
+        this.canvas.node.width = 1200;
+        this.canvas.node.height = 600;
 
-    this.canvas = new Control(this.node, 'canvas');
-    this.canvas.node.width = 1200;
-    this.canvas.node.height = 600;
+        const context = this.canvas.node.getContext('2d');
+        if (context == null) {
+            throw new Error('Canvas 2d context is not available.');
+        }
+        this.ctx = context;
 
-    const context = this.canvas.node.getContext('2d');
-    if (context == null){
-        throw new Error('Canvas 2d context is not available.');
+        this.canvas.node.onmousemove = (e) => {
+
+        }
+
+        this.canvas.node.onclick = (e: MouseEvent) => {
+
+        }
+
+        this.canvas.node.oncontextmenu = (e) => {
+            e.preventDefault();
+        }
+        this.canvas.node.onmousedown = (e: MouseEvent) => {
+
+        }
+
+        this.ticker.onTick.add((delta) => {
+            this.render(delta);
+        });
+        this.ticker.startRender();
+
+        window.addEventListener('resize', this.autoSize);
+        this.autoSize();
     }
-    this.ctx = context;
 
-    this.canvas.node.onmousemove = (e)=>{
-
+    render(delta: number) {
+        const ctx = this.ctx;
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, this.canvas.node.width, this.canvas.node.height);
+        this.onRender(ctx, delta);
     }
 
-    this.canvas.node.onclick = (e: MouseEvent) => {
-
+    private autoSize = () => {
+        this.canvas.node.width = this.node.clientWidth;
+        this.canvas.node.height = this.node.clientHeight;
+        this.render(0);
     }
 
-    this.canvas.node.oncontextmenu = (e) => {
-      e.preventDefault();
+    destroy(): void {
+        window.removeEventListener('resize', this.autoSize);
+        super.destroy();
     }
-    this.canvas.node.onmousedown = (e: MouseEvent) => {
- 
-    } 
+}
 
-    this.ticker.onTick.add((delta)=>{
-      this.render(delta);
-    });
-    this.ticker.startRender();
+export class TestScene {
+    private canvas: Canvas;
+    private map: Array<Array<number>>;
+    private path: Array<IVector>;
+    private startPoint = new Vector(10, 10);
+    private endPoint = new Vector(55, 55);
 
-    window.addEventListener('resize', this.autoSize);
-    this.autoSize();
-  }
+    constructor(parentNode: HTMLElement) {
+        this.canvas = new Canvas(parentNode, this.render);
 
-  render(delta: number) {
-    const ctx = this.ctx;
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, this.canvas.node.width, this.canvas.node.height);
-    render(delta);
-  }
+        this.build();
+    }
 
-  private autoSize = () => {
-    this.canvas.node.width = this.node.clientWidth;
-    this.canvas.node.height = this.node.clientHeight;
-    this.render(0);
-  }
+    async build() {
+        const image = await loadImage(mapFile);
+        const map = getMapFromImageData(getImageData(image));
+        tracePath(map, this.startPoint, this.endPoint, (path)=>{
+            console.log(path);
+            this.path = path;
+        });
+        this.map = map;
+    }
 
-  destroy(): void {
-    window.removeEventListener('resize', this.autoSize);
-    super.destroy();
-  }
+    render = (ctx: CanvasRenderingContext2D, delta:number)=>{
+        const tileSize = 5;
+        if (this.map){
+            this.map.forEach((row, y)=>{
+                row.forEach((cell, x)=>{
+                    ctx.fillStyle = ['#fff', '#ff0', '#f0f'][cell] || '#0ff';
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                })
+            })
+        }
+
+        if (this.path){
+            this.path.forEach((pos)=>{
+                ctx.fillStyle = '#9f99';
+                ctx.fillRect(pos.x * tileSize, pos.y * tileSize, tileSize, tileSize);
+            })
+        }
+
+        ctx.fillStyle = '#9f0';
+        ctx.fillRect(this.startPoint.x * tileSize, this.startPoint.y * tileSize, tileSize, tileSize);
+
+        ctx.fillStyle = '#9f0';
+        ctx.fillRect(this.endPoint.x * tileSize, this.endPoint.y * tileSize, tileSize, tileSize);
+    }
 }
