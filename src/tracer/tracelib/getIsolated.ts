@@ -40,9 +40,10 @@ export function getAreaFromPoint(mp: Array<Array<number>>, indexPoint: Vector, a
 }
 
 export function getChunks(map: Array<Array<number>>){
-    const chunkSize = 8;
+    const chunkSize = 32;
     const chunks = [];
     for (let i = 0; i< map.length; i+=chunkSize){
+        const chunksRow = [];
         for (let j = 0; j< map[i].length; j+=chunkSize){
             const chunk:Array<Array<number>> = [];
             for (let ii = 0; ii< chunkSize; ii+=1){
@@ -52,11 +53,20 @@ export function getChunks(map: Array<Array<number>>){
                 }
                 chunk.push(chunkRow);
             }
-            chunks.push({
+            chunksRow.push(/*{
                 map:chunk,
                 pos: new Vector(j, i)
-            });
+            }*/chunk);
         }
+        chunks.push(chunksRow);
     }
     return chunks;
+}
+
+export function getIsolatedChunks(map: Array<Array<number>>){
+    const chunks = getChunks(map);
+    return chunks.map((chunkRow, i)=>chunkRow.map((chunk, j)=>{
+        const ch = getIsolated(chunk)
+        return ch;
+    }));
 }
