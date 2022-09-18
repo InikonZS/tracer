@@ -165,7 +165,21 @@ export class TestScene {
                 const pos = chunk.original.pos;
                 ctx.fillStyle = '#f009';
                 const size = this.chunks[0][0][0].length;
-                ctx.fillRect(pos.x * tileSize * size, pos.y * tileSize * size, tileSize * size, tileSize * size);
+                //ctx.fillRect(pos.x * tileSize * size, pos.y * tileSize * size, tileSize * size, tileSize * size);
+            })
+        }
+
+        if (this.chunkPath){
+            this.chunkPath.forEach((chunk)=>{
+                const pos = chunk.original.pos;
+                ctx.fillStyle = '#f009';
+                const size = this.chunks[0][0][0].length;
+                this.chunks[pos.y][pos.x].forEach((row, y)=>row.forEach((cell, x)=>{
+                    if (cell == chunk.original.i){
+                        ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
+                    }
+                }))
+                
             })
         }
 
