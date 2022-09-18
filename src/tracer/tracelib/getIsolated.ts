@@ -16,6 +16,9 @@ export function getIsolated(map: Array<Array<number>>){
             if (cell == Number.MAX_SAFE_INTEGER){
                 currentId +=1;
                 const nextMap = getAreaFromPoint(mp, new Vector(x, y), -currentId -1);
+                if (!nextMap.isFound){
+                    return;
+                } 
                 mp.forEach((row, y)=>{
                     row.forEach((cell, x)=>{
                         row[x] = nextMap.map[y][x];
@@ -32,8 +35,15 @@ export function getAreaFromPoint(mp: Array<Array<number>>, indexPoint: Vector, a
     //let mp = map.map(it=>it.map(jt=>jt==0?Number.MAX_SAFE_INTEGER:-1));
     let isFound = false;
     indexate(mp, [indexPoint], 0);
+
+    //fix, initial isnt indexed
+    if (mp[indexPoint.y][indexPoint.x] > -1){
+        mp[indexPoint.y][indexPoint.x] = areaId;
+    }
+
     const resultMap = mp.map(it=>it.map(jt=>{
         if (jt != Number.MAX_SAFE_INTEGER &&  jt > -1){
+            isFound =true;
             return areaId;
         } else {
             return jt;
@@ -47,7 +57,7 @@ export function getAreaFromPoint(mp: Array<Array<number>>, indexPoint: Vector, a
 }
 
 export function getChunks(map: Array<Array<number>>){
-    const chunkSize = 16;
+    const chunkSize = 6;
     const chunks = [];
     for (let i = 0; i< map.length; i+=chunkSize){
         const chunksRow = [];
@@ -173,7 +183,7 @@ function iteration(tree: Record<string, IChunk>, points:Array<string>, generatio
         //const px = point.x+step.x;
         //const py = point.y+step.y;
         //const row = map[py];
-       console.log(tree[step].index, generation);
+       //console.log(tree[step].index, generation);
         if (tree[step].index>generation){   
             tree[step].index = generation;
             nextPoints.push(step);
@@ -191,6 +201,9 @@ function iteration(tree: Record<string, IChunk>, points:Array<string>, generatio
 
   export function findChunkPath(tree: Record<string, IChunk>, destHash:string){
     let path:Array<IChunk> = [];
+    if (!tree[destHash]) {
+        return null;
+    }
     let currentValue = tree[destHash].index;
     if (currentValue == Number.MAX_SAFE_INTEGER) {
       return null;

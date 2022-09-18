@@ -10,6 +10,7 @@ export class Canvas extends Control {
     private ctx: CanvasRenderingContext2D;
     private ticker = new RenderTicker();
     private onRender: (ctx: CanvasRenderingContext2D, delta: number) => void;
+    onMove: (e:MouseEvent)=>void;
 
     constructor(parentNode: HTMLElement, onRender: (ctx: CanvasRenderingContext2D, delta: number) => void) {
         super(parentNode, 'div', 'canvas');
@@ -26,7 +27,7 @@ export class Canvas extends Control {
         this.ctx = context;
 
         this.canvas.node.onmousemove = (e) => {
-
+            this.onMove(e);
         }
 
         this.canvas.node.onclick = (e: MouseEvent) => {
@@ -111,6 +112,18 @@ export class TestScene {
 
         this.chunkPath = findChunkPath(traceTree, getHashByVector(this.endPoint));
         console.log(this.chunkPath);
+
+        this.canvas.onMove = (e)=>{
+            const vector = new Vector(Math.round(e.offsetX / 5), Math.round(e.offsetY / 5));
+            this.endPoint = vector;
+            if (vector.y < map.length && vector.x < map[0].length && vector.x>=0 && vector.y>=0){
+                
+                this.chunkPath = findChunkPath(traceTree, getHashByVector(this.endPoint)) || [];
+            } else {
+                this.chunkPath = [];
+            }
+            //console.log(this.chunkPath);
+        }
     }
 
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
