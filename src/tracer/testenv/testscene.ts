@@ -2,9 +2,9 @@ import Control from "../../common/control";
 import { IVector, Vector } from '../../common/vector';
 import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
-import mapFile from './assets/map3.png';
-import {tracePath} from '../tracelib/tracer';
-import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk} from '../tracelib/getIsolated';
+import mapFile from './assets/map5.png';
+import {findPath, indexate, tracePath} from '../tracelib/tracer';
+import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap} from '../tracelib/getIsolated';
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     private ctx: CanvasRenderingContext2D;
@@ -114,11 +114,25 @@ export class TestScene {
         //console.log(this.chunkPath);
 
         this.canvas.onMove = (e)=>{
+            const startTime = Date.now();
             const vector = new Vector(Math.round(e.offsetX / 5), Math.round(e.offsetY / 5));
             this.endPoint = vector;
             if (vector.y < map.length && vector.x < map[0].length && vector.x>=0 && vector.y>=0){
                 
+                console.log(Date.now()- startTime);
                 this.chunkPath = findChunkPath(traceTree, getHashByVector(this.endPoint)) || [];
+                const start = getHashByVector(this.startPoint)
+                if (start){
+                this.chunkPath.push(traceTree[start])
+                }
+                console.log(Date.now()- startTime);
+                const lm = getLimitPathMap(this.chunkPath, this.chunks, this.map);
+                //let lm = map.map(it=>it.map(jt=>jt==0?Number.MAX_SAFE_INTEGER:-1));
+                console.log(Date.now()- startTime);
+                indexate(lm, [this.startPoint], 0);
+                console.log(Date.now()- startTime);
+                this.path = findPath(lm, this.startPoint, this.endPoint);
+               // console.log(this.path);
             } else {
                 this.chunkPath = [];
             }
@@ -132,7 +146,7 @@ export class TestScene {
             this.map.forEach((row, y)=>{
                 row.forEach((cell, x)=>{
                     ctx.fillStyle = ['#fff', '#ff0', '#f0f'][cell] || '#0ff';
-                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                   // ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
                 })
             })
         }
@@ -166,12 +180,7 @@ export class TestScene {
             });
         }
 
-        if (this.path){
-            this.path.forEach((pos)=>{
-                ctx.fillStyle = '#9f99';
-                ctx.fillRect(pos.x * tileSize, pos.y * tileSize, tileSize, tileSize);
-            })
-        }
+        
 
         if (this.chunkPath){
             this.chunkPath.forEach((chunk)=>{
@@ -181,6 +190,8 @@ export class TestScene {
                 //ctx.fillRect(pos.x * tileSize * size, pos.y * tileSize * size, tileSize * size, tileSize * size);
             })
         }
+        
+        
 
         if (this.chunkPath){
             this.chunkPath.forEach((chunk)=>{
@@ -193,6 +204,13 @@ export class TestScene {
                     }
                 }))
                 
+            })
+        }
+        
+        if (this.path){
+            this.path.forEach((pos)=>{
+                ctx.fillStyle = '#fffe';
+                ctx.fillRect(pos.x * tileSize, pos.y * tileSize, tileSize, tileSize);
             })
         }
 

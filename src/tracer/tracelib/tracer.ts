@@ -127,7 +127,7 @@ export function findPath(map:Array<Array<number>>, indexPoint:Vector, destPoint:
     crashDetector--;
     let nextStep = steps.find(step=>{
       let point = currentPoint.clone().add(Vector.fromIVector(step));
-      let result = map[point.y][point.x] == currentValue-1;
+      let result = map[point.y]?.[point.x] == currentValue-1;
       if (result){
         currentPoint = point;
         currentValue = map[point.y][point.x];

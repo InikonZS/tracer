@@ -57,7 +57,7 @@ export function getAreaFromPoint(mp: Array<Array<number>>, indexPoint: Vector, a
 }
 
 export function getChunks(map: Array<Array<number>>){
-    const chunkSize = 6;
+    const chunkSize = 8;
     const chunks = [];
     for (let i = 0; i< map.length; i+=chunkSize){
         const chunksRow = [];
@@ -205,6 +205,7 @@ function iteration(tree: Record<string, IChunk>, points:Array<string>, generatio
         return null;
     }
     let currentValue = tree[destHash].index;
+    path.push(tree[destHash]);
     if (currentValue == Number.MAX_SAFE_INTEGER) {
       return null;
     }
@@ -230,3 +231,20 @@ function iteration(tree: Record<string, IChunk>, points:Array<string>, generatio
     return path;
   }
 
+export function getLimitPathMap(chunkPath:IChunk[], chunks: number[][][][], map:Array<Array<number>>){
+    let mp = map.map(it=>it.map(jt=>{
+        return -1;//jt==0?Number.MAX_SAFE_INTEGER:-1
+    }));
+    chunkPath.forEach((chunk)=>{
+        const pos = chunk.original.pos;
+        const size = chunks[0][0][0].length;
+        chunks[pos.y][pos.x].forEach((row, y)=>row.forEach((cell, x)=>{
+            if (cell == chunk.original.i){
+                mp[pos.y * size + y][pos.x * size + x] = map[pos.y * size + y][pos.x * size + x]==0?Number.MAX_SAFE_INTEGER:-1
+                //ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
+            }
+        }))
+        
+    })
+    return mp;
+}
