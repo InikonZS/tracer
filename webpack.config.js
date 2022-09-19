@@ -40,8 +40,8 @@ const config = {
                 use: [stylesHandler,'css-loader'],
             },
             {
-                test: /\.(eot|svg|ttf|woff|woff2|png|jpg|gif)$/i,
-                type: 'asset',
+                test: /\.(eot|svg|ttf|woff|woff2|png|jpg|gif|w.js)$/i,
+                type: 'asset/resource',
             },
 
             // Add your rules for custom modules here

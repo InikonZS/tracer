@@ -95,10 +95,10 @@ export class TestScene {
         this.map = map;
 
         this.area = getIsolated(this.map);//getAreaFromPoint(this.map, this.startPoint, 1);
-        console.log(this.area);
+        //console.log(this.area);
         this.chunks = getIsolatedChunks(this.map)//getChunks(this.map);
         const connections = getAllConnections(this.chunks);
-        console.log(connections);
+        //console.log(connections);
         const traceTree = getChunkTree(this.chunks);
 
         const getHashByVector = (pos: Vector)=>{
@@ -111,7 +111,7 @@ export class TestScene {
         console.log(traceTree);
 
         this.chunkPath = findChunkPath(traceTree, getHashByVector(this.endPoint));
-        console.log(this.chunkPath);
+        //console.log(this.chunkPath);
 
         this.canvas.onMove = (e)=>{
             const vector = new Vector(Math.round(e.offsetX / 5), Math.round(e.offsetY / 5));
