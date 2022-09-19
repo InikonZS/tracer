@@ -14,11 +14,40 @@ export class TestScene {
             console.log(msg.data);
         }
 
+        const buttonFreeze = new Control(parent, 'button', '', 'freeze');
+        buttonFreeze.node.onclick = () => {
+            //worker.postMessage({ a: 32423, b: 'dafsada' });
+            heavyOne();
+            //worker.postMessage({route: 'heaveOne'});
+        }
+
         const button = new Control(parent, 'button', '', 'send');
         button.node.onclick = () => {
             //worker.postMessage({ a: 32423, b: 'dafsada' });
             //heavyOne();
             worker.postMessage({route: 'heaveOne'});
+        }
+
+        const iterateButton = new Control(parent, 'button', '', 'iterate');
+        iterateButton.node.onclick = () => {
+            const res: Array<number> = [];
+            console.log('start async');
+            asyncIterate(notBigData, (item, index) => {
+                res.push(Math.sin(item));
+            }, () => {
+                console.log('done ', res);
+            })
+        }
+
+        const iterateButtonB = new Control(parent, 'button', '', 'iterateBatch');
+        iterateButtonB.node.onclick = () => {
+            const res: Array<number> = [];
+            console.log('start async');
+            batchIterate(bigData, (item, index) => {
+                res.push(Math.sin(item));
+            }, () => {
+                console.log('done ', res);
+            }, 100)
         }
 
         const startOnceWorkerButton = new Control(parent, 'button', '', 'onceWorker');
@@ -65,6 +94,70 @@ function heavyOne(){
     }
     return arr;
 }
+
+const notBigData = (()=>{
+    return new Array(343).fill(0).map((_, i)=> i);
+})();
+
+const bigData = (()=>{
+    return new Array(34343).fill(0).map((_, i)=> i);
+})();
+
+function asyncIterate<T>(array: Array<T>, onIterate: (item:T, index:number)=>void, onFinish:()=>void){
+    
+    const rec = (iteration:number, onIterate: (item:T, index:number)=>void, onFinish: ()=>void)=>{
+        setTimeout(()=>{
+            onIterate(array[iteration], iteration)
+            if (iteration >= array.length-1){
+                onFinish();
+            } else { 
+                rec(iteration + 1, onIterate, onFinish);
+            }
+           
+        }, 0)
+    }
+
+    rec(0, onIterate, onFinish);
+}
+
+function batchIterate<T>(array: Array<T>, onIterate: (item:T, index:number)=>void, onFinish:()=>void, batchSize:number){
+    
+    const rec = (iteration:number, onIterate: (item:T, index:number)=>void, onFinish: ()=>void)=>{
+        //let i = iteration;
+        let bi = 0;
+        setTimeout(()=>{
+            //use it outside timeout for sync first calc.
+            while((bi+iteration <= array.length-1) && bi< batchSize){
+                onIterate(array[bi+iteration], iteration)
+                bi++;
+            }
+
+            if (bi + iteration >= array.length-1){
+                onFinish();
+            } else { 
+                rec(iteration + bi, onIterate, onFinish);
+            }
+           
+        }, 0)
+    }
+
+    rec(0, onIterate, onFinish);
+}
+
+function batchIterateAsync<T>(array: Array<T>, batchSize:number, onIterate: (item:T, index:number)=>void){
+    return new Promise<void>(resolve=>{
+        batchIterate(array, onIterate, ()=>{
+            resolve();
+        }, batchSize)
+    })
+}
+
+/*batchIterate([], 100, (item, index)=>{
+
+}).then(()=>{
+
+});*/
+
 
 function _heaveOneInWorker(onResult:(result:Array<number>)=>void, onError:(err: any)=>void){
     const onceWorker = new Worker(wscript);
