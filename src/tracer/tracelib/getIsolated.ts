@@ -232,18 +232,33 @@ function iteration(tree: Record<string, IChunk>, points:Array<string>, generatio
   }
 
 export function getLimitPathMap(chunkPath:IChunk[], chunks: number[][][][], map:Array<Array<number>>){
-    let mp = map.map(it=>it.map(jt=>{
-        return -1;//jt==0?Number.MAX_SAFE_INTEGER:-1
-    }));
+    /*
+        let mp = map.map(it=>it.map(jt=>{
+            return -1;//jt==0?Number.MAX_SAFE_INTEGER:-1
+        }));
+    */
+    let mp = new Array(map.length).fill(0).map((it, i)=> new Array(map[i].length).fill(-1));
+    //let mp: Record<number, Record<number, number>>= {};
+    const size = chunks[0][0][0].length;
     chunkPath.forEach((chunk)=>{
         const pos = chunk.original.pos;
-        const size = chunks[0][0][0].length;
-        chunks[pos.y][pos.x].forEach((row, y)=>row.forEach((cell, x)=>{
-            if (cell == chunk.original.i){
-                mp[pos.y * size + y][pos.x * size + x] = map[pos.y * size + y][pos.x * size + x]==0?Number.MAX_SAFE_INTEGER:-1
-                //ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
-            }
-        }))
+        chunks[pos.y][pos.x].forEach((row, y)=>{
+            const my = pos.y * size + y;
+            let mpy = mp[my];
+            //for record optimization
+            /*if (!mpy){ 
+                mp[my]={};
+                mpy = mp[my];
+            }*/
+            const mapy = map[my];
+            row.forEach((cell, x)=>{
+                if (cell == chunk.original.i){
+                    const mx = pos.x * size + x;
+                    mpy[mx] = mapy[mx]==0?Number.MAX_SAFE_INTEGER:-1
+                    //ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
+                }
+            })
+        })
         
     })
     return mp;

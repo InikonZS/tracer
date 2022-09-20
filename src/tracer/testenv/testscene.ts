@@ -126,7 +126,7 @@ export class TestScene {
                 this.chunkPath.push(traceTree[start])
                 }
                 console.log(Date.now()- startTime);
-                const lm = getLimitPathMap(this.chunkPath, this.chunks, this.map);
+                const lm = getLimitPathMap(this.chunkPath, this.chunks, this.map) as Array<Array<number>>;//can be same access record<num, record<num, num>>
                 //let lm = map.map(it=>it.map(jt=>jt==0?Number.MAX_SAFE_INTEGER:-1));
                 console.log(Date.now()- startTime);
                 indexate(lm, [this.startPoint], 0);
