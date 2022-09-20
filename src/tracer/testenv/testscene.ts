@@ -86,6 +86,28 @@ export class TestScene {
     }
 
     async build() {
+
+        showTime(fill1, [5000], 100, 'fill 1');
+        showTime(fill2, [5000], 100, 'fill 2');
+        showTime(fill1, [5000], 100, 'fill 1');
+        showTime(fill2, [5000], 100, 'fill 2');
+        showTime(fill1, [5000], 100, 'fill 1');
+        showTime(fill2, [5000], 100, 'fill 2');
+
+        const arr = fill2d1(100);
+
+        showTime(iterate1, [arr], 1000, 'iterate 1');
+        showTime(iterate1, [arr], 1000, 'iterate 1');
+        showTime(iterate1, [arr], 1000, 'iterate 1');
+
+        showTime(iterate2, [arr], 1000, 'iterate 2');
+        showTime(iterate2, [arr], 1000, 'iterate 2');
+        showTime(iterate2, [arr], 1000, 'iterate 2');
+
+        showTime(iterate3, [arr], 1000, 'iterate 3');
+        showTime(iterate3, [arr], 1000, 'iterate 3');
+        showTime(iterate3, [arr], 1000, 'iterate 3');
+
         const image = await loadImage(mapFile);
         const map = getMapFromImageData(getImageData(image));
         tracePath(map, this.startPoint, this.endPoint, (path)=>{
@@ -119,7 +141,7 @@ export class TestScene {
             this.endPoint = vector;
             if (vector.y < map.length && vector.x < map[0].length && vector.x>=0 && vector.y>=0){
                 
-                const traceTree = getChunkTree(this.chunks);
+                /*const traceTree = getChunkTree(this.chunks);
 
                 console.log('chunk tree ',Date.now()- startTime);
 
@@ -129,7 +151,7 @@ export class TestScene {
                     return `${Math.floor(pos.x / size)}_${Math.floor(pos.y / size)}_${z}`
                 }
         
-                chunkIndexate(traceTree, [getHashByVector(this.startPoint)], 0); 
+                chunkIndexate(traceTree, [getHashByVector(this.startPoint)], 0); */
                 //console.log(traceTree);
                 console.log('chunk index ',Date.now()- startTime);
     
@@ -233,5 +255,66 @@ export class TestScene {
 
         ctx.fillStyle = '#9f0';
         ctx.fillRect(this.endPoint.x * tileSize, this.endPoint.y * tileSize, tileSize, tileSize);
+    }
+}
+
+
+function showTime(func: Function, args: Array<any>, iterations:number = 1, text:string) {
+    const startTime = Date.now();
+    for (let i = 0; i< iterations; i++){
+       func(...args); 
+    }  
+    console.log(text + ': ', Date.now()-startTime);
+}
+
+function fill1(iterations: number){
+    const arr = [];
+    for (let i = 0; i< iterations; i++){
+        arr.push(Math.random());
+    }
+}
+
+function fill2(iterations: number){
+    const arr = new Array(iterations);
+    for (let i = 0; i< iterations; i++){
+        arr[i] = Math.random();
+    }
+}
+
+function fill2d1(iterations: number){
+    const arr = new Array(iterations);
+    for (let i = 0; i< iterations; i++){
+        const row = new Array(iterations);
+        for (let j = 0; j< iterations; j++){
+            row[j] = Math.random();
+        }
+        arr[i] = row;
+    }
+    return arr;
+}
+
+function iterate1(arr:Array<Array<any>>){
+    for (let i = 0; i< arr.length; i++){
+        for (let j = 0; j< arr[i].length; j++){
+           const a = arr[i][j] * 2; 
+        }
+    }
+}
+
+function iterate3(arr:Array<Array<any>>){
+    for (let j = 0; j< arr[0].length; j++){
+        for (let i = 0; i< arr.length; i++){
+           const a = arr[i][j] * 2; 
+        }
+    }
+}
+
+function iterate2(arr:Array<Array<any>>){
+    for (let i = 0; i< arr.length; i++){
+        const row = arr[i];
+        const len = row.length;
+        for (let j = 0; j< len; j++){
+           const a = row[j] * 2; 
+        }
     }
 }
