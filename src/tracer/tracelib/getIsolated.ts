@@ -57,7 +57,7 @@ export function getAreaFromPoint(mp: Array<Array<number>>, indexPoint: Vector, a
 }
 
 export function getChunks(map: Array<Array<number>>){
-    const chunkSize = 8;
+    const chunkSize = 16;
     const chunks = [];
     for (let i = 0; i< map.length; i+=chunkSize){
         const chunksRow = [];

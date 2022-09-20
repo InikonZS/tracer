@@ -119,19 +119,33 @@ export class TestScene {
             this.endPoint = vector;
             if (vector.y < map.length && vector.x < map[0].length && vector.x>=0 && vector.y>=0){
                 
-                console.log(Date.now()- startTime);
+                const traceTree = getChunkTree(this.chunks);
+
+                console.log('chunk tree ',Date.now()- startTime);
+
+                const getHashByVector = (pos: Vector)=>{
+                    const size =this.chunks[0][0][0].length;
+                    const z = this.chunks[Math.floor(pos.y / size)][Math.floor(pos.x / size)][Math.floor(pos.y % size)][Math.floor(pos.x % size)];
+                    return `${Math.floor(pos.x / size)}_${Math.floor(pos.y / size)}_${z}`
+                }
+        
+                chunkIndexate(traceTree, [getHashByVector(this.startPoint)], 0); 
+                //console.log(traceTree);
+                console.log('chunk index ',Date.now()- startTime);
+    
                 this.chunkPath = findChunkPath(traceTree, getHashByVector(this.endPoint)) || [];
                 const start = getHashByVector(this.startPoint)
                 if (start){
                 this.chunkPath.push(traceTree[start])
                 }
-                console.log(Date.now()- startTime);
+                console.log('chunk path ',Date.now()- startTime);
                 const lm = getLimitPathMap(this.chunkPath, this.chunks, this.map) as Array<Array<number>>;//can be same access record<num, record<num, num>>
                 //let lm = map.map(it=>it.map(jt=>jt==0?Number.MAX_SAFE_INTEGER:-1));
-                console.log(Date.now()- startTime);
+                console.log('limit map ',Date.now()- startTime);
                 indexate(lm, [this.startPoint], 0);
-                console.log(Date.now()- startTime);
+                console.log('indexate ',Date.now()- startTime);
                 this.path = findPath(lm, this.startPoint, this.endPoint);
+                console.log('result path ',Date.now()- startTime);
                // console.log(this.path);
             } else {
                 this.chunkPath = [];
