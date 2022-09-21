@@ -1,0 +1,125 @@
+*, *::after, *::before{
+    box-sizing: border-box;
+}
+
+body{
+    margin: 0;
+    padding: 0;
+    color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+.screen{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: #47587a;
+    height: 100vh;
+}
+
+.screen_column{
+    padding: 20px
+}
+.screen_main{
+    display: flex;
+    justify-content: space-between;
+    background-color: #0009;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 700px;
+}
+
+.screen_pages{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
+    border-right: 1px solid #fff;
+    width: 250px;
+}
+
+.screen_content{
+    width: 100%;
+}
+.settings{
+    padding: 20px 0px;
+}
+.setting_item{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+   
+    padding: 5px;
+}
+
+.setting_item:nth-child(2n + 1){
+    background-image: linear-gradient(90deg, #0000 0%, #fff3 50%, #0000 100%);
+    /*background-color: #fff4;*/
+}
+
+.screen_controls{
+    display: flex;
+    justify-content: center;
+}
+
+.screen button{
+    position: relative;
+    border-radius: 5px;
+    border: #fff 2px solid;
+    padding: 14px;
+    background-color: rgb(82, 101, 177);
+    color: #fff;
+    width: 100%;
+    margin: 20px 0px;
+    font-weight: bold;
+    font-size: inherit;
+    background: repeating-linear-gradient( -45deg, rgb(82, 101, 177), rgb(82, 101, 177) 3px, #47587a 3px, #47587a 6px );
+}
+
+.screen button::after{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top:0;
+    left: 0;
+    border-radius: 5px;
+    border: #22375b 3px solid;
+    content: "";
+}
+
+.screen button:hover{
+    background-color: rgb(82, 101, 177);
+    color: rgb(239, 240, 209);
+}
+
+
+.settings_name{
+    width: 75%;
+}
+
+.settings_button{
+    border-radius: 5px;
+    border: rgb(239, 240, 209) 2px solid;
+    padding: 8px;
+    color: #fff;
+    width: 100%;
+    font-weight: bold;
+    text-align: center;
+}
+
+.settings_or{
+    width: 50%;
+    text-align: center;
+}
+
+.hidden{
+    visibility: hidden;
+}
+
+.screen .button_back{
+    width: 180px;
+    padding: 8px;
+}
