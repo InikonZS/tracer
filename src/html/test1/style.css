@@ -17,6 +17,8 @@ body{
     flex-direction: column;
     background-color: #47587a;
     height: 100vh;
+    background-image: radial-gradient(#444cf7 0.9px, #080839 0.9px);
+    background-size: 18px 18px;
 }
 
 .screen_column{
@@ -122,4 +124,14 @@ body{
 .screen .button_back{
     width: 180px;
     padding: 8px;
+}
+
+.screen_bg{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(45deg, #000a 10%, #0000 60%, #fff2 85%, #0000 100%);
 }
