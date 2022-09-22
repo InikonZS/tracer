@@ -122,7 +122,7 @@ export function findPath(map:Array<Array<number>>, indexPoint:Vector, destPoint:
     return null;
   }
   let currentPoint:Vector = destPoint.clone();
-  let crashDetector = 1000;
+  let crashDetector = 10000;
   while (currentValue != 0 && crashDetector>0){
     crashDetector--;
     let nextStep = steps.find(step=>{

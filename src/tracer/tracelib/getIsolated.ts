@@ -175,6 +175,14 @@ export function getChunkTree(chunks:number[][][][]){
     return tree;
 }
 
+export function dublicateChunkTree(tree: Record<string, IChunk>){
+    const dub:Record<string, IChunk> = {};
+    Object.keys(tree).map(key=>{
+        dub[key] = {...tree[key]}
+    })
+    return dub;
+}
+
 function iteration(tree: Record<string, IChunk>, points:Array<string>, generation:number){
     const nextPoints: Array<string> = [];
     if (!points.length) { return; }
