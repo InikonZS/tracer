@@ -4,7 +4,7 @@ import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
 import mapFile from './assets/map5.png';
 import {findPath, indexate, tracePath} from '../tracelib/tracer';
-import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree} from '../tracelib/getIsolated';
+import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree, updateChunkTree} from '../tracelib/getIsolated';
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     public ctx: CanvasRenderingContext2D;
@@ -84,6 +84,7 @@ export class TestScene {
     area: number[][];
     chunks: number[][][][];
     chunkPath: IChunk[];
+    traceTreeInitial: Record<string, IChunk>;
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render);
@@ -136,7 +137,7 @@ export class TestScene {
         this.chunks = getIsolatedChunks(this.map)//getChunks(this.map);
         const connections = getAllConnections(this.chunks);
         //console.log(connections);
-        const traceTreeInitial = getChunkTree(this.chunks);
+        this.traceTreeInitial = getChunkTree(this.chunks);
 
         const getHashByVector = (pos: Vector)=>{
             const size =this.chunks[0][0][0].length;
@@ -163,7 +164,7 @@ export class TestScene {
             if (vector.y < map.length && vector.x < map[0].length && vector.x>=0 && vector.y>=0){
                 
                 //const traceTree = getChunkTree(this.chunks);
-                const traceTree = dublicateChunkTree(traceTreeInitial)
+                const traceTree = dublicateChunkTree(this.traceTreeInitial)
 
                 verbose && console.log('chunk tree ',Date.now()- startTime);
         
@@ -195,15 +196,28 @@ export class TestScene {
 
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
         if (!this.canvas) return;
+        
         const tileSize = 5;
+        const changed: {pos:Vector, val:number}[] = [];
         if (this.map){
             this.map.forEach((row, y)=>{
                 row.forEach((cell, x)=>{
+                    if (Math.random()<0.0001){
+                        //row[x] = 1;
+                        changed.push({pos: new Vector(x, y), val: 1});
+                    }
                     //ctx.fillStyle = ['#fff', '#ff0', '#f0f'][cell] || '#0ff';
                    // ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
                 })
-            })
+            });
+            //this.chunks = getIsolatedChunks(this.map)//getChunks(this.map);
+            //const connections = getAllConnections(this.chunks);
+            //console.log(connections);
+            //this.traceTreeInitial = getChunkTree(this.chunks);
+            updateChunkTree(this.map, this.chunks, this.traceTreeInitial, changed);
+            this.canvas.onMove({offsetX: this.endPoint.x * tileSize, offsetY: this.endPoint.y * tileSize} as MouseEvent);
         }
+       
 
         if (this.area){
             this.area.forEach((row, y)=>{
@@ -223,13 +237,13 @@ export class TestScene {
                     chunk.forEach((row, y)=>{
                         //console.log(row[0])
                         row.forEach((cell, x)=>{
-                            if (cell != -1){
-                                if (this.canvas.canvasBack[(i * chunk.length + y)]){
-                                    this.canvas.canvasBack[(i * chunk.length + y)][(j * row.length + x)] = ['#090', '#ff0', '#f0f', '#574'][-(cell + 2)] || '#0ff';
-                                }// ctx.fillStyle = ['#0909', '#ff09', '#f0f9', '#5749'][-(cell + 2)] || '#0ff9';
+                            //if (cell != -1){
+                                //if (this.canvas.canvasBack[(i * chunk.length + y)]){
+                                    this.canvas.canvasBack[(i * chunk.length + y)][(j * row.length + x)] = ['#000','#090', '#ff0', '#f0f', '#574'][-(cell + 1)] || '#0ff';
+                                //}// ctx.fillStyle = ['#0909', '#ff09', '#f0f9', '#5749'][-(cell + 2)] || '#0ff9';
                                 //ctx.fillStyle = ['#0909', '#ff09', '#f0f9', '#0ff9', '#5749'][i % 5];
                                 //ctx.fillRect((j * row.length + x) * tileSize, (i * chunk.length + y) * tileSize, tileSize, tileSize);
-                            }
+                            //}
                         })
                     })
                 });

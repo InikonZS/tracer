@@ -80,6 +80,18 @@ export function getChunks(map: Array<Array<number>>){
     return chunks;
 }
 
+function getChunk(map:Array<Array<number>>, pos:Vector, chunkSize:number){
+    const chunk: number[][] = [];
+    for (let ii = 0; ii< chunkSize; ii+=1){
+        const chunkRow: Array<number> = [];
+        for (let jj = 0; jj< chunkSize; jj+=1){
+            chunkRow.push(map[Math.floor(pos.y/chunkSize)*chunkSize +ii][Math.floor(pos.x /chunkSize)*chunkSize+jj]);
+        }
+        chunk.push(chunkRow);
+    }
+    return chunk;
+}
+
 export function getIsolatedChunks(map: Array<Array<number>>){
     const chunks = getChunks(map);
     return chunks.map((chunkRow, i)=>chunkRow.map((chunk, j)=>{
@@ -153,6 +165,106 @@ export interface IChunk{
     };
     connections: string[];
     index: number;
+}
+
+const getHashByVector = (chunks:number[][][][], pos: Vector)=>{
+    const size = chunks[0][0][0].length;
+    const z = chunks[Math.floor(pos.y / size)][Math.floor(pos.x / size)][Math.floor(pos.y % size)][Math.floor(pos.x % size)];
+    return `${Math.floor(pos.x / size)}_${Math.floor(pos.y / size)}_${z}`
+}
+
+const getChunkPosByVector = (chunks:number[][][][], pos: Vector)=>{
+    const size = chunks[0][0][0].length;
+    //const z = chunks[Math.floor(pos.y / size)][Math.floor(pos.x / size)][Math.floor(pos.y % size)][Math.floor(pos.x % size)];
+    return new Vector(Math.floor(pos.x / size), Math.floor(pos.y / size));
+}
+
+export function getAffected(chunks:number[][][][], tree: Record<string, IChunk>, point: Vector){
+    const affectedChunkPos = getChunkPosByVector(chunks, point);
+    //make only if border point or restructurized zones;
+    return affectedChunkPos
+}
+
+export function getClosest(chunks:number[][][][], tree: Record<string, IChunk>, point: Vector){
+    //const affectedChunkPos = getChunkPosByVector(chunks, point);
+    //make only if border point or restructurized zones;
+    const closest: Array<Vector> = [];
+    steps.forEach(step=>{
+        const next = point.clone().add(Vector.fromIVector(step));
+        const chunk = chunks[next.y]?.[next.x];
+        if (chunk){
+            closest.push(next)
+        }
+    });
+    return closest;
+}
+
+function findChunkHashes(tree: Record<string, IChunk>, pos:Vector){
+    const hashes:string[] = [];
+    for (let i = -2; i>-100; i--){
+        const hash = `${pos.x}_${pos.y}_${i}`;
+        if (tree[hash]){
+            hashes.push(hash);
+        } else {
+            break;
+        }
+    }
+    return hashes;
+}
+
+export function updateChunkTree(map:number[][],chunks:number[][][][], tree: Record<string, IChunk>, points: {pos: Vector, val:number}[]){
+    const affected: Vector[] = [];
+    const size = chunks[0][0][0].length;
+    points.forEach(point=>{
+        const affectedChunk = getAffected(chunks, tree, point.pos);
+        //chunks[affectedChunk.y][affectedChunk.x][point.pos.y % size][point.pos.x % size] = point.val;
+        map[point.pos.y][point.pos.x] = point.val;
+        const chunk = getChunk(map, point.pos, size);
+        chunks[affectedChunk.y][affectedChunk.x] = getIsolated(chunk);
+        if (affected.find(it=> it.x == affectedChunk.x && it.y == affectedChunk.y) == null){
+            affected.push(affectedChunk);
+        }
+    })
+
+    const closest:Vector[] = [];
+    affected.forEach(it=>{
+        const closestChunks = getClosest(chunks, tree, it);
+        closestChunks.forEach(jt=>{
+            if (closest.find(iit=> iit.x == jt.x && iit.y == jt.y) == null){
+                closest.push(jt);
+            }
+        })
+    });
+
+    const all = [...affected, ...closest];
+
+    const hashes:string[] = [];
+    all.forEach(it=>{
+        const newh = findChunkHashes(tree, it);
+        newh.forEach(jt=>{
+            hashes.push(jt);
+        })
+    })
+
+    hashes.forEach(hash=>{
+        delete tree[hash];
+    })
+
+    all.forEach((vec, i)=>{
+        const connections = getConnections(chunks, vec);
+        //const hash = hashes[i];
+        connections.forEach(z=>{
+            tree[`${vec.x}_${vec.y}_${z.ci}`] = {
+                index: Number.MAX_SAFE_INTEGER,
+                original: {
+                    pos: new Vector(vec.x, vec.y),
+                    i: z.ci
+                },
+                connections: connections.filter(it=> it.ci == z.ci).map(it=> `${it.pos.x}_${it.pos.y}_${it.i}`)
+            }
+        })
+    });
+    return tree;
 }
 
 export function getChunkTree(chunks:number[][][][]){
