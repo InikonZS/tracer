@@ -114,6 +114,15 @@ export class TestScene {
         showTime(iterate3, [arr], 1000, 'iterate 3');
         showTime(iterate3, [arr], 1000, 'iterate 3');
 
+        showTime(find, [data, data[data.length-1]], 1000, 'find');
+        showTime(find, [data, data[data.length-1]], 1000, 'find');
+        showTime(find, [data, data[data.length-1]], 1000, 'find');
+
+        const indFind = indexateData(data);
+        showTime(indFind, [data[data.length-1]], 1000, 'find i');
+        showTime(indFind, [data[data.length-1]], 1000, 'find i');
+        showTime(indFind, [data[data.length-1]], 1000, 'find i');
+
         const image = await loadImage(mapFile);
         const map = getMapFromImageData(getImageData(image));
         tracePath(map, this.startPoint, this.endPoint, (path)=>{
@@ -340,5 +349,63 @@ function iterate2(arr:Array<Array<any>>){
         for (let j = 0; j< len; j++){
            const a = row[j] * 2; 
         }
+    }
+}
+
+const data = new Array(100).fill(null).map((it, i)=>{
+    return new Array(1000).fill(null).map((jt, j)=>{
+        return Math.random();
+    })
+});
+
+function find(data:Array<Array<number>>, obj:Array<number>){
+    const isEqual = (a: Array<number>, b: Array<number>)=>{
+        let findex = -1;
+        a.forEach((jt, j)=>{
+            if (b[j]===jt) {
+                findex = j
+            }
+            //return b[j] !== jt
+        });
+        return findex !== -1;
+    }
+    const res = data.find(it=> isEqual(it, obj));
+    return res;
+}
+
+function indexateData(data:Array<Array<number>>){
+    //const map: Record<number, Array<number>> = {};
+    const getHash = (item:Array<number>)=>{
+        return Math.floor(item.reduce((a, it) => (a + it) % 1000, 0));
+    }
+    const indexated = data.map(it=>{
+        return {original: it, hash: getHash(it)}
+    })
+
+    return (obj:Array<number>)=>{
+        const objHash = getHash(obj);
+        /*const isEqual = (a: Array<number>, b: Array<number>)=>{
+            return a.find((jt, j)=>{
+                return b[j] !== jt
+            }) == null;
+        }*/
+        const isEqual = (a: Array<number>, b: Array<number>)=>{
+            let findex = -1;
+            a.forEach((jt, j)=>{
+                if (b[j]===jt) {
+                    findex = j
+                }
+                //return b[j] !== jt
+            });
+            return findex !== -1;
+        }
+    
+        const res = indexated.find(it=> {
+            if (objHash !== it.hash){
+                return false;
+            }
+            return isEqual(it.original, obj)
+        });
+        return res;
     }
 }
