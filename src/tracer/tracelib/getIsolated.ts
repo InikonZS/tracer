@@ -6,6 +6,13 @@ export const steps = [
     {x: 1, y: 0}, 
     {x: 0, y: 1}, 
     {x: 0, y: -1}
+];
+
+export const steps2 = [
+    {x: -1, y: -1}, 
+    {x: 1, y: 1}, 
+    {x: -1, y: 1}, 
+    {x: 1, y: -1}
 ]
 
 export function getIsolated(map: Array<Array<number>>){
@@ -149,6 +156,40 @@ export function getConnections(chunks:number[][][][], pos:Vector){
             })
         }
     });
+
+    steps2.forEach(step=>{
+        const nextVector = pos.clone().add(Vector.fromIVector(step));
+        const nextChunk = chunks[nextVector.y]?.[nextVector.x];
+        if (!nextChunk) return;
+        if (step.x == 1 && step.y == 1){
+            const cell = chunk[chunk.length-1][chunk[0].length-1];
+            const nextCell = nextChunk[0][0];
+            if (nextCell<-1 && cell<-1){
+                addConnection({pos:nextVector, i: nextCell, ci: cell});
+            }
+        } else 
+        if (step.x == -1 && step.y == 1){
+            const cell = chunk[chunk.length-1][0];
+            const nextCell = nextChunk[0][nextChunk[0].length-1];
+            if (nextCell<-1 && cell<-1){
+                addConnection({pos:nextVector, i: nextCell, ci: cell});
+            }
+        } else
+        if (step.y == -1 && step.x == 1){
+            const cell = chunk[0][chunk[0].length-1];
+            const nextCell = nextChunk[nextChunk.length-1][0];
+            if (nextCell<-1 && cell<-1){
+                addConnection({pos:nextVector, i: nextCell, ci: cell});
+            }
+        } else 
+        if (step.y == -1 && step.x == -1){
+            const cell = chunk[0][0];
+            const nextCell = nextChunk[nextChunk.length-1][nextChunk[0].length-1];
+            if (nextCell<-1 && cell<-1){
+                addConnection({pos:nextVector, i: nextCell, ci: cell});
+            }
+        }
+    });
     return connections;
 }
 
@@ -189,7 +230,7 @@ export function getClosest(chunks:number[][][][], tree: Record<string, IChunk>, 
     //const affectedChunkPos = getChunkPosByVector(chunks, point);
     //make only if border point or restructurized zones;
     const closest: Array<Vector> = [];
-    steps.forEach(step=>{
+    [...steps, ...steps2].forEach(step=>{
         const next = point.clone().add(Vector.fromIVector(step));
         const chunk = chunks[next.y]?.[next.x];
         if (chunk){
@@ -299,6 +340,9 @@ function iteration(tree: Record<string, IChunk>, points:Array<string>, generatio
     const nextPoints: Array<string> = [];
     if (!points.length) { return; }
     points.forEach(point=>{
+        if (!tree[point]){
+            return;
+        }
       tree[point].connections.forEach(step=>{
         //const px = point.x+step.x;
         //const py = point.y+step.y;
