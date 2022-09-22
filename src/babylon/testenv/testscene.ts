@@ -1,26 +1,45 @@
-import { ActionManager, ArcRotateCamera, Engine, ExecuteCodeAction, HemisphericLight, MeshBuilder, Scene, Vector3 } from 'babylonjs';
+import { ActionManager, ArcRotateCamera, Engine, ExecuteCodeAction, HemisphericLight, Mesh, MeshBuilder, Scene, Vector3 } from 'babylonjs';
 import { getMapFromImageData, getImageData, loadImage } from '../../tracer/tracelib/imageDataTools';
 import mapFile from '../assets/map1.png';
 
 async function createScene(engine: Engine, canvas: HTMLCanvasElement) {
     const scene = new Scene(engine);
 
-    const camera = new ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), scene);
+    const camera = new ArcRotateCamera("Camera",0, 0, 2, Vector3.Zero(), scene);
     camera.attachControl(canvas, true);
+    canvas.onkeydown = (e: KeyboardEvent) => {
+        const vector = camera.target.clone();
+        switch (e.code) {
+            case "KeyD":
+                vector._z = vector._z +1;                
+                break;
+            case 'KeyA':
+                vector._z = vector._z -1;
+                break;
+            case 'KeyW':
+                 vector._x = vector._x  -1;
+                break;
+            case 'KeyS':
+                 vector._x = vector._x +1;
+                break;
+        }
+        console.log(vector)
+        camera.setTarget(vector);
+    }
 
     const light1 = new HemisphericLight("light1", new Vector3(1, 1, 0), scene);
 
-    
+   // camera.setPosition(new Vector3())
 
    const image = await loadImage(mapFile);
     const map = getMapFromImageData(getImageData(image));
-    const objects = []
+    const objects:Mesh[] = []
     for (let i = 0; i < map.length; i++){
             for (let j = 0; j < map[0].length; j++){
                 switch (map[i][j]){
                     case 1:
                         const gold = MeshBuilder.CreateSphere("sphere", { diameter: 1, segments: 10 }, scene);
-                        const posGold = new Vector3(i, 0,j);
+                        const posGold = new Vector3(i, 0, j);
                         gold.position = posGold.clone();
                         //ON MOUSE ENTER
                         gold.actionManager = new ActionManager(scene);
@@ -29,7 +48,7 @@ async function createScene(engine: Engine, canvas: HTMLCanvasElement) {
                             gold.scaling = new Vector3(2, 2, 2);
                         }));
 	
-                //     //ON MOUSE EXIT
+                       //ON MOUSE EXIT
                         gold.actionManager.registerAction(new ExecuteCodeAction(BABYLON.ActionManager.OnPointerOutTrigger, (ev)=>{
                             gold.scaling = new Vector3(1, 1, 1);
                         }));
@@ -93,10 +112,9 @@ async function runBabylonExample(parentNode: HTMLElement) {
     let ani = 0;
     window.addEventListener('resize',autoSize);
     engine.runRenderLoop(() => {
-        // ani+=0.01;
-        // sphere.position = new Vector3(Math.sin(ani), Math.cos(ani), 0);
-        // spheres.forEach(({sphere, pos:position}, i) =>{
-        //     sphere.position = position.add(new Vector3(Math.sin(ani + i), Math.cos(ani), 0));
+        ani+=0.01;
+        // objects.forEach((it, i) =>{
+        //     it.position = it.position.add(new Vector3(Math.sin(ani)/100, 0,Math.cos(ani)/100));
         // })
         scene.render();
     });
