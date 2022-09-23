@@ -413,7 +413,7 @@ export function getLimitPathMap(chunkPath:IChunk[], chunks: number[][][][], map:
         }));
     */
         
-    let mp = _mp? _mp: new Array(map.length).fill(0).map((it, i)=> new Array(map[i].length).fill(-1));
+    let mp = /*_mp? _mp:*/ new Array(map.length).fill(0).map((it, i)=> new Array(map[i].length).fill(-1));
     //let mp: Record<number, Record<number, number>>= {};
     const size = chunks[0][0][0].length;
     chunkPath.forEach((chunk)=>{
@@ -433,7 +433,7 @@ export function getLimitPathMap(chunkPath:IChunk[], chunks: number[][][][], map:
                     mpy[mx] = mapy[mx]==0?Number.MAX_SAFE_INTEGER:-1
                     //ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
                 } else {
-                    mpy[mx] =-1;
+                  //  mpy[mx] =-1;
                 }
             })
         })
@@ -498,7 +498,7 @@ export function limitTree(tree:Record<string | number, IChunk>, chunkPath: IChun
     for (let chunkIndex in dub){
         const chunk = tree[chunkIndex];
         dub[chunkIndex].connections = chunk.connections.filter((it)=>{
-            return dub[it]
+            return dub[it] !== undefined
         })
         //const connections:Array<string | number> = [];
         /*chunk.connections.forEach((it, i)=>{
