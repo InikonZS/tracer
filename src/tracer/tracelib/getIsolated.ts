@@ -16,8 +16,8 @@ export const steps2 = [
 ]
 
 export function getHash(x:number,y:number,z:number): string | number{
-    //`${x}_${y}_${z}`; 
-    return (y+1)*2048*100 + (x+1)*100+(-z);
+    return `${x}_${y}_${z}`; 
+    //return (y+1)*2048*100 + (x+1)*100+(-z);
 }
 
 export function getIsolated(map: Array<Array<number>>){
@@ -68,8 +68,8 @@ export function getAreaFromPoint(mp: Array<Array<number>>, indexPoint: Vector, a
     }
 }
 
-export function getChunks(map: Array<Array<number>>){
-    const chunkSize = 16;
+export function getChunks(map: Array<Array<number>>, chunkSize: number){
+    //const chunkSize = 16;
     const chunks = [];
     for (let i = 0; i< map.length; i+=chunkSize){
         const chunksRow = [];
@@ -104,8 +104,8 @@ function getChunk(map:Array<Array<number>>, pos:Vector, chunkSize:number){
     return chunk;
 }
 
-export function getIsolatedChunks(map: Array<Array<number>>){
-    const chunks = getChunks(map);
+export function getIsolatedChunks(map: Array<Array<number>>, chunkSize: number){
+    const chunks = getChunks(map, chunkSize);
     return chunks.map((chunkRow, i)=>chunkRow.map((chunk, j)=>{
         const ch = getIsolated(chunk)
         return ch;
@@ -342,7 +342,7 @@ export function dublicateChunkTree(tree: Record<string | number, IChunk>){
     //    dub[+key] = {...tree[+key]}
     //})
     for (let key in tree){
-        dub[key] = {...tree[key]}
+        dub[key] = {...tree[key], connections:[...tree[key].connections]}
     }
     return dub;
 }
@@ -440,4 +440,33 @@ export function getLimitPathMap(chunkPath:IChunk[], chunks: number[][][][], map:
         
     })
     return mp;
+}
+
+export function limitTree(tree:Record<string | number, IChunk>, chunkPath: IChunk[], cw:number, mw:number){
+    const ra = Math.floor(cw / mw);
+    const allowed: Record<string | number, boolean> ={}
+    chunkPath.forEach(chunk=>{
+        const chp = chunk.original.pos;
+        for (let i =0; i<ra; i++){
+            for (let j =0; j<ra; j++){
+                for (let z =2; z<10; z++){
+                    allowed[getHash(chp.x * ra +i, chp.y * ra + j, -z)] = true;
+                }
+            }
+        }
+    });
+    for (let chunkIndex in tree){
+        if (!allowed[chunkIndex]){
+            delete tree[chunkIndex];
+        } else {
+            const chunk = tree[chunkIndex];
+            chunk.connections.forEach((it, i)=>{
+                if (!allowed[it]){
+                    chunk.connections[i] = undefined;
+                }
+            })
+            chunk.connections = chunk.connections.filter(it=>it);
+        }
+        
+    }
 }

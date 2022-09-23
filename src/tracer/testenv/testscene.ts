@@ -118,7 +118,7 @@ export class TestScene {
 
         this.area = getIsolated(this.map);//getAreaFromPoint(this.map, this.startPoint, 1);
         //console.log(this.area);
-        this.chunks = getIsolatedChunks(this.map)//getChunks(this.map);
+        this.chunks = getIsolatedChunks(this.map, 16)//getChunks(this.map);
         const connections = getAllConnections(this.chunks);
         //console.log(connections);
         const traceTree = getChunkTree(this.chunks);
