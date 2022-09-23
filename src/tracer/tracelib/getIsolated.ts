@@ -1,5 +1,5 @@
 import { Vector } from "../../common/vector";
-import { indexate } from "./tracer";
+import { indexate, indexate2 } from "./tracer";
 
 export const steps = [
     {x: -1, y: 0}, 
@@ -395,13 +395,14 @@ function iteration(tree: Record<string, IChunk>, points:Array<string>, generatio
     return path;
   }
 
-export function getLimitPathMap(chunkPath:IChunk[], chunks: number[][][][], map:Array<Array<number>>){
+export function getLimitPathMap(chunkPath:IChunk[], chunks: number[][][][], map:Array<Array<number>>, _mp?:number[][]){
     /*
         let mp = map.map(it=>it.map(jt=>{
             return -1;//jt==0?Number.MAX_SAFE_INTEGER:-1
         }));
     */
-    let mp = new Array(map.length).fill(0).map((it, i)=> new Array(map[i].length).fill(-1));
+        
+    let mp = _mp? _mp: new Array(map.length).fill(0).map((it, i)=> new Array(map[i].length).fill(-1));
     //let mp: Record<number, Record<number, number>>= {};
     const size = chunks[0][0][0].length;
     chunkPath.forEach((chunk)=>{
@@ -416,10 +417,12 @@ export function getLimitPathMap(chunkPath:IChunk[], chunks: number[][][][], map:
             }*/
             const mapy = map[my];
             row.forEach((cell, x)=>{
+                const mx = pos.x * size + x;
                 if (cell == chunk.original.i){
-                    const mx = pos.x * size + x;
                     mpy[mx] = mapy[mx]==0?Number.MAX_SAFE_INTEGER:-1
                     //ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
+                } else {
+                    mpy[mx] =-1;
                 }
             })
         })

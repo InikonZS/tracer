@@ -2,7 +2,7 @@ import Control from "../../common/control";
 import { IVector, Vector } from '../../common/vector';
 import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
-import mapFile from './assets/map4.png';
+import mapFile from './assets/map5.png';
 import {findPath, indexate, tracePath} from '../tracelib/tracer';
 import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree, updateChunkTree} from '../tracelib/getIsolated';
 export class Canvas extends Control {
@@ -23,7 +23,7 @@ export class Canvas extends Control {
         this.canvas.node.width = 1200;
         this.canvas.node.height = 600;
 
-        const mapSize = 256;
+        const mapSize = 512;
         this.canvasBackLast = new Array(mapSize).fill(0).map(it=> new Array(mapSize).fill(undefined));
         this.canvasBack = new Array(mapSize).fill(0).map(it=> new Array(mapSize).fill(0));
 
@@ -87,6 +87,7 @@ export class TestScene {
     chunks: number[][][][];
     chunkPath: IChunk[];
     traceTreeInitial: Record<string, IChunk>;
+    chunkPathes: Array<Array<IChunk>> =[];
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render);
@@ -128,10 +129,10 @@ export class TestScene {
 
         const image = await loadImage(mapFile);
         const map = getMapFromImageData(getImageData(image));
-        tracePath(map, this.startPoint, this.endPoint, (path)=>{
+       /* tracePath(map, this.startPoint, this.endPoint, (path)=>{
             console.log(path);
             this.path = path;
-        });
+        });*/
         this.map = map;
 
         this.area = getIsolated(this.map);//getAreaFromPoint(this.map, this.startPoint, 1);
@@ -190,11 +191,20 @@ export class TestScene {
                 verbose && console.log('result path ',Date.now()- startTime);
                // console.log(this.path);
 
-               this.pathes = [
+               const pathes = [
                     tracep1(this.startPoint.clone().add(new Vector(10, 10)), this.endPoint.clone().add(new Vector(10, 10)), this.traceTreeInitial, this.chunks, this.map),
                     tracep1(this.startPoint.clone().add(new Vector(10, 20)), this.endPoint.clone().add(new Vector(-10, 10)), this.traceTreeInitial, this.chunks, this.map),
                     tracep1(this.startPoint.clone().add(new Vector(10, 15)), this.endPoint.clone().add(new Vector(10, -10)), this.traceTreeInitial, this.chunks, this.map),
+                    tracep1(this.startPoint.clone().add(new Vector(20, 10)), this.endPoint.clone().add(new Vector(20, 10)), this.traceTreeInitial, this.chunks, this.map),
+                    tracep1(this.startPoint.clone().add(new Vector(20, 20)), this.endPoint.clone().add(new Vector(-20, 10)), this.traceTreeInitial, this.chunks, this.map),
+                    tracep1(this.startPoint.clone().add(new Vector(20, 15)), this.endPoint.clone().add(new Vector(20, -10)), this.traceTreeInitial, this.chunks, this.map),
+                    tracep1(this.startPoint.clone().add(new Vector(30, 10)), this.endPoint.clone().add(new Vector(10, 30)), this.traceTreeInitial, this.chunks, this.map),
+                    tracep1(this.startPoint.clone().add(new Vector(40, 20)), this.endPoint.clone().add(new Vector(-10, 30)), this.traceTreeInitial, this.chunks, this.map),
+                    tracep1(this.startPoint.clone().add(new Vector(40, 15)), this.endPoint.clone().add(new Vector(10, -30)), this.traceTreeInitial, this.chunks, this.map),
                 ]
+                this.pathes =[];
+                this.chunkPathes = pathes.map(it=>it.ch);
+                this.pathes = pathes.map(it=>it.ph);
             } else {
                 this.chunkPath = [];
             }
@@ -288,6 +298,21 @@ export class TestScene {
                 }))
                 
             })
+        }
+
+        if (this.chunkPathes){
+            this.chunkPathes.forEach(chunkPath=>{chunkPath.forEach((chunk)=>{
+                const pos = chunk.original.pos;
+                //ctx.fillStyle = '#f009';
+                const size = this.chunks[0][0][0].length;
+                this.chunks[pos.y][pos.x].forEach((row, y)=>row.forEach((cell, x)=>{
+                    if (cell == chunk.original.i){
+                        this.canvas.canvasBack[ (pos.y * size + y)][ (pos.x * size + x)] = '#f00';
+                       // ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
+                    }
+                }))
+                
+            })});
         }
         
         if (this.path){
@@ -445,8 +470,14 @@ function indexateData(data:Array<Array<number>>){
         return res;
     }
 }
-
-function tracep1(startPoint:Vector, endPoint:Vector, tree:Record<string, IChunk>, chunks: number[][][][], map:number[][]){
+let mp = new Array(512).fill(0).map((it, i)=> new Array(512).fill(-1));
+function tracep1(startPoint:Vector, endPoint:Vector, tree:Record<string, IChunk>, chunks: number[][][][], map:number[][]): {ch:IChunk[], ph:Vector[]}{
+    if (!(startPoint.y < map.length && startPoint.x < map[0].length && startPoint.x>=0 && startPoint.y>=0)){
+        return {ch:[], ph:[]}
+    }
+    if (!(endPoint.y < map.length && endPoint.x < map[0].length && endPoint.x>=0 && endPoint.y>=0)){
+        return {ch:[], ph:[]}
+    }
     const verbose = false;
     const startTime = Date.now();
     const traceTree = dublicateChunkTree(tree)
@@ -469,12 +500,12 @@ function tracep1(startPoint:Vector, endPoint:Vector, tree:Record<string, IChunk>
     chunkPath.push(traceTree[start])
     }
     verbose && console.log('chunk path ',Date.now()- startTime);
-    const lm = getLimitPathMap(chunkPath, chunks, map) as Array<Array<number>>;//can be same access record<num, record<num, num>>
+    const lm = getLimitPathMap(chunkPath, chunks, map, mp) as Array<Array<number>>;//can be same access record<num, record<num, num>>
     //let lm = map.map(it=>it.map(jt=>jt==0?Number.MAX_SAFE_INTEGER:-1));
     verbose && console.log('limit map ',Date.now()- startTime);
     indexate(lm, [startPoint], 0);
     verbose && console.log('indexate ',Date.now()- startTime);
     const path = findPath(lm, startPoint, endPoint);
     verbose && console.log('result path ',Date.now()- startTime);
-    return path;
+    return {ch:chunkPath, ph:path};
 }

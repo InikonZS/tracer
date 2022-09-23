@@ -9,6 +9,15 @@ export const steps = [
   {x: -1, y: 1}, 
   {x: 1, y: 1}, 
   {x: 1, y: -1},
+
+ /* {x: -1, y: -2}, 
+  {x: -1, y: 2}, 
+  {x: 1, y: 2}, 
+  {x: 1, y: -2},
+  {x: -2, y: -1}, 
+  {x: -2, y: 1}, 
+  {x: 2, y: 1}, 
+  {x: 2, y: -1},*/
 ]
 
 function iteration(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number){
@@ -34,10 +43,53 @@ export function indexate(map:Array<Array<number>>, points:Array<{x:number, y:num
   indexate(map, nextPoints, generation+1);
 }
 
+const mp = new Array(512 * 10).fill(0);
+const tm = new Array(512 * 10).fill(0);
+
+function iteration2(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number, len:number): number{
+
+  //const nextPoints: Array<{x:number, y:number}> = mp;//[{x:0, y:43},{x:34, y:34}];
+  if (/*!points.length ||*/ !len) { 
+    return 0; 
+  }  
+  
+  for (let i=0; i< len; i++){
+    tm[i] = points[i];
+  }
+  let cnt = 0;
+  tm.findIndex((point, ind)=>{
+    steps.forEach(step=>{
+      const px = point.x+step.x;
+      const py = point.y+step.y;
+      const row = map[py];
+      if (row && row[px]!=null && row[px]>generation){
+        row[px] = generation;
+        mp[cnt] = {x:px, y:py};
+        //nextPoints.push({x:px, y:py});
+        cnt++;
+      }
+    })
+    if (len <= ind+1) {
+      //cnt++;
+      return true;
+    }
+    return false;
+  });
+  return cnt;//[nextPoints, cnt];
+}
+
+
+export function indexate2(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number, length:number = 1){
+  const len = iteration2(map, points, generation, /*points.length*/length);
+  if (!points.length || !length) { return generation; }
+  indexate2(map, mp, generation+1, len);
+}
+
 export function* indexGenerator(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number){
   let gen = generation;
   let nextPoints = points;
   do {
+    //@ts-ignore;
     nextPoints = iteration(map, nextPoints, gen);
     gen+=1;
     yield {generation:gen, points:nextPoints};
