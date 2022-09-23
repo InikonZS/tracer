@@ -4,7 +4,7 @@ import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
 import mapFile from './assets/map5.png';
 import {findPath, indexate, tracePath} from '../tracelib/tracer';
-import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree, updateChunkTree} from '../tracelib/getIsolated';
+import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree, updateChunkTree, getHash} from '../tracelib/getIsolated';
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     public ctx: CanvasRenderingContext2D;
@@ -145,7 +145,7 @@ export class TestScene {
         const getHashByVector = (pos: Vector)=>{
             const size =this.chunks[0][0][0].length;
             const z = this.chunks[Math.floor(pos.y / size)][Math.floor(pos.x / size)][Math.floor(pos.y % size)][Math.floor(pos.x % size)];
-            return `${Math.floor(pos.x / size)}_${Math.floor(pos.y / size)}_${z}`
+            return getHash(Math.floor(pos.x / size), Math.floor(pos.y / size), z);//`${Math.floor(pos.x / size)}_${Math.floor(pos.y / size)}_${z}`
         }
 
         //chunkIndexate(traceTree, [getHashByVector(this.startPoint)], 0); 
@@ -484,7 +484,7 @@ function tracep1(startPoint:Vector, endPoint:Vector, tree:Record<string, IChunk>
     const getHashByVector = (pos: Vector)=>{
         const size =chunks[0][0][0].length;
         const z = chunks[Math.floor(pos.y / size)][Math.floor(pos.x / size)][Math.floor(pos.y % size)][Math.floor(pos.x % size)];
-        return `${Math.floor(pos.x / size)}_${Math.floor(pos.y / size)}_${z}`
+        return getHash(Math.floor(pos.x / size), Math.floor(pos.y / size), z);// `${Math.floor(pos.x / size)}_${Math.floor(pos.y / size)}_${z}`
     }
     verbose && console.log('chunk tree ',Date.now()- startTime);
     

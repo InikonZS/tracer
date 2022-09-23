@@ -15,6 +15,11 @@ export const steps2 = [
     {x: 1, y: -1}
 ]
 
+export function getHash(x:number,y:number,z:number): string | number{
+    //`${x}_${y}_${z}`; 
+    return (y+1)*2048*100 + (x+1)*100+(-z);
+}
+
 export function getIsolated(map: Array<Array<number>>){
     let mp = map.map(it=>it.map(jt=>jt==0?Number.MAX_SAFE_INTEGER:-1));
     let currentId = 0;
@@ -204,7 +209,7 @@ export interface IChunk{
         pos: Vector,
         i: number
     };
-    connections: string[];
+    connections: Array<string | number>;
     index: number;
 }
 
@@ -240,10 +245,10 @@ export function getClosest(chunks:number[][][][], tree: Record<string, IChunk>, 
     return closest;
 }
 
-function findChunkHashes(tree: Record<string, IChunk>, pos:Vector){
-    const hashes:string[] = [];
+function findChunkHashes(tree: Record<string | number, IChunk>, pos:Vector){
+    const hashes:Array<string | number> = [];
     for (let i = -2; i>-100; i--){
-        const hash = `${pos.x}_${pos.y}_${i}`;
+        const hash = getHash(pos.x, pos.y, i);//`${pos.x}_${pos.y}_${i}`;
         if (tree[hash]){
             hashes.push(hash);
         } else {
@@ -253,7 +258,7 @@ function findChunkHashes(tree: Record<string, IChunk>, pos:Vector){
     return hashes;
 }
 
-export function updateChunkTree(map:number[][],chunks:number[][][][], tree: Record<string, IChunk>, points: {pos: Vector, val:number}[]){
+export function updateChunkTree(map:number[][],chunks:number[][][][], tree: Record<string | number, IChunk>, points: {pos: Vector, val:number}[]){
     const affected: Vector[] = [];
     const size = chunks[0][0][0].length;
     points.forEach(point=>{
@@ -279,7 +284,7 @@ export function updateChunkTree(map:number[][],chunks:number[][][][], tree: Reco
 
     const all = [...affected, ...closest];
 
-    const hashes:string[] = [];
+    const hashes:Array<string| number> = [];
     all.forEach(it=>{
         const newh = findChunkHashes(tree, it);
         newh.forEach(jt=>{
@@ -289,19 +294,20 @@ export function updateChunkTree(map:number[][],chunks:number[][][][], tree: Reco
 
     hashes.forEach(hash=>{
         delete tree[hash];
+        //tree[hash] = undefined;
     })
 
     all.forEach((vec, i)=>{
         const connections = getConnections(chunks, vec);
         //const hash = hashes[i];
         connections.forEach(z=>{
-            tree[`${vec.x}_${vec.y}_${z.ci}`] = {
+            tree[/*`${vec.x}_${vec.y}_${z.ci}`*/getHash(vec.x, vec.y, z.ci)] = {
                 index: Number.MAX_SAFE_INTEGER,
                 original: {
                     pos: new Vector(vec.x, vec.y),
                     i: z.ci
                 },
-                connections: connections.filter(it=> it.ci == z.ci).map(it=> `${it.pos.x}_${it.pos.y}_${it.i}`)
+                connections: connections.filter(it=> it.ci == z.ci).map(it=> /*`${it.pos.x}_${it.pos.y}_${it.i}`*/getHash(it.pos.x, it.pos.y, it.i))
             }
         })
     });
@@ -310,17 +316,17 @@ export function updateChunkTree(map:number[][],chunks:number[][][][], tree: Reco
 
 export function getChunkTree(chunks:number[][][][]){
     const connections = getAllConnections(chunks);
-    const tree: Record<string, IChunk> = {}
+    const tree: Record<string | number, IChunk> = {}
     chunks.forEach((row, i)=>{
         row.forEach((chunk, j)=>{
             connections[i][j].forEach(z=>{
-                tree[`${j}_${i}_${z.ci}`] = {
+                tree[/*`${j}_${i}_${z.ci}`*/getHash(j, i, z.ci)] = {
                     index: Number.MAX_SAFE_INTEGER,
                     original: {
                         pos: new Vector(j, i),
                         i: z.ci
                     },
-                    connections: connections[i][j].filter(it=> it.ci == z.ci).map(it=> `${it.pos.x}_${it.pos.y}_${it.i}`)
+                    connections: connections[i][j].filter(it=> it.ci == z.ci).map(it=> /*`${it.pos.x}_${it.pos.y}_${it.i}`*/getHash(it.pos.x, it.pos.y, it.i))
                 }
             })
         })
@@ -328,16 +334,21 @@ export function getChunkTree(chunks:number[][][][]){
     return tree;
 }
 
-export function dublicateChunkTree(tree: Record<string, IChunk>){
+export function dublicateChunkTree(tree: Record<string | number, IChunk>){
     const dub:Record<string, IChunk> = {};
-    Object.keys(tree).map(key=>{
+    //*Object.keys(tree).map(key=>{
+        //warning, use +key for num
+        //dub[key] = {...tree[key]}
+    //    dub[+key] = {...tree[+key]}
+    //})
+    for (let key in tree){
         dub[key] = {...tree[key]}
-    })
+    }
     return dub;
 }
 
-function iteration(tree: Record<string, IChunk>, points:Array<string>, generation:number){
-    const nextPoints: Array<string> = [];
+function iteration(tree: Record<string, IChunk>, points:Array<string|number>, generation:number){
+    const nextPoints: Array<string|number> = [];
     if (!points.length) { return; }
     points.forEach(point=>{
         if (!tree[point]){
@@ -357,13 +368,13 @@ function iteration(tree: Record<string, IChunk>, points:Array<string>, generatio
     return nextPoints;
   }
   
-  export function chunkIndexate(tree: Record<string, IChunk>, points:Array<string>, generation:number){
+  export function chunkIndexate(tree: Record<string|number, IChunk>, points:Array<string|number>, generation:number){
     const nextPoints = iteration(tree, points, generation);
     if (!points.length) { return generation; }
     chunkIndexate(tree, nextPoints, generation+1);
   }
 
-  export function findChunkPath(tree: Record<string, IChunk>, destHash:string){
+  export function findChunkPath(tree: Record<string|number, IChunk>, destHash:string|number){
     let path:Array<IChunk> = [];
     if (!tree[destHash]) {
         return null;
@@ -373,11 +384,11 @@ function iteration(tree: Record<string, IChunk>, points:Array<string>, generatio
     if (currentValue == Number.MAX_SAFE_INTEGER) {
       return null;
     }
-    let currentPoint: string = destHash;
+    let currentPoint: string |number = destHash;
     let crashDetector = 1000;
     while (currentValue != 0 && crashDetector>0){
       crashDetector--;
-      let nextStep = tree[currentPoint].connections.find(step=>{
+      let nextStep = tree[currentPoint].connections.findIndex((step)=>{
         //let point = currentPoint.clone().add(Vector.fromIVector(step));
         let result = tree[step].index == currentValue-1;
         if (result){
