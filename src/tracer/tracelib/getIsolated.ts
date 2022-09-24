@@ -351,16 +351,18 @@ function iteration(tree: Record<string, IChunk>, points:Array<string|number>, ge
     const nextPoints: Array<string|number> = [];
     if (!points.length) { return; }
     points.forEach(point=>{
-        if (!tree[point]){
+        const pointItem = tree[point];
+        if (!pointItem){
             return;
         }
-      tree[point].connections.forEach(step=>{
+      pointItem.connections.forEach(step=>{
         //const px = point.x+step.x;
         //const py = point.y+step.y;
         //const row = map[py];
        //console.log(tree[step].index, generation);
-        if (tree[step].index>generation){   
-            tree[step].index = generation;
+       const treeItem = tree[step];
+        if (treeItem && treeItem.index>generation){   
+            treeItem.index = generation;
             nextPoints.push(step);
         }
       })
@@ -390,6 +392,9 @@ function iteration(tree: Record<string, IChunk>, points:Array<string|number>, ge
       crashDetector--;
       let nextStep = tree[currentPoint].connections.findIndex((step)=>{
         //let point = currentPoint.clone().add(Vector.fromIVector(step));
+        if (!tree[step]){
+            return false;
+        }
         let result = tree[step].index == currentValue-1;
         if (result){
           currentPoint = step;
@@ -418,8 +423,11 @@ export function getLimitPathMap(chunkPath:IChunk[], chunks: number[][][][], map:
     const size = chunks[0][0][0].length;
     chunkPath.forEach((chunk)=>{
         const pos = chunk.original.pos;
+        const py = pos.y*size;
+        const px = pos.x *size;
+        const oi = chunk.original.i;
         chunks[pos.y][pos.x].forEach((row, y)=>{
-            const my = pos.y * size + y;
+            const my = py + y;
             let mpy = mp[my];
             //for record optimization
             /*if (!mpy){ 
@@ -428,8 +436,8 @@ export function getLimitPathMap(chunkPath:IChunk[], chunks: number[][][][], map:
             }*/
             const mapy = map[my];
             row.forEach((cell, x)=>{
-                const mx = pos.x * size + x;
-                if (cell == chunk.original.i){
+                const mx = px + x;
+                if (cell == oi){
                     mpy[mx] = mapy[mx]==0?Number.MAX_SAFE_INTEGER:-1
                     //ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
                 } else {
@@ -495,7 +503,7 @@ export function limitTree(tree:Record<string | number, IChunk>, chunkPath: IChun
         } 
     }
 
-    for (let chunkIndex in dub){
+    /*for (let chunkIndex in dub){
         const chunk = tree[chunkIndex];
         dub[chunkIndex].connections = chunk.connections.filter((it)=>{
             return dub[it] !== undefined
@@ -508,6 +516,6 @@ export function limitTree(tree:Record<string | number, IChunk>, chunkPath: IChun
             }
         })*/
         //dub[chunkIndex].connections = connections;//chunk.connections.filter(it=>it);
-    }
+    //}
     return dub;
 }
