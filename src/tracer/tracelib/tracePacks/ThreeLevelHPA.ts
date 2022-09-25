@@ -39,6 +39,7 @@ export class ThreeLevelHPA{
 
     updateTree(changed: Array<{ pos: Vector, val: number }>){
         updateChunkTree(this.map, this.chunks, this.traceTreeInitial, changed);
+        //optimize big tree update, only if small chunks was restrutured
         updateChunkTree(this.map, this.chunks2, this.traceTreeInitial2, changed);
     }
 

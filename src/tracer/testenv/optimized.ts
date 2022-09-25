@@ -2,7 +2,7 @@ import Control from "../../common/control";
 import { IVector, Vector } from '../../common/vector';
 import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
-import mapFile from './assets/map6.png';
+import mapFile from './assets/map4.png';
 import {findPath, indexate, tracePath} from '../tracelib/tracer';
 import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree, updateChunkTree, getHash, limitTree, getPathBreaks} from '../tracelib/getIsolated';
 import {createTracer, ITracer} from '../tracelib/tracePack';
@@ -10,7 +10,7 @@ import {TwoLevelHPA} from '../tracelib/tracePacks/TwoLevelHPA';
 import {ThreeLevelHPA} from '../tracelib/tracePacks/ThreeLevelHPA';
 import {SimpleWave} from '../tracelib/tracePacks/SimpleWave';
 
-const mapSize = 1024;
+const mapSize = 256;
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     public ctx: CanvasRenderingContext2D;
@@ -263,11 +263,11 @@ export class TestScene {
             this.map.forEach((row, y)=>{
                 row.forEach((cell, x)=>{
     
-                    if (Math.random()<0.1){
+                    if (Math.random()<0.01){
                         //row[x] = 1;
                         const val = (Math.random() < 0.01 ? 1 : row[x]);
                         if (val != row[x]){
-                            //changed.push({pos: new Vector(x, y), val: val })
+                            changed.push({pos: new Vector(x, y), val: val })
                             //row[x] = val;
                         };
                     }
