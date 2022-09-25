@@ -2,12 +2,12 @@ import Control from "../../common/control";
 import { IVector, Vector } from '../../common/vector';
 import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
-import mapFile from './assets/map4.png';
+import mapFile from './assets/map5.png';
 import {findPath, indexate, tracePath} from '../tracelib/tracer';
-import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree, updateChunkTree, getHash, limitTree} from '../tracelib/getIsolated';
+import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree, updateChunkTree, getHash, limitTree, getPathBreaks} from '../tracelib/getIsolated';
 import {createTracer, ITracer} from '../tracelib/tracePack';
 
-const mapSize = 256;
+const mapSize = 512;
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     public ctx: CanvasRenderingContext2D;
@@ -171,7 +171,7 @@ export class TestScene {
 
         //this.chunkPath = findChunkPath(traceTree, getHashByVector(this.endPoint));
         //console.log(this.chunkPath);
-        for (let i = 0; i< 10; i++){
+        for (let i = 0; i< 1; i++){
             const tracer = createTracer(map);
             this.tracers.push(tracer);
         }
@@ -260,11 +260,12 @@ export class TestScene {
             this.map.forEach((row, y)=>{
                 row.forEach((cell, x)=>{
     
-                    if (Math.random()<0.01){
+                    if (Math.random()<0.1){
                         //row[x] = 1;
                         const val = (Math.random() < 0.01 ? 1 : row[x]);
                         if (val != row[x]){
                             changed.push({pos: new Vector(x, y), val: val })
+                            row[x] = val;
                         };
                     }
                     //ctx.fillStyle = ['#fff', '#ff0', '#f0f'][cell] || '#0ff';
@@ -280,7 +281,9 @@ export class TestScene {
             //this.traceTreeInitial = getChunkTree(this.chunks);
             //updateChunkTree(this.map, this.chunks, this.traceTreeInitial, changed);
             //updateChunkTree(this.map, this.chunks2, this.traceTreeInitial2, changed);
-            this.canvas.onMove({offsetX: this.endPoint.x * tileSize, offsetY: this.endPoint.y * tileSize} as MouseEvent);
+            if (this.pathes[0] && getPathBreaks(this.pathes[0] as Vector[], this.map).length){
+                this.canvas.onMove({offsetX: this.endPoint.x * tileSize, offsetY: this.endPoint.y * tileSize} as MouseEvent);
+            }
         }
        
 

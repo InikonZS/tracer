@@ -38,6 +38,8 @@ export function createTracer(map: number[][]): ITracer {
     const updateTrees = (changed: Array<{ pos: Vector, val: number }>) => {
         updateChunkTree(map, chunks, traceTreeInitial, changed);
         updateChunkTree(map, chunks2, traceTreeInitial2, changed);
+        clearCache();
+        lastIndexed = null;
     }
 
     let lastIndexed: {vector:Vector, trace: (endPoint:Vector)=>{
@@ -52,7 +54,7 @@ export function createTracer(map: number[][]): ITracer {
                 const res = lastIndexed.trace(point);
                 if (res.ph.length == 0){
                     lastIndexed = null
-                    clearCache();
+           clearCache()
                     indexate(startPoint, point);
                 }
                 return res;
@@ -99,7 +101,6 @@ function tracep1(startPoint: Vector, endPoint: Vector, tree: Record<string, IChu
     const hash2 = getHashByVector2(endPoint);
     let traceTree;
     if (hash2 != lastHash2 || !lastTree2){
-        console.log('reindex 2');
         lastHash2 = hash2;
         const chunkPath2 = findChunkPath(traceTree2, hash2) || [];
         const start2 = getHashByVector2(startPoint)
@@ -144,3 +145,5 @@ function tracep1(startPoint: Vector, endPoint: Vector, tree: Record<string, IChu
 }
 return [tracep1, ()=>{lastTree2 = null}];
 }
+
+

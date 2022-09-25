@@ -20,6 +20,17 @@ export const steps = [
   {x: 2, y: -1},*/
 ]
 
+export const steps2 = [
+  {x: -1, y: -2}, 
+  {x: -1, y: 2}, 
+  {x: 1, y: 2}, 
+  {x: 1, y: -2},
+  {x: -2, y: -1}, 
+  {x: -2, y: 1}, 
+  {x: 2, y: 1}, 
+  {x: 2, y: -1},
+]
+
 function iteration(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number){
   const nextPoints: Array<{x:number, y:number}> = [];
   if (!points.length) { return; }
@@ -29,6 +40,7 @@ function iteration(map:Array<Array<number>>, points:Array<{x:number, y:number}>,
       const py = point.y+step.y;
       const row = map[py];
       if (row && row[px]!=null && row[px]>generation){
+       // row[px] = generation - ((Math.abs(step.x) + Math.abs(step.y))==2?-0.3: 0);//- Math.random();
         row[px] = generation;
         nextPoints.push({x:px, y:py});
       }
@@ -179,7 +191,7 @@ export function findPath(map:Array<Array<number>>, indexPoint:Vector, destPoint:
     crashDetector--;
     let nextStep = steps.find(step=>{
       let point = currentPoint.clone().add(Vector.fromIVector(step));
-      let result = map[point.y]?.[point.x] == currentValue-1;
+      let result = map[point.y]?.[point.x]!=-1 && map[point.y]?.[point.x]< currentValue// == currentValue-1;
       if (result){
         currentPoint = point;
         currentValue = map[point.y][point.x];

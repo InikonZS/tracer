@@ -395,7 +395,7 @@ function iteration(tree: Record<string, IChunk>, points:Array<string|number>, ge
         if (!tree[step]){
             return false;
         }
-        let result = tree[step].index == currentValue-1;
+        let result = tree[step].index <currentValue//== currentValue-1;
         if (result){
           currentPoint = step;
           currentValue = tree[step].index;
@@ -518,4 +518,10 @@ export function limitTree(tree:Record<string | number, IChunk>, chunkPath: IChun
         //dub[chunkIndex].connections = connections;//chunk.connections.filter(it=>it);
     //}
     return dub;
+}
+
+export function getPathBreaks(path:Array<Vector>, map:number[][]){
+    return path.filter(point=>{
+        return map[point.y][point.x] != 0;
+    })
 }
