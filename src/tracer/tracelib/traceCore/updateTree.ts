@@ -28,7 +28,7 @@ export function getClosest(chunks:number[][][][], tree: Record<string, IChunk>, 
     return closest;
 }
 
-function findChunkHashes(tree: Record<string, IChunk>, pos:Vector){
+export function findChunkHashes(tree: Record<string, IChunk>, pos:Vector){
     const hashes:Array<string> = [];
     for (let i = -2; i>-100; i--){
         const hash = getHash(pos.x, pos.y, i);

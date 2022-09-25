@@ -2,7 +2,7 @@ import { Vector } from "../../../common/vector";
 import { maxValue } from "./traceTools";
 import { getHash, IChunk } from "./traceTree";
 
-function iteration(tree: Record<string, IChunk>, points: Array<string>, generation: number) {
+export function iteration(tree: Record<string, IChunk>, points: Array<string>, generation: number) {
     const nextPoints: Array<string> = [];
     if (!points.length) { 
         return []; 

@@ -175,7 +175,7 @@ export class TestScene {
         //this.chunkPath = findChunkPath(traceTree, getHashByVector(this.endPoint));
         //console.log(this.chunkPath);
         for (let i = 0; i< 1; i++){
-            const tracer = new ThreeLevelHPA(this.map);//createTracer(map);
+            const tracer = new TwoLevelHPA(this.map);//createTracer(map);
             this.tracers.push(tracer);
         }
         
