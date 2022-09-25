@@ -2,12 +2,15 @@ import Control from "../../common/control";
 import { IVector, Vector } from '../../common/vector';
 import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
-import mapFile from './assets/map5.png';
+import mapFile from './assets/map6.png';
 import {findPath, indexate, tracePath} from '../tracelib/tracer';
 import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree, updateChunkTree, getHash, limitTree, getPathBreaks} from '../tracelib/getIsolated';
 import {createTracer, ITracer} from '../tracelib/tracePack';
+import {TwoLevelHPA} from '../tracelib/tracePacks/TwoLevelHPA';
+import {ThreeLevelHPA} from '../tracelib/tracePacks/ThreeLevelHPA';
+import {SimpleWave} from '../tracelib/tracePacks/SimpleWave';
 
-const mapSize = 512;
+const mapSize = 1024;
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     public ctx: CanvasRenderingContext2D;
@@ -94,7 +97,7 @@ export class TestScene {
     chunks2: number[][][][];
     traceTreeInitial2: Record<string | number, IChunk>;
     chunkPath2: IChunk[];
-    tracers: ITracer[] = [];
+    tracers: (TwoLevelHPA | ThreeLevelHPA | SimpleWave)[] = [];
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render);
@@ -172,11 +175,11 @@ export class TestScene {
         //this.chunkPath = findChunkPath(traceTree, getHashByVector(this.endPoint));
         //console.log(this.chunkPath);
         for (let i = 0; i< 1; i++){
-            const tracer = createTracer(map);
+            const tracer = new ThreeLevelHPA(this.map);//createTracer(map);
             this.tracers.push(tracer);
         }
         
-        this.chunks = this.tracers[0].getInternal().chunks;
+        this.chunks = this.tracers[0].chunks;
         const tileSize = 2;
         this.canvas.onClick = (e)=>{
             const vector = new Vector(Math.round(e.offsetX / tileSize), Math.round(e.offsetY / tileSize));
@@ -240,7 +243,7 @@ export class TestScene {
                     tracep1(this.startPoint.clone().add(new Vector(40, 15)), this.endPoint.clone().add(new Vector(10, -30)), this.traceTreeInitial, this.chunks,this.traceTreeInitial2, this.chunks2, this.map),*/
                 ]
                 const paths = this.tracers.map(tracer=>tracer.trace(this.startPoint, this.endPoint));
-                this.chunkPathes = paths.map(it=> it.ch); 
+                this.chunkPathes =  paths.map(it=> it.ch); 
                 this.pathes =paths.map(it=> it.ph);
                 //this.chunkPathes =pathes.map(it=>it.ch);
                 //this.pathes = pathes.map(it=>it.ph);
@@ -264,8 +267,8 @@ export class TestScene {
                         //row[x] = 1;
                         const val = (Math.random() < 0.01 ? 1 : row[x]);
                         if (val != row[x]){
-                            changed.push({pos: new Vector(x, y), val: val })
-                            row[x] = val;
+                            //changed.push({pos: new Vector(x, y), val: val })
+                            //row[x] = val;
                         };
                     }
                     //ctx.fillStyle = ['#fff', '#ff0', '#f0f'][cell] || '#0ff';
@@ -273,7 +276,7 @@ export class TestScene {
                 })
             });
             if (changed.length){
-                this.tracers.forEach(it=> it.updateTrees(changed));
+                this.tracers.forEach(it=> it.updateTree(changed));
             }
             //this.chunks = getIsolatedChunks(this.map)//getChunks(this.map);
             //const connections = getAllConnections(this.chunks);
@@ -281,9 +284,9 @@ export class TestScene {
             //this.traceTreeInitial = getChunkTree(this.chunks);
             //updateChunkTree(this.map, this.chunks, this.traceTreeInitial, changed);
             //updateChunkTree(this.map, this.chunks2, this.traceTreeInitial2, changed);
-            if (this.pathes[0] && getPathBreaks(this.pathes[0] as Vector[], this.map).length){
+            //if (this.pathes[0] && getPathBreaks(this.pathes[0] as Vector[], this.map).length){
                 this.canvas.onMove({offsetX: this.endPoint.x * tileSize, offsetY: this.endPoint.y * tileSize} as MouseEvent);
-            }
+            //}
         }
        
 

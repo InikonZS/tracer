@@ -27,7 +27,7 @@ export function getIsolated(map: Array2d):Array2d {
                 }
                 indexationMap.forEach((row, y) => {
                     row.forEach((cell, x) => {
-                        row[x] = nextMap.map[y][x];
+                        row[x] = nextMap[y][x];
                     })
                 });
             }
