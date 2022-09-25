@@ -1,11 +1,11 @@
-import { Vector } from "../../../common/vector";
+import { IVector, Vector } from "../../../common/vector";
 import { IChunk } from "../traceCore/traceTree";
 import { getIsolatedChunks } from "../traceCore/traceChunks";
 import { Array2d, maxValue } from "../traceCore/traceTools";
 import { getChunkTree, getHash } from "../traceCore/traceTree";
 import { dublicateChunkTree, findChunkHashes, updateChunkTree } from "../traceCore/updateTree";
 import { chunkIndexate, findChunkPath, getLimitPathMap, iteration } from "../traceCore/findChunkPath";
-import { findPath, indexate } from "../traceCore/tracerBase";
+import { findPath, indexate, iteration as iterationMap } from "../traceCore/tracerBase";
 
 export class TwoLevelHPA{
     chunks: Array2d[][];
@@ -68,7 +68,7 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
     const rTree = dublicateChunkTree(reverseTree);
     const endHash = chunkReverseIndexate(rTree, traceTree, [getHashByVector2(endPoint)], 0);
 
-    const resHash = traceTree[getHashByVector(endPoint)] ? getHashByVector(endPoint) : endHash;
+    const resHash = /*traceTree[getHashByVector(endPoint)] ? getHashByVector(endPoint) :*/ endHash;
     const attackChunkPath = findChunkPath(rTree, endHash) || [];
     if (getHashByVector2(endPoint) && rTree[getHashByVector2(endPoint)]) {
         attackChunkPath.push(rTree[getHashByVector2(endPoint)])
@@ -85,9 +85,15 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
     indexate(lm, [startPoint], 0);
     verbose && console.log('indexate ', Date.now() - startTime);
 
-    const path = findPath(lm, startPoint, endPoint) || [];
+    const amp = getAttackIndexationMap(map);
+    const attackPoint = indexateAttack(amp, lm, [endPoint], 0);
+    const result = findPath(lm, startPoint, Vector.fromIVector(attackPoint));
+
+    const path = findPath(lm, startPoint, /*endPoint*/ Vector.fromIVector(attackPoint)) || [];
+
+   // const path = findPath(lm, startPoint, endPoint) || [];
     verbose && console.log('result path ', Date.now() - startTime);
-    return { ch: attackChunkPath, ph: path };
+    return { ch: [...chunkPath, ...attackChunkPath], ph: path };
 }
 
 function onlyMove(startPoint: Vector, endPoint: Vector, tree: Record<string, IChunk>, chunks: number[][][][], map: number[][], getHashByVector: (pos: Vector) => string): { ch: IChunk[], ph: Vector[] } {
@@ -136,3 +142,20 @@ export function chunkReverseIndexate(tree: Record<string, IChunk>, moveTree: Rec
     if (!points.length) { return null; }
     return chunkReverseIndexate(tree, moveTree, nextPoints, generation + 1);
 }
+
+export function getAttackIndexationMap(map:Array2d): Array2d {
+    const indexationMap = map.map(row => row.map(cell => maxValue));
+    return indexationMap;
+}
+  
+  export function indexateAttack(map:Array<Array<number>>, moveMap:Array2d, points:Array<{x:number, y:number}>, generation:number):IVector | null{
+    const nextPoints = iterationMap(map, points, generation);
+    const stopPoint = nextPoints.find(point=>{
+        return moveMap[point.y][point.x] != -1 && moveMap[point.y][point.x] != null && moveMap[point.y][point.x] != maxValue;
+    })
+    if (stopPoint){
+        return stopPoint;
+    }
+    if (!points.length) { return null; }
+    return indexateAttack(map, moveMap, nextPoints, generation+1);
+  }
