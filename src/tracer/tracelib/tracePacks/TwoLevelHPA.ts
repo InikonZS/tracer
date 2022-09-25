@@ -69,6 +69,10 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
     const endHash = chunkReverseIndexate(rTree, traceTree, [getHashByVector2(endPoint)], 0);
 
     const resHash = traceTree[getHashByVector(endPoint)] ? getHashByVector(endPoint) : endHash;
+    const attackChunkPath = findChunkPath(rTree, endHash) || [];
+    if (getHashByVector2(endPoint) && rTree[getHashByVector2(endPoint)]) {
+        attackChunkPath.push(rTree[getHashByVector2(endPoint)])
+    }
     const chunkPath = findChunkPath(traceTree, resHash) || [];
     const start = getHashByVector(startPoint)
     if (start && traceTree[start]) {
@@ -83,7 +87,7 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
 
     const path = findPath(lm, startPoint, endPoint) || [];
     verbose && console.log('result path ', Date.now() - startTime);
-    return { ch: chunkPath, ph: path };
+    return { ch: attackChunkPath, ph: path };
 }
 
 function onlyMove(startPoint: Vector, endPoint: Vector, tree: Record<string, IChunk>, chunks: number[][][][], map: number[][], getHashByVector: (pos: Vector) => string): { ch: IChunk[], ph: Vector[] } {
@@ -118,7 +122,7 @@ function onlyMove(startPoint: Vector, endPoint: Vector, tree: Record<string, ICh
     return { ch: chunkPath, ph: path };
 }
 
-export function chunkReverseIndexate(tree: Record<string, IChunk>, moveTree: Record<string, IChunk>, points: Array<string>, generation: number):string {
+export function chunkReverseIndexate(tree: Record<string, IChunk>, moveTree: Record<string, IChunk>, points: Array<string>, generation: number):string{
     const nextPoints = iteration(tree, points, generation);
     const stopPoint = nextPoints.find(point=>{
         const hashes = findChunkHashes(moveTree, tree[point].original.pos);

@@ -354,10 +354,10 @@ export class TestScene {
                 //ctx.fillStyle = '#f009';
                 const size = this.chunks[0][0][0].length;
                 this.chunks[pos.y][pos.x].forEach((row, y)=>row.forEach((cell, x)=>{
-                    if (cell == chunk.original.i){
+                    //if (cell == chunk.original.i){
                         this.canvas.canvasBack[ (pos.y * size + y)][ (pos.x * size + x)] = '#f00';
                        // ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
-                    }
+                    //}
                 }))
                 
             })
@@ -369,10 +369,10 @@ export class TestScene {
                 //ctx.fillStyle = '#f009';
                 const size = this.chunks[0][0][0].length;
                 this.chunks[pos.y][pos.x].forEach((row, y)=>row.forEach((cell, x)=>{
-                    if (cell == chunk.original.i){
+                   // if (cell == chunk.original.i){
                         this.canvas.canvasBack[ (pos.y * size + y)][ (pos.x * size + x)] = '#f00';
                        // ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
-                    }
+                  //  }
                 }))
                 
             })});
