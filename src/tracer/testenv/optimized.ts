@@ -2,7 +2,7 @@ import Control from "../../common/control";
 import { IVector, Vector } from '../../common/vector';
 import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
-import mapFile from './assets/map4.png';
+import mapFile from './assets/map5.png';
 import {findPath, indexate, tracePath} from '../tracelib/tracer';
 import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree, updateChunkTree, getHash, limitTree, getPathBreaks} from '../tracelib/getIsolated';
 import {createTracer, ITracer} from '../tracelib/tracePack';
@@ -10,7 +10,7 @@ import {TwoLevelHPA} from '../tracelib/tracePacks/TwoLevelHPA';
 import {ThreeLevelHPA} from '../tracelib/tracePacks/ThreeLevelHPA';
 import {SimpleWave} from '../tracelib/tracePacks/SimpleWave';
 
-const mapSize = 256;
+const mapSize = 512;
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     public ctx: CanvasRenderingContext2D;
@@ -284,9 +284,9 @@ export class TestScene {
             //this.traceTreeInitial = getChunkTree(this.chunks);
             //updateChunkTree(this.map, this.chunks, this.traceTreeInitial, changed);
             //updateChunkTree(this.map, this.chunks2, this.traceTreeInitial2, changed);
-            //if (this.pathes[0] && getPathBreaks(this.pathes[0] as Vector[], this.map).length){
+            if (this.pathes && this.pathes[0] && getPathBreaks(this.pathes[0] as Vector[], this.map).length){
                 this.canvas.onMove({offsetX: this.endPoint.x * tileSize, offsetY: this.endPoint.y * tileSize} as MouseEvent);
-            //}
+            }
         }
        
 
