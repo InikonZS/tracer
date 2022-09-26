@@ -35,7 +35,7 @@ export function findChunkPath(tree: Record<string , IChunk>, destHash: string) {
         return null;
     }
     let currentValue = tree[destHash].index;
-    path.push(tree[destHash]);
+    path.push(tree[destHash]);//?
     if (currentValue == Number.MAX_SAFE_INTEGER) {
         return null;
     }

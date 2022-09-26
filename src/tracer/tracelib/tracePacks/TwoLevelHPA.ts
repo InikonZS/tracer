@@ -66,12 +66,14 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
     }
     
     const rTree = dublicateChunkTree(reverseTree);
-    const endHash = chunkReverseIndexate(rTree, traceTree, [getHashByVector2(endPoint)], 0);
-
-    const resHash = /*traceTree[getHashByVector(endPoint)] ? getHashByVector(endPoint) :*/ endHash;
-    const attackChunkPath = findChunkPath(rTree, endHash) || [];
+    rTree[getHashByVector2(endPoint)].index =0;
+    const endHash = chunkReverseIndexate(rTree, traceTree, [getHashByVector2(endPoint)], 1);
+    console.log(endHash, traceTree[endHash].index, maxValue);
+    const resHash = findChunkPath(traceTree, getHashByVector(endPoint)) ? getHashByVector(endPoint) : endHash;
+    const rHash = getHashByVector2(traceTree[endHash].original.pos.clone().scale(chunks[0][0][0].length));
+    const attackChunkPath = findChunkPath(rTree, rHash) || [];
     if (getHashByVector2(endPoint) && rTree[getHashByVector2(endPoint)]) {
-        attackChunkPath.push(rTree[getHashByVector2(endPoint)])
+        //attackChunkPath.push(rTree[getHashByVector2(endPoint)])
     }
     const chunkPath = findChunkPath(traceTree, resHash) || [];
     const start = getHashByVector(startPoint)
@@ -130,14 +132,37 @@ function onlyMove(startPoint: Vector, endPoint: Vector, tree: Record<string, ICh
 
 export function chunkReverseIndexate(tree: Record<string, IChunk>, moveTree: Record<string, IChunk>, points: Array<string>, generation: number):string{
     const nextPoints = iteration(tree, points, generation);
+    let rpoint:string = null;
     const stopPoint = nextPoints.find(point=>{
+        
         const hashes = findChunkHashes(moveTree, tree[point].original.pos);
+        if (point== '5_17_-2'){ 
+            console.log('evil ', hashes);
+          //  return false;//
+         }
+         rpoint =null;
         return hashes.find(hash=>{
-            return moveTree[hash].index != -1 && moveTree[hash].index != null && moveTree[hash].index != maxValue;
-        })  
+            if (moveTree[hash].index == maxValue){
+                console.log('mx');
+            }
+            const res =(moveTree[hash].index != -1) && (moveTree[hash].index != null) && (moveTree[hash].index != maxValue);
+            if ((res == true) ){
+                console.log('br');
+                rpoint = hash;
+            }
+            if (hash== '5_17_-3'){
+                // return false;// console.log('evil ', res, moveTree[hash].index);
+            }
+            return (moveTree[hash].index != -1) && (moveTree[hash].index != null) && (moveTree[hash].index != maxValue);
+        });
     })
-    if (stopPoint){
-        return stopPoint;
+    if (rpoint){
+        if (moveTree[stopPoint].index == maxValue){
+console.log(moveTree[stopPoint].index);
+        }
+        return rpoint;
+    } else {
+        //console.log('und')
     }
     if (!points.length) { return null; }
     return chunkReverseIndexate(tree, moveTree, nextPoints, generation + 1);
