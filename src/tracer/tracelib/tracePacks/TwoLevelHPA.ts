@@ -95,10 +95,10 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
     const amp = getAttackIndexationMap(map);
     
     const lmp = getLimitPathMap([...attackChunkPath, ...chunkPath], chunksEmpty, reverseMap) as Array<Array<number>>;
-    const attackPoint = indexateAttack(lmp, lm, [endPoint], 0);
-    const result = findPath(lm, startPoint, Vector.fromIVector(attackPoint));
+    const attackPoint = indexateAttack(lmp, lm, [endPoint], 0, null);
+    const result = findPath(lm, startPoint, Vector.fromIVector(attackPoint.vec));
 
-    const path = findPath(lm, startPoint, /*endPoint*/ Vector.fromIVector(attackPoint)) || [];
+    const path = findPath(lm, startPoint, /*endPoint*/ Vector.fromIVector(attackPoint.vec)) || [];
 
    // const path = findPath(lm, startPoint, endPoint) || [];
     verbose && console.log('result path ', Date.now() - startTime);
@@ -180,7 +180,7 @@ export function getAttackIndexationMap(map:Array2d): Array2d {
     return indexationMap;
 }
   
-  export function indexateAttack(map:Array<Array<number>>, moveMap:Array2d, points:Array<{x:number, y:number}>, generation:number):IVector | null{
+  export function indexateAttack2(map:Array<Array<number>>, moveMap:Array2d, points:Array<{x:number, y:number}>, generation:number):IVector | null{
     const nextPoints = iterationMap(map, points, generation);
     const stopPoint = nextPoints.find(point=>{
         return moveMap[point.y][point.x] != -1 && moveMap[point.y][point.x] != null && moveMap[point.y][point.x] != maxValue;
@@ -189,5 +189,24 @@ export function getAttackIndexationMap(map:Array2d): Array2d {
         return stopPoint;
     }
     if (!points.length) { return null; }
-    return indexateAttack(map, moveMap, nextPoints, generation+1);
+    return indexateAttack2(map, moveMap, nextPoints, generation+1);
+  }
+
+  export function indexateAttack(map:Array<Array<number>>, moveMap:Array2d, points:Array<{x:number, y:number}>, generation:number, bestPoint:{vec: Vector, val:number}):{vec: IVector, val:number} | null{
+    const nextPoints = iterationMap(map, points, generation);
+    let stopPoint = bestPoint;
+    nextPoints.forEach(point=>{
+        const yes = moveMap[point.y][point.x] != -1 && moveMap[point.y][point.x] != null && moveMap[point.y][point.x] != maxValue;
+        if (yes && moveMap[point.y][point.x] < (stopPoint?.val || maxValue)){
+            stopPoint = {
+                vec: Vector.fromIVector(point),
+                val:moveMap[point.y][point.x]
+            }
+        }
+    })
+    if (stopPoint && generation>=28){
+        return stopPoint;
+    }
+    if (!points.length) { return null; }
+    return indexateAttack(map, moveMap, nextPoints, generation+1, stopPoint);
   }
