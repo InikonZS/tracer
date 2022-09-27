@@ -19,7 +19,8 @@ export class TwoLevelHPA{
         this.chunks = getIsolatedChunks(map, 16)
         this.traceTreeInitial = getChunkTree(this.chunks);
         
-        const reverseMap = map.map(row => row.map(cell => 0));
+        const _reverseMap = map.map(row => row.map(cell => 0));
+        reverseMap = _reverseMap;
         this.chunksEmpty = getIsolatedChunks(reverseMap, 16)
         this.reverseTreeInitial = getChunkTree(this.chunksEmpty);
         
@@ -38,9 +39,12 @@ export class TwoLevelHPA{
 
     trace(startPoint: Vector, endPoint: Vector){
         const result = tracePath(startPoint, endPoint, this.traceTreeInitial, this.reverseTreeInitial, this.chunks, this.chunksEmpty, this.map, (pos:Vector)=>this.getHashByVector(pos));
+        //const result = onlyMove(startPoint, endPoint, this.traceTreeInitial, this.chunks, this.map, (pos:Vector)=>this.getHashByVector(pos));
         return result;
     }
 }
+
+let reverseMap: Array2d;
 
 //for move and attack
 function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IChunk>, reverseTree: Record<string, IChunk>, chunks: number[][][][], chunksEmpty: number[][][][], map: number[][], getHashByVector: (pos: Vector) => string): { ch: IChunk[], ph: Vector[] } {
@@ -80,15 +84,18 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
     if (start && traceTree[start]) {
         chunkPath.push(traceTree[start])
     }
+    //chunkPath.push(reverseTree[endHash]);
     verbose && console.log('chunk path ', Date.now() - startTime);
-    const lm = getLimitPathMap(chunkPath, chunks, map) as Array<Array<number>>;
+    const lm = getLimitPathMap([...chunkPath, /*attackChunkPath[attackChunkPath.length-1]*/ ...attackChunkPath], chunks, map) as Array<Array<number>>;
 
     verbose && console.log('limit map ', Date.now() - startTime);
     indexate(lm, [startPoint], 0);
     verbose && console.log('indexate ', Date.now() - startTime);
 
     const amp = getAttackIndexationMap(map);
-    const attackPoint = indexateAttack(amp, lm, [endPoint], 0);
+    
+    const lmp = getLimitPathMap([...attackChunkPath, ...chunkPath], chunksEmpty, reverseMap) as Array<Array<number>>;
+    const attackPoint = indexateAttack(lmp, lm, [endPoint], 0);
     const result = findPath(lm, startPoint, Vector.fromIVector(attackPoint));
 
     const path = findPath(lm, startPoint, /*endPoint*/ Vector.fromIVector(attackPoint)) || [];
