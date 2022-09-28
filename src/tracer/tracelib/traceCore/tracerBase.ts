@@ -12,6 +12,9 @@ export function iteration(map:Array<Array<number>>, points:Array<{x:number, y:nu
       const row = map[py];
       if (row && row[px]!=null && row[px]>generation){
         row[px] = generation;
+        /*if (Math.abs(step.x) +Math.abs(step.y) == 2){
+          row[px] = generation + 0.5;
+        }*/
         nextPoints.push({x:px, y:py});
       }
     })

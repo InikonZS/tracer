@@ -6,6 +6,7 @@ import { getChunkTree, getHash } from "../traceCore/traceTree";
 import { dublicateChunkTree, findChunkHashes, updateChunkTree } from "../traceCore/updateTree";
 import { chunkIndexate, findChunkPath, getLimitPathMap, iteration } from "../traceCore/findChunkPath";
 import { findPath, indexate, iteration as iterationMap } from "../traceCore/tracerBase";
+import { tileLine } from '../traceCore/tileLine';
 
 export class TwoLevelHPA{
     chunks: Array2d[][];
@@ -102,7 +103,7 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
 
    // const path = findPath(lm, startPoint, endPoint) || [];
     verbose && console.log('result path ', Date.now() - startTime);
-    return { ch: [...chunkPath, ...attackChunkPath], ph: path };
+    return { ch: [...chunkPath, ...attackChunkPath], ph: smoothPath(path, map) };
 }
 
 function onlyMove(startPoint: Vector, endPoint: Vector, tree: Record<string, IChunk>, chunks: number[][][][], map: number[][], getHashByVector: (pos: Vector) => string): { ch: IChunk[], ph: Vector[] } {
@@ -210,3 +211,53 @@ export function getAttackIndexationMap(map:Array2d): Array2d {
     if (!points.length) { return null; }
     return indexateAttack(map, moveMap, nextPoints, generation+1, stopPoint);
   }
+
+
+function smoothPath(path:Vector[], map:Array2d){
+    let currentPoint = 0;
+    let smPath:Vector[] = [path[0]];//[new Vector(100, 100),new Vector(101, 100),new Vector(101, 101)];
+   // for (let i=0; i<path.length; i++){
+        for (let j=1; j<path.length; j++){
+            let intersected = false;
+            let intVec:Vector = null;
+            tileLine(path[currentPoint], path[j], (x, y)=>{
+                if (map[Math.floor(y)][Math.floor(x)] !=0 ){
+                    intersected = true;
+                    // new Vector(x, y);
+                } else {
+                    if (intersected == false){
+                        intVec = path[j]
+                    }
+                }
+            });
+            if (intersected){
+                currentPoint = j;
+                //j++;
+                intersected = false;
+                smPath.push(intVec);
+                
+                //intVec = null;
+               // break;
+            }
+            //(j % 5 == 0) && smPath.push(path[j])
+        }
+        smPath.push(path[path.length-1])
+   //     if (currentPoint==path.length-1){
+    
+            
+   //         break;
+    //    }
+    //}
+    const outPath: Vector[] = [];
+    smPath.forEach((pth, i)=>{
+        if (i>0){ 
+            //console.log('len ', smPath[i-1].clone().sub(smPath[i]).abs());
+            const res = tileLine(smPath[i-1], smPath[i], (x, y)=>{
+               
+                outPath.push(new Vector(x, y));
+            });
+            //console.log('res ',res);
+        }
+    })
+    return outPath;
+}
