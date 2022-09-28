@@ -106,7 +106,7 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
 
    // const path = findPath(lm, startPoint, endPoint) || [];
     verbose && console.log('result path ', Date.now() - startTime);
-    return { ch: [...chunkPath, ...attackChunkPath], ph: smoothPath(path, map) };
+    return { ch: [...chunkPath, ...attackChunkPath], ph: smoothPath(path, map)};
 }
 
 function onlyMove(startPoint: Vector, endPoint: Vector, tree: Record<string, IChunk>, chunks: number[][][][], map: number[][], getHashByVector: (pos: Vector) => string): { ch: IChunk[], ph: Vector[] } {
@@ -217,16 +217,18 @@ export function getAttackIndexationMap(map:Array2d): Array2d {
 
 
 function smoothPath(path:Vector[], map:Array2d){
+    //bug with direction of smooth path
     let currentPoint = 0;
     if (path.length<2){
         return path;
     }
-    let smPath:Vector[] = [path[0]];//[new Vector(100, 100),new Vector(101, 100),new Vector(101, 101)];
+    let smPath:Vector[] = [path[0]];
+    let spch = [];//[new Vector(100, 100),new Vector(101, 100),new Vector(101, 101)];
    // for (let i=0; i<path.length; i++){
         for (let j=1; j<path.length; j++){
             let intersected = false;
             let intVec:Vector = null;
-            tileLine(path[currentPoint], path[j], (x, y)=>{
+            const res = tileLine(path[currentPoint], path[j], (x, y)=>{
                 if (map[Math.floor(y)][Math.floor(x)] !=0 ){
                     intersected = true;
                     // new Vector(x, y);
@@ -240,6 +242,7 @@ function smoothPath(path:Vector[], map:Array2d){
                 currentPoint = j;
                 //j++;
                 intersected = false;
+
                 smPath.push(intVec);
                 
                 //intVec = null;
