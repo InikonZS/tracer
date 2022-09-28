@@ -73,7 +73,8 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
     const rTree = dublicateChunkTree(reverseTree);
     rTree[getHashByVector2(endPoint)].index =0;
     const endHash = chunkReverseIndexate(rTree, traceTree, [getHashByVector2(endPoint)], 1);
-    console.log(endHash, traceTree[endHash].index, maxValue);
+    if(!traceTree[endHash]) return { ch: [], ph: [] };
+    //console.log(endHash, traceTree[endHash].index, maxValue);
     const resHash = findChunkPath(traceTree, getHashByVector(endPoint)) ? getHashByVector(endPoint) : endHash;
     const rHash = getHashByVector2(traceTree[endHash].original.pos.clone().scale(chunks[0][0][0].length));
     const attackChunkPath = findChunkPath(rTree, rHash) || [];
@@ -96,7 +97,9 @@ function tracePath(startPoint: Vector, endPoint: Vector, tree: Record<string, IC
     const amp = getAttackIndexationMap(map);
     
     const lmp = getLimitPathMap([...attackChunkPath, ...chunkPath], chunksEmpty, reverseMap) as Array<Array<number>>;
-    const attackPoint = indexateAttack(lmp, lm, [endPoint], 0, null);
+    const attackPoint = indexateAttack(amp, lm, [endPoint], 0, null);//bug in lmp on atack point and _3 and more chunk index
+        if(!attackPoint) return { ch: [...chunkPath, ...attackChunkPath], ph: [] };
+
     const result = findPath(lm, startPoint, Vector.fromIVector(attackPoint.vec));
 
     const path = findPath(lm, startPoint, /*endPoint*/ Vector.fromIVector(attackPoint.vec)) || [];
@@ -215,6 +218,9 @@ export function getAttackIndexationMap(map:Array2d): Array2d {
 
 function smoothPath(path:Vector[], map:Array2d){
     let currentPoint = 0;
+    if (path.length<2){
+        return path;
+    }
     let smPath:Vector[] = [path[0]];//[new Vector(100, 100),new Vector(101, 100),new Vector(101, 101)];
    // for (let i=0; i<path.length; i++){
         for (let j=1; j<path.length; j++){
@@ -242,6 +248,7 @@ function smoothPath(path:Vector[], map:Array2d){
             //(j % 5 == 0) && smPath.push(path[j])
         }
         smPath.push(path[path.length-1])
+        
    //     if (currentPoint==path.length-1){
     
             

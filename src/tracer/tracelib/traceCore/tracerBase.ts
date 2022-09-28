@@ -4,7 +4,7 @@ import { steps } from "./traceSteps";
 
 export function iteration(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number){
   const nextPoints: Array<{x:number, y:number}> = [];
-  if (!points.length) { return; }
+  if (!points.length) { return []; }
   points.forEach(point=>{
     steps.forEach(step=>{
       const px = point.x+step.x;
