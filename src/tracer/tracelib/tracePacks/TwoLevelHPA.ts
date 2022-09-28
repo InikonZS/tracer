@@ -7,6 +7,7 @@ import { dublicateChunkTree, findChunkHashes, updateChunkTree } from "../traceCo
 import { chunkIndexate, findChunkPath, getLimitPathMap, iteration } from "../traceCore/findChunkPath";
 import { findPath, indexate, iteration as iterationMap } from "../traceCore/tracerBase";
 import { tileLine } from '../traceCore/tileLine';
+import { getPathBreaks } from "../getIsolated";
 
 export class TwoLevelHPA{
     chunks: Array2d[][];
@@ -234,16 +235,16 @@ function smoothPath(path:Vector[], map:Array2d){
                     // new Vector(x, y);
                 } else {
                     if (intersected == false){
-                        intVec = path[j]
+                     //   intVec = path[j]
                     }
                 }
             });
             if (intersected){
-                currentPoint = j;
+                currentPoint = j-1;
                 //j++;
                 intersected = false;
 
-                smPath.push(intVec);
+                smPath.push(path[j-1]);
                 
                 //intVec = null;
                // break;
@@ -269,5 +270,8 @@ function smoothPath(path:Vector[], map:Array2d){
             //console.log('res ',res);
         }
     })
+    if (getPathBreaks(outPath, map).length){
+        console.log(getPathBreaks(outPath, map));
+    }
     return outPath;
 }
