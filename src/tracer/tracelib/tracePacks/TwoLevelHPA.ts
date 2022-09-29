@@ -150,17 +150,17 @@ export function chunkReverseIndexate(tree: Record<string, IChunk>, moveTree: Rec
         
         const hashes = findChunkHashes(moveTree, tree[point].original.pos);
         if (point== '5_17_-2'){ 
-            console.log('evil ', hashes);
+            //console.log('evil ', hashes);
           //  return false;//
          }
          rpoint =null;
         return hashes.find(hash=>{
             if (moveTree[hash].index == maxValue){
-                console.log('mx');
+               // console.log('mx');
             }
             const res =(moveTree[hash].index != -1) && (moveTree[hash].index != null) && (moveTree[hash].index != maxValue);
             if ((res == true) ){
-                console.log('br');
+                //console.log('br');
                 rpoint = hash;
             }
             if (hash== '5_17_-3'){

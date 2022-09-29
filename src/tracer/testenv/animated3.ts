@@ -9,8 +9,6 @@ import {createTracer, ITracer} from '../tracelib/tracePack';
 import {TwoLevelHPA} from '../tracelib/tracePacks/TwoLevelHPA';
 import {ThreeLevelHPA} from '../tracelib/tracePacks/ThreeLevelHPA';
 import {SimpleWave} from '../tracelib/tracePacks/SimpleWave';
-import { iteration } from "../tracelib/traceCore/tracerBase";
-import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
 
 const mapSize = 512;
 export class Canvas extends Control {
@@ -104,20 +102,6 @@ class Unit{
             this.tm = 0;
             if (this.path && this.path.length){
                 const next = this.path.pop();
-                if(this.wait && map[next.y][next.x] != 0){
-                    const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue))
-                    const correctPoint = this.correct(indMap);
-                    console.log('try correct');
-                    if (!correctPoint){
-                        console.log('no correct');
-                        return;
-                    }
-                    const correctIndex = this.path.findIndex(it=> it.x == correctPoint.x && it.y == correctPoint.y);
-                    const correctPath = findPath(indMap, this.pos, correctPoint);
-                    console.log('correct points ', correctPath.length, 'cutted ', this.path.length - correctIndex);
-                    this.path.splice(correctIndex);
-                    this.path = this.path.concat(correctPath);
-                } else
                 if (map[next.y][next.x] != 0){
                     this.path.push(next);
                     this.wait = true;
@@ -129,45 +113,8 @@ class Unit{
         }
     }
 
-    correct(map:number[][]){
-        return indexateCorrect(map, this.path, [this.pos], 0);
-    }
-
     trace(point:Vector){
         this.path = this.tracer.trace(this.pos, point).ph;
-    }
-
-    render(ctx:CanvasRenderingContext2D){
-       // ctx.fillRect()
-    }
-}
-
-function indexateCorrect(map:Array<Array<number>>, path:Array<Vector>, points:Array<{x:number, y:number}>, generation:number):Vector | null{
-    const nextPoints = iteration(map, points, generation);
-    let stopPoint =
-    nextPoints.find(point=>{
-        const pathPoint = path.find(pp=> pp.x == point.x && pp.y == point.y);
-        return pathPoint;
-    })
-    if (stopPoint){
-        return Vector.fromIVector(stopPoint);
-    }
-    if (!points.length) { return null; }
-    return indexateCorrect(map, path, nextPoints, generation+1);
-  }
-
-class Build{
-    pos: Vector;
-    health: number;
-    tm:number = 0;
-    //map: number[][];
-    constructor(pos: Vector){
-        this.health = 100;
-        this.pos = pos;
-    }
-
-    tick(delta:number){
-        
     }
 
     render(ctx:CanvasRenderingContext2D){
@@ -192,7 +139,6 @@ export class TestScene {
     chunkPath2: IChunk[];
     tracers: (TwoLevelHPA | ThreeLevelHPA | SimpleWave)[] = [];
     units: Array<Unit>;
-    builds: Build[];
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render);
@@ -210,19 +156,10 @@ export class TestScene {
             this.tracers.push(tracer);
         }
         this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
-        for (let i=0; i<170; i++){
+        for (let i=0; i<10; i++){
             const unit = new Unit(this.tracers[0] as TwoLevelHPA, new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)));
             this.units.push(unit);
         }
-
-        this.builds = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
-        for (let i=0; i<10; i++){
-            const build = new Build(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)));
-            this.builds.push(build);
-        }
-
-        this.units.forEach(it=> it.trace(this.builds[Math.floor(Math.random()*this.builds.length)].pos))
-
         this.chunks = this.tracers[0].chunks;
         const tileSize = 2;
         this.canvas.onClick = (e)=>{
@@ -236,7 +173,7 @@ export class TestScene {
             const vector = new Vector(Math.round(e.offsetX / tileSize), Math.round(e.offsetY / tileSize));
             this.endPoint = vector;
 
-            //this.units.forEach(it=> it.trace(this.endPoint))
+            this.units.forEach(it=> it.trace(this.endPoint))
 
             if (vector.y < map.length && vector.x < map[0].length && vector.x>=0 && vector.y>=0){
                 const paths = this.tracers.map(tracer=>tracer.trace(this.startPoint, this.endPoint));
@@ -387,7 +324,7 @@ export class TestScene {
             }));
         }
 
-        if (this.units && this.builds){
+        if (this.units){
             const map = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
             this.units.forEach(unit=>{
                 this.units.forEach(unit2=>{
@@ -436,12 +373,9 @@ export class TestScene {
                 for (let y = -2; y<2; y++){
                     for (let x = -2; x<2; x++){
                         //const size = this.chunks[0][0][0].length;
-                        if (this.canvas.canvasBack[ (pos.y + y)]){
-                            this.canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = '#0ff';
-                        }
+                        this.canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = '#0ff';
                     }
                 }
-
 
                 if (unit.path){
                     unit.path.forEach((pos)=>{
@@ -452,16 +386,6 @@ export class TestScene {
                 }
                 
                 
-            })
-
-            this.builds.forEach(build=>{
-                const pos = build.pos;
-                for (let y = -2; y<2; y++){
-                    for (let x = -2; x<2; x++){
-                        //const size = this.chunks[0][0][0].length;
-                        this.canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = '#909';
-                    }
-                }
             })
         }
 
