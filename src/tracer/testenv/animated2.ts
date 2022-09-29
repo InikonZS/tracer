@@ -87,19 +87,28 @@ class Unit{
     pos: Vector;
     path: Array<Vector>;
     tm:number = 0;
+    wait: boolean = false;
+    //map: number[][];
     constructor(tracer: TwoLevelHPA, pos: Vector){
         this.tracer = tracer;
+        //this.map = map;
         this.pos = pos;
         this.path = [];
     }
 
-    tick(delta:number){
+    tick(delta:number, map:number[][]){
         this.tm+=delta;
         if (this.tm>10.5){
             this.tm = 0;
             if (this.path && this.path.length){
                 const next = this.path.pop();
-                this.pos = next.clone();
+                if (map[next.y][next.x] != 0){
+                    this.path.push(next);
+                    this.wait = true;
+                } else {
+                    this.wait = false;
+                    this.pos = next.clone();
+                }
             }
         }
     }
@@ -146,8 +155,11 @@ export class TestScene {
             const tracer = new TwoLevelHPA(this.map);//createTracer(map);
             this.tracers.push(tracer);
         }
-        this.units = [new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10))];
-        
+        this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
+        for (let i=0; i<10; i++){
+            const unit = new Unit(this.tracers[0] as TwoLevelHPA, new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)));
+            this.units.push(unit);
+        }
         this.chunks = this.tracers[0].chunks;
         const tileSize = 2;
         this.canvas.onClick = (e)=>{
@@ -313,10 +325,51 @@ export class TestScene {
         }
 
         if (this.units){
+            const map = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
+            this.units.forEach(unit=>{
+                this.units.forEach(unit2=>{
+                    if  (unit == unit2) {
+                        return;
+                    }
+                    if (unit.pos.x == unit2.pos.x && unit.pos.y == unit2.pos.y){
+                        console.log('shit');
+                    }
+                });
+            });
+            this.units.forEach(unit=>{
+                map[unit.pos.y][unit.pos.x] = 1;
+                if (unit.path && unit.path[unit.path.length-1]){
+                    const next = unit.path[unit.path.length-1];
+                    map[next.y][next.x] = 1;
+                }
+            });
             this.units.forEach((unit)=>{
-                unit.tick(delta);
+                
+                /*if (unit.path && unit.path[unit.path.length-1]){
+                    const next = unit.path[unit.path.length-1];
+                    map[next.y][next.x] = 0;//this.map[next.y][next.x];
+                
+                
+                    unit.tick(delta, map);
+                    //if (unit.path && unit.path[unit.path.length-1]){
+                      //  const next = unit.path[unit.path.length-1];
+                        map[next.y][next.x] = 1;//this.map[next.y][next.x];
+                    //}
+                }*/
+                const map = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
+                this.units.forEach(unit2=>{
+                    if (unit === unit2) return;
+                    map[unit2.pos.y][unit2.pos.x] = 1;
+                    if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
+                        const next = unit2.path[unit2.path.length-1];
+                        map[next.y][next.x] = 1;
+                    }
+                });
+                unit.tick(delta, map);
+
                 const pos = unit.pos;
                 //ctx.fillStyle = '#f009';
+                const usize = 1;
                 for (let y = -2; y<2; y++){
                     for (let x = -2; x<2; x++){
                         //const size = this.chunks[0][0][0].length;

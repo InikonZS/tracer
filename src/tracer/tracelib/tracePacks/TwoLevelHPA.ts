@@ -210,7 +210,7 @@ export function getAttackIndexationMap(map:Array2d): Array2d {
             }
         }
     })
-    if (stopPoint && generation>=28){
+    if (stopPoint && generation>=2){
         return stopPoint;
     }
     if (!points.length) { return null; }
