@@ -1,6 +1,6 @@
 import { Vector } from "../../../common/vector";
 
-export function tileLine(start:Vector, finish:Vector, onPlot:(x:number, y: number)=>void):number{
+export function tileLine(start: Vector, finish: Vector, onPlot: (x: number, y: number) => void): number {
     let x1 = finish.x;
     let y1 = finish.y;
     let x0 = start.x;
@@ -8,25 +8,12 @@ export function tileLine(start:Vector, finish:Vector, onPlot:(x:number, y: numbe
 
     var steep = Math.abs(y1 - y0) > Math.abs(x1 - x0); // Проверяем рост отрезка по оси икс и по оси игрек
     // Отражаем линию по диагонали, если угол наклона слишком большой
-    if (steep){
+    if (steep) {
         x0 = y0;
         y0 = start.x;
         x1 = y1;
         y1 = finish.x;
     }
-    // Если линия растёт не слева направо, то меняем начало и конец отрезка местами
-    /*let rev = false;
-    if (x0 > x1){
-        rev = true
-        let b = 0;
-        b = x0;
-        x0 = x1;
-        x1 = b;
-
-        b=y0;
-        y0 = y1;
-        y1 = b;
-    }*/
 
     let deltax = Math.abs(x1 - x0)
     let deltay = Math.abs(y1 - y0)
@@ -37,27 +24,25 @@ export function tileLine(start:Vector, finish:Vector, onPlot:(x:number, y: numbe
     if (diry > 0) {
         diry = 1
     }
-    if (diry < 0){
+    if (diry < 0) {
         diry = -1
     }
-    if (x0 < x1){
-    for (let x= x0; x<= x1; x++){
+    const plot = (x:number)=>{
         onPlot(steep ? y : x, steep ? x : y);
         error = error + deltaerr
-        if (error >= (deltax + 1)){
+        if (error >= (deltax + 1)) {
             y = y + diry
             error = error - (deltax + 1)
         }
     }
-} else {
-    for (let x= x0; x >= x1; x--){
-        onPlot(steep ? y : x, steep ? x : y);
-        error = error + deltaerr
-        if (error >= (deltax + 1)){
-            y = y + diry
-            error = error - (deltax + 1)
+    if (x0 < x1) {
+        for (let x = x0; x <= x1; x++) {
+            plot(x); 
         }
-    } 
+    } else {
+        for (let x = x0; x >= x1; x--) {
+            plot(x);
+        }
+    }
+    return x0 - x1;
 }
-    return x0-x1;
-  }

@@ -8,6 +8,7 @@ import { chunkIndexate, findChunkPath, getLimitPathMap, iteration } from "../tra
 import { findPath, indexate, iteration as iterationMap } from "../traceCore/tracerBase";
 import { tileLine } from '../traceCore/tileLine';
 import { getPathBreaks } from "../getIsolated";
+import { smoothPath } from "../traceCore/smoothPath";
 
 export class TwoLevelHPA{
     chunks: Array2d[][];
@@ -217,7 +218,7 @@ export function getAttackIndexationMap(map:Array2d): Array2d {
   }
 
 
-function smoothPath(path:Vector[], map:Array2d){
+/*function smoothPath(path:Vector[], map:Array2d){
     //bug with direction of smooth path
     let currentPoint = 0;
     if (path.length<2){
@@ -274,4 +275,4 @@ function smoothPath(path:Vector[], map:Array2d){
         console.log(getPathBreaks(outPath, map));
     }
     return outPath;
-}
+}*/
