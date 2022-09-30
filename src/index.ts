@@ -6,10 +6,12 @@ import {TestScene as WorkerScene} from './worker/testenv/testscene';
 import {runBabylonExample} from './babylon/testenv/testscene';
 import {MiniMapTestScene} from './minimap/testenv/minimapscene';
 import './style.css'
+import {Demo} from './mvcdemo/testenv/test';
 
 const rootWrapper = new Control(document.body, 'div', 'screen');
 //runBabylonExample(rootWrapper.node);
 //const testScene = new TestScene(rootWrapper.node);
-const optScene2 = new OptScene2(rootWrapper.node);
+//const optScene2 = new OptScene2(rootWrapper.node);
 //const workerScene = new WorkerScene(rootWrapper.node);
 //new MiniMapTestScene(rootWrapper.node)
+const demo = new Demo(rootWrapper.node);
