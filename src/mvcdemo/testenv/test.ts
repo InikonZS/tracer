@@ -51,8 +51,9 @@ class ScoreView extends Control{
     }
 }
 
+
 class View extends Control{
-    field: CellView[][];
+    field: ICellView[][];
 
     constructor(parentNode:HTMLElement, model:Model){
         super(parentNode); 
@@ -60,7 +61,8 @@ class View extends Control{
         this.field = model.field.map((row, y)=>{
             const rowView = new Control(this.node, 'div', 'row');
             return row.map((cellData, x)=>{
-                const view = new CellView(rowView.node, cellData);
+                const ctor = viewMap[cellData.type];
+                const view = new ctor(rowView.node, cellData);
                 view.update(cellData.health);
                 /*view.onClick = ()=>{
                     cellData.damage(5);
@@ -82,31 +84,70 @@ class View extends Control{
     }
 }
 
-class CellView extends Control{
+interface ICellView{
     onClick: ()=>void;
-    private cellModel: CellModel;
+
+    handleChange: ()=>void
+
+    update:(data: number)=>void;
+
+    destroy(): void
+}
+
+const d:ICellView = {
+    onClick: function (): void {
+        throw new Error("Function not implemented.");
+    },
+    handleChange: function (): void {
+        throw new Error("Function not implemented.");
+    },
+    update: function (data: number): void {
+        throw new Error("Function not implemented.");
+    },
+    destroy: function (): void {
+        throw new Error("Function not implemented.");
+    }
+}
+class CellView extends Control implements ICellView{
+    onClick: ()=>void;
+    protected cellModel: CellModel;
 
     constructor(parentNode:HTMLElement, cellModel: CellModel){
         super(parentNode, 'button', 'cell');
         this.cellModel = cellModel;
         cellModel.onChange.add(this.handleChange);
         this.node.onclick = ()=>{
-            cellModel.damage(5);
+            this.damage();
             this.onClick?.();
         }
     }
+
+    protected damage(){
+        this.cellModel.damage(5);
+    }
+
     handleChange = ()=>{
         this.update(this.cellModel.health);
     }
 
     update(data: number){
-        console.log('upd')
         this.node.textContent = data.toString();
     }
 
     destroy(): void {
         this.cellModel.onChange.remove(this.handleChange);
         super.destroy();
+    }
+}
+
+class CellView1 extends CellView{
+    constructor(parentNode:HTMLElement, cellModel: CellModel){
+        super(parentNode, cellModel);
+        this.node.className = 'cell cell1';
+    }
+
+    protected damage(): void {
+        this.cellModel.damage(10);
     }
 }
 
@@ -148,3 +189,9 @@ class CellModel{
         this.onChange.emit();
     }
 }
+
+const viewMap: Record<number, typeof CellView> = {
+    0: CellView,
+    1: CellView1,
+    2: CellView
+};
