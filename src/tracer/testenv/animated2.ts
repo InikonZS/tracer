@@ -90,6 +90,7 @@ class Unit{
     path: Array<Vector>;
     tm:number = 0;
     wait: boolean = false;
+    indMap: Array2d;
     //map: number[][];
     constructor(tracer: TwoLevelHPA, pos: Vector){
         this.tracer = tracer;
@@ -99,13 +100,24 @@ class Unit{
     }
 
     tick(delta:number, map:number[][]){
+        if (!this.indMap){
+            this.indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue))
+        }
         this.tm+=delta;
         if (this.tm>10.5){
             this.tm = 0;
             if (this.path && this.path.length){
                 const next = this.path.pop();
                 if(this.wait && map[next.y][next.x] != 0){
-                    const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue))
+                    const indMap = this.indMap; //not full map to index
+                    for (let y=-10; y<10; y++){
+                        for (let x=-10; x<10; x++){
+                            if (indMap[next.y+y] && indMap[next.y+y][next.x+x]!=null){
+                                indMap[next.y+y][next.x+x] = map[next.y+y][next.x+x] !=0 ? -1 : maxValue;
+                            }
+                        } 
+                    }
+                    //const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue))
                     const correctPoint = this.correct(indMap);
                     console.log('try correct');
                     if (!correctPoint){
@@ -210,8 +222,13 @@ export class TestScene {
             this.tracers.push(tracer);
         }
         this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
-        for (let i=0; i<170; i++){
-            const unit = new Unit(this.tracers[0] as TwoLevelHPA, new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)));
+        for (let i=0; i<200; i++){
+            const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+            if (map[pos.y][pos.x]!=0){
+                i--;
+                continue;
+            }
+            const unit = new Unit(this.tracers[0] as TwoLevelHPA, pos);
             this.units.push(unit);
         }
 
@@ -388,7 +405,7 @@ export class TestScene {
         }
 
         if (this.units && this.builds){
-            const map = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
+            //const map = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
             this.units.forEach(unit=>{
                 this.units.forEach(unit2=>{
                     if  (unit == unit2) {
@@ -399,13 +416,14 @@ export class TestScene {
                     }
                 });
             });
-            this.units.forEach(unit=>{
+            /*this.units.forEach(unit=>{
                 map[unit.pos.y][unit.pos.x] = 1;
                 if (unit.path && unit.path[unit.path.length-1]){
                     const next = unit.path[unit.path.length-1];
                     map[next.y][next.x] = 1;
                 }
-            });
+            });*/
+            const map1 = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
             this.units.forEach((unit)=>{
                 
                 /*if (unit.path && unit.path[unit.path.length-1]){
@@ -419,17 +437,30 @@ export class TestScene {
                         map[next.y][next.x] = 1;//this.map[next.y][next.x];
                     //}
                 }*/
-                const map = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
+                const curPoints = [unit.pos.clone()];
+                if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
+                    curPoints.push(unit.path[unit.path.length-1])
+                }
+                curPoints.forEach(last=>{
+                    map1[last.y][last.x] = 0;
+                })
+                
                 this.units.forEach(unit2=>{
                     if (unit === unit2) return;
-                    map[unit2.pos.y][unit2.pos.x] = 1;
+                    map1[unit2.pos.y][unit2.pos.x] = 1;
                     if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
                         const next = unit2.path[unit2.path.length-1];
-                        map[next.y][next.x] = 1;
+                        map1[next.y][next.x] = 1;
                     }
                 });
-                unit.tick(delta, map);
-
+                const lastPoints = [unit.pos.clone()];
+                if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
+                    lastPoints.push(unit.path[unit.path.length-1])
+                }
+                unit.tick(delta, map1);
+                lastPoints.forEach(last=>{
+                    map1[last.y][last.x] = 0;
+                })
                 const pos = unit.pos;
                 //ctx.fillStyle = '#f009';
                 const usize = 1;
@@ -442,8 +473,8 @@ export class TestScene {
                     }
                 }
 
-
-                if (unit.path){
+                const drawPath = true;
+                if (unit.path && drawPath){
                     unit.path.forEach((pos)=>{
                         //ctx.fillStyle = '#fffe';
                         //ctx.fillRect(pos.x * tileSize, pos.y * tileSize, tileSize, tileSize);
