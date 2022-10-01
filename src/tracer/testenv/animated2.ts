@@ -117,10 +117,13 @@ class ChunkedArray<T extends IPositioned>{
         if (lastChunk == chunk){
             return;
         }
+        //console.log('upd ')
         const index = lastChunk.findIndex(it=> it == item);
         if (index !=-1){
             lastChunk.splice(index, 1);
             this.length--;
+        } else {
+            console.log('shit no item')
         }
         chunk.push(item);
         this.length++;
@@ -190,8 +193,8 @@ class Unit{
                 if(this.wait && map[next.y][next.x] != 0){
                     //map.forEach(row=>row.forEach((cell, j)=> row[j] != 0 ? -1 : maxValue))
                     const indMap = this.indMap; //not full map to index
-                    for (let y=-10; y<10; y++){
-                        for (let x=-10; x<10; x++){
+                    for (let y=-20; y<20; y++){
+                        for (let x=-20; x<20; x++){
                             if (indMap[next.y+y] && indMap[next.y+y][next.x+x]!=null){
                                 indMap[next.y+y][next.x+x] = map[next.y+y][next.x+x] !=0 ? -1 : maxValue;
                             }
@@ -244,6 +247,9 @@ function indexateCorrect(map:Array<Array<number>>, path:Array<Vector>, points:Ar
         const pathPoint = path.find(pp=> pp.x == point.x && pp.y == point.y);
         return pathPoint;
     })
+    if (generation>10){
+        return null;
+    }
     if (stopPoint){
         return Vector.fromIVector(stopPoint);
     }
@@ -561,6 +567,7 @@ export class TestScene {
                     map1[last.y][last.x] = 1;
                 })
                 const pos = unit.pos;
+                map1[pos.y][pos.x] = 1;
                 this.cUnits.updateItem(unit, lastPos);
               /*  this.cUnits.getWithClosestItems(lastPos).forEach(unit2=>{
                     if (unit === unit2) return;
