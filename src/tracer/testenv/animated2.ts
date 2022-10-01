@@ -11,6 +11,7 @@ import {ThreeLevelHPA} from '../tracelib/tracePacks/ThreeLevelHPA';
 import {SimpleWave} from '../tracelib/tracePacks/SimpleWave';
 import { iteration } from "../tracelib/traceCore/tracerBase";
 import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
+import { steps } from "../tracelib/traceCore/traceSteps";
 
 const mapSize = 512;
 export class Canvas extends Control {
@@ -81,6 +82,73 @@ export class Canvas extends Control {
     destroy(): void {
         window.removeEventListener('resize', this.autoSize);
         super.destroy();
+    }
+}
+
+interface IPositioned {
+    pos: Vector;
+}
+
+class ChunkedArray<T extends IPositioned>{
+    items: Array<T> = [];
+    chunks: T[][][];
+    chunkSize = 16;
+    constructor(items:Array<T>){
+        items = items;
+        this.chunks = [];
+        for (let y = 0; y< mapSize / this.chunkSize; y++){
+            const row:T[][] = [];
+            for (let x = 0; x< mapSize / this.chunkSize; x++){
+                row.push([]);
+            }
+            this.chunks.push(row);
+        }
+        items.forEach(it=>{
+            const chunk = this.getChunk(it.pos);
+            chunk.push(it);
+        })
+    }
+
+    updateItem(item:T, lastPos:Vector){
+        const lastChunk = this.getChunk(lastPos);
+        const chunk = this.getChunk(item.pos);
+        if (lastChunk == chunk){
+            return;
+        }
+        const index = lastChunk.findIndex(it=> it == item);
+        if (index !=-1){
+            lastChunk.splice(index, 1);
+        }
+        chunk.push(item);
+    }
+
+    getChunk(pos:Vector){
+        const row = this.chunks[Math.floor(pos.y / this.chunkSize)];
+        if (!row){
+            return null;
+        }
+        return row[Math.floor(pos.x / this.chunkSize)]||null;
+    }
+
+    getWithClosest(pos:Vector){
+        const chunks:T[][] = [];
+        steps.forEach(step=>{
+            const chunk = this.getChunk(pos.clone().add(Vector.fromIVector(step)));
+            if (chunk){
+                chunks.push(chunk);
+            }
+        })
+    }
+
+    getWithClosestItems(pos:Vector){
+        const items:T[] = [];
+        steps.forEach(step=>{
+            const chunk = this.getChunk(pos.clone().add(Vector.fromIVector(step)));
+            if (chunk){
+                chunk.forEach(it=>items.push(it));
+            }
+        })
+        return items;
     }
 }
 
@@ -205,6 +273,7 @@ export class TestScene {
     tracers: (TwoLevelHPA | ThreeLevelHPA | SimpleWave)[] = [];
     units: Array<Unit>;
     builds: Build[];
+    cUnits: ChunkedArray<Unit>;
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render);
@@ -231,6 +300,7 @@ export class TestScene {
             const unit = new Unit(this.tracers[0] as TwoLevelHPA, pos);
             this.units.push(unit);
         }
+        this.cUnits = new ChunkedArray(this.units);
 
         this.builds = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         for (let i=0; i<10; i++){
@@ -445,7 +515,8 @@ export class TestScene {
                     map1[last.y][last.x] = 0;
                 })
                 
-                this.units.forEach(unit2=>{
+                //this.units.forEach(unit2=>{
+                this.cUnits.getWithClosestItems(unit.pos).forEach(unit2=>{
                     if (unit === unit2) return;
                     map1[unit2.pos.y][unit2.pos.x] = 1;
                     if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
@@ -453,7 +524,8 @@ export class TestScene {
                         map1[next.y][next.x] = 1;
                     }
                 });
-                const lastPoints = [unit.pos.clone()];
+                const lastPos =unit.pos.clone();
+                const lastPoints = [lastPos];
                 if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
                     lastPoints.push(unit.path[unit.path.length-1])
                 }
@@ -462,6 +534,7 @@ export class TestScene {
                     map1[last.y][last.x] = 0;
                 })
                 const pos = unit.pos;
+                this.cUnits.updateItem(unit, lastPos);
                 //ctx.fillStyle = '#f009';
                 const usize = 1;
                 for (let y = -2; y<2; y++){
