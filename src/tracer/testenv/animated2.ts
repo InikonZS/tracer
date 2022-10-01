@@ -182,7 +182,7 @@ class Unit{
         this.indMap = indMap;
     }
 
-    tick(delta:number, map:number[][], utracer:TwoLevelHPA){
+    tick(delta:number, map:number[][], getUtracer:()=>TwoLevelHPA){
         const verbose = false;
         if (!this.indMap){
             //
@@ -193,9 +193,9 @@ class Unit{
             this.tm = 0;
             if (this.path && this.path.length){
                 const next = this.path.pop();
-                if(this.wait && map[next.y][next.x] != 0 && this.noCorrectCounter>10){
+                if(this.wait && map[next.y][next.x] != 0 && this.noCorrectCounter>50){
                     this.noCorrectCounter = 0;
-                    const tracer =utracer;// new TwoLevelHPA(map);
+                    const tracer =getUtracer();// new TwoLevelHPA(map);
                     if (this.clickedPoint){
                         tracer.updateTree([{pos: this.pos, val:0}])
                         this.path = tracer.trace(this.pos, this.clickedPoint).ph;
@@ -335,7 +335,7 @@ export class TestScene {
         }
         this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue));
-        for (let i=0; i<500; i++){
+        for (let i=0; i<2500; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (map[pos.y][pos.x]!=0){
                 i--;
@@ -549,10 +549,10 @@ export class TestScene {
                         map1[next.y][next.x] = 1;
                     }
                 });
-                const u1 = this.units.find(u=>{
-                    return u.noCorrectCounter>=10;
-                })
-                const utracer = u1 && new TwoLevelHPA(map1);
+                //const u1 = this.units.find(u=>{
+                //    return u.noCorrectCounter>=50;
+                //})
+                let utracer:TwoLevelHPA = null;
             this.units.forEach((unit)=>{
                 
                 /*if (unit.path && unit.path[unit.path.length-1]){
@@ -588,7 +588,12 @@ export class TestScene {
                 if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
                     lastPoints.push(unit.path[unit.path.length-1])
                 }
-                unit.tick(delta, map1, utracer);
+                unit.tick(delta, map1, ()=>{
+                    if (!utracer){
+                        utracer = new TwoLevelHPA(map1);
+                    }
+                    return utracer; 
+                });
                 lastPoints.forEach(last=>{
                     map1[last.y][last.x] = 1;
                 })
