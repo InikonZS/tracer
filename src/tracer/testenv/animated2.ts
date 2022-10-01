@@ -93,8 +93,9 @@ class ChunkedArray<T extends IPositioned>{
     items: Array<T> = [];
     chunks: T[][][];
     chunkSize = 16;
+    length:number;
     constructor(items:Array<T>){
-        items = items;
+        this.items = items;
         this.chunks = [];
         for (let y = 0; y< mapSize / this.chunkSize; y++){
             const row:T[][] = [];
@@ -107,6 +108,7 @@ class ChunkedArray<T extends IPositioned>{
             const chunk = this.getChunk(it.pos);
             chunk.push(it);
         })
+        this.length = items.length;
     }
 
     updateItem(item:T, lastPos:Vector){
@@ -118,11 +120,14 @@ class ChunkedArray<T extends IPositioned>{
         const index = lastChunk.findIndex(it=> it == item);
         if (index !=-1){
             lastChunk.splice(index, 1);
+            this.length--;
         }
         chunk.push(item);
+        this.length++;
     }
 
     getChunk(pos:Vector){
+        //console.log(this.length);
         const row = this.chunks[Math.floor(pos.y / this.chunkSize)];
         if (!row){
             return null;
@@ -162,29 +167,36 @@ class Unit{
     wait: boolean = false;
     indMap: Array2d;
     //map: number[][];
-    constructor(tracer: TwoLevelHPA, pos: Vector){
+    constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d){
         this.tracer = tracer;
         //this.map = map;
         this.pos = pos;
         this.path = [];
+
+        this.indMap = indMap;
     }
 
     tick(delta:number, map:number[][]){
         const verbose = false;
         if (!this.indMap){
-            this.indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue))
+            //
         }
+        
         this.tm+=delta;
-        if (this.tm>10.5){
+        if (this.tm>1.5){
             this.tm = 0;
             if (this.path && this.path.length){
                 const next = this.path.pop();
                 if(this.wait && map[next.y][next.x] != 0){
+                    //map.forEach(row=>row.forEach((cell, j)=> row[j] != 0 ? -1 : maxValue))
                     const indMap = this.indMap; //not full map to index
                     for (let y=-10; y<10; y++){
                         for (let x=-10; x<10; x++){
                             if (indMap[next.y+y] && indMap[next.y+y][next.x+x]!=null){
                                 indMap[next.y+y][next.x+x] = map[next.y+y][next.x+x] !=0 ? -1 : maxValue;
+                            }
+                            if (x == -10 || x == 10-1 || y==-10 || y ==10-1){
+                             //   indMap[next.y+y][next.x+x] = map[next.y+y][next.x+x] = -1;
                             }
                         } 
                     }
@@ -294,13 +306,14 @@ export class TestScene {
             this.tracers.push(tracer);
         }
         this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
-        for (let i=0; i<1200; i++){
+        const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue));
+        for (let i=0; i<1500; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (map[pos.y][pos.x]!=0){
                 i--;
                 continue;
             }
-            const unit = new Unit(this.tracers[0] as TwoLevelHPA, pos);
+            const unit = new Unit(this.tracers[0] as TwoLevelHPA, pos, indMap);
             this.units.push(unit);
         }
         this.cUnits = new ChunkedArray(this.units);
@@ -311,8 +324,10 @@ export class TestScene {
             this.builds.push(build);
         }
 
-        this.units.forEach(it=> it.trace(this.builds[Math.floor(Math.random()*this.builds.length)].pos))
-
+        this.units.forEach((it, i)=> i<1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)].pos))
+        setTimeout(()=>{
+            this.units.forEach((it, i)=> i>=1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)].pos))
+        },1000);
         this.chunks = this.tracers[0].chunks;
         const tileSize = 2;
         this.canvas.onClick = (e)=>{
@@ -497,6 +512,15 @@ export class TestScene {
                 }
             });*/
             const map1 = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
+            //this.units.forEach(unit2=>{
+                this.units.forEach(unit2=>{
+                    //if (unit === unit2) return;
+                    map1[unit2.pos.y][unit2.pos.x] = 1;
+                    if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
+                        const next = unit2.path[unit2.path.length-1];
+                        map1[next.y][next.x] = 1;
+                    }
+                });
             this.units.forEach((unit)=>{
                 
                 /*if (unit.path && unit.path[unit.path.length-1]){
@@ -534,11 +558,11 @@ export class TestScene {
                 }
                 unit.tick(delta, map1);
                 lastPoints.forEach(last=>{
-                    map1[last.y][last.x] = 0;
+                    map1[last.y][last.x] = 1;
                 })
                 const pos = unit.pos;
                 this.cUnits.updateItem(unit, lastPos);
-                /*this.cUnits.getWithClosestItems(lastPos).forEach(unit2=>{
+              /*  this.cUnits.getWithClosestItems(lastPos).forEach(unit2=>{
                     if (unit === unit2) return;
                     map1[unit2.pos.y][unit2.pos.x] = 0;
                     if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
