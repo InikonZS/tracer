@@ -193,6 +193,7 @@ class Unit{
         if (this.tm>10.5){
             this.tm = 0;
             if ((!this.path || !this.path.length) && this.clickedPoint && this.clickedPoint.clone().sub(this.pos).abs()>10){
+                //return;
                 if (this.noRetraceCounter< 150){
                     this.noRetraceCounter++;
                     return;
@@ -213,6 +214,7 @@ class Unit{
                 const next = this.path.pop();
                 if(this.wait && map[next.y][next.x] != 0 && this.noCorrectCounter>50){
                     this.noCorrectCounter = 0;
+                    //return;
                     const tracer =getUtracer();// new TwoLevelHPA(map);
                     if (this.clickedPoint){
                         tracer.updateTree([{pos: this.pos, val:0}])
@@ -400,6 +402,7 @@ export class TestScene {
                                      //   this.canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = '#0ff';
                                     //}
                                     changed.push({pos: new Vector(vector.x + x1, vector.y +y1), val: 0 })
+                                    this.map[vector.y +y1][vector.x + x1] = 0;
                                 }
                             }
                             
@@ -607,6 +610,7 @@ export class TestScene {
                 let updatedTree = false;
                 if (!this.utracer){
                     this.utracer = new TwoLevelHPA(this.map);
+                    this.tracers.push(this.utracer);
                 }
                 const ps = this.units.map(it=> ({pos:it.pos.clone(), val:1}))
             this.units.forEach((unit)=>{
