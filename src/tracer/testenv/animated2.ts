@@ -131,9 +131,9 @@ class ChunkedArray<T extends IPositioned>{
     }
 
     getWithClosest(pos:Vector){
-        const chunks:T[][] = [];
+        const chunks:T[][] = [this.getChunk(pos.clone())];
         steps.forEach(step=>{
-            const chunk = this.getChunk(pos.clone().add(Vector.fromIVector(step)));
+            const chunk = this.getChunk(pos.clone().add(Vector.fromIVector(step).scale(this.chunkSize)));
             if (chunk){
                 chunks.push(chunk);
             }
@@ -143,11 +143,13 @@ class ChunkedArray<T extends IPositioned>{
     getWithClosestItems(pos:Vector){
         const items:T[] = [];
         steps.forEach(step=>{
-            const chunk = this.getChunk(pos.clone().add(Vector.fromIVector(step)));
+            const chunk = this.getChunk(pos.clone().add(Vector.fromIVector(step).scale(this.chunkSize)));
             if (chunk){
                 chunk.forEach(it=>items.push(it));
             }
         })
+        this.getChunk(pos.clone()).forEach(it=> items.push(it));
+
         return items;
     }
 }
@@ -168,6 +170,7 @@ class Unit{
     }
 
     tick(delta:number, map:number[][]){
+        const verbose = false;
         if (!this.indMap){
             this.indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue))
         }
@@ -187,14 +190,14 @@ class Unit{
                     }
                     //const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue))
                     const correctPoint = this.correct(indMap);
-                    console.log('try correct');
+                    verbose && console.log('try correct');
                     if (!correctPoint){
-                        console.log('no correct');
+                        verbose && console.log('no correct');
                         return;
                     }
                     const correctIndex = this.path.findIndex(it=> it.x == correctPoint.x && it.y == correctPoint.y);
                     const correctPath = findPath(indMap, this.pos, correctPoint);
-                    console.log('correct points ', correctPath.length, 'cutted ', this.path.length - correctIndex);
+                    verbose && console.log('correct points ', correctPath.length, 'cutted ', this.path.length - correctIndex);
                     this.path.splice(correctIndex);
                     this.path = this.path.concat(correctPath);
                 } else
@@ -291,7 +294,7 @@ export class TestScene {
             this.tracers.push(tracer);
         }
         this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
-        for (let i=0; i<200; i++){
+        for (let i=0; i<1200; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (map[pos.y][pos.x]!=0){
                 i--;
@@ -535,6 +538,14 @@ export class TestScene {
                 })
                 const pos = unit.pos;
                 this.cUnits.updateItem(unit, lastPos);
+                /*this.cUnits.getWithClosestItems(lastPos).forEach(unit2=>{
+                    if (unit === unit2) return;
+                    map1[unit2.pos.y][unit2.pos.x] = 0;
+                    if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
+                        const next = unit2.path[unit2.path.length-1];
+                        map1[next.y][next.x] = 0;
+                    }
+                });*/
                 //ctx.fillStyle = '#f009';
                 const usize = 1;
                 for (let y = -2; y<2; y++){
