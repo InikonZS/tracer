@@ -182,7 +182,7 @@ class Unit{
         this.indMap = indMap;
     }
 
-    tick(delta:number, map:number[][]){
+    tick(delta:number, map:number[][], utracer:TwoLevelHPA){
         const verbose = false;
         if (!this.indMap){
             //
@@ -195,9 +195,11 @@ class Unit{
                 const next = this.path.pop();
                 if(this.wait && map[next.y][next.x] != 0 && this.noCorrectCounter>10){
                     this.noCorrectCounter = 0;
-                    const tracer = new TwoLevelHPA(map);
+                    const tracer =utracer;// new TwoLevelHPA(map);
                     if (this.clickedPoint){
+                        tracer.updateTree([{pos: this.pos, val:0}])
                         this.path = tracer.trace(this.pos, this.clickedPoint).ph;
+                        tracer.updateTree([{pos: this.pos, val:1}])
                         console.log('retraced');
                     } else {
                         console.log('no path 0');
@@ -547,6 +549,10 @@ export class TestScene {
                         map1[next.y][next.x] = 1;
                     }
                 });
+                const u1 = this.units.find(u=>{
+                    return u.noCorrectCounter>=10;
+                })
+                const utracer = u1 && new TwoLevelHPA(map1);
             this.units.forEach((unit)=>{
                 
                 /*if (unit.path && unit.path[unit.path.length-1]){
@@ -582,7 +588,7 @@ export class TestScene {
                 if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
                     lastPoints.push(unit.path[unit.path.length-1])
                 }
-                unit.tick(delta, map1);
+                unit.tick(delta, map1, utracer);
                 lastPoints.forEach(last=>{
                     map1[last.y][last.x] = 1;
                 })
