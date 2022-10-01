@@ -168,7 +168,10 @@ class Unit{
     path: Array<Vector>;
     tm:number = 0;
     wait: boolean = false;
+    noCorrectCounter: number = 0;
     indMap: Array2d;
+    finishPoint: Vector;
+    clickedPoint: Vector;
     //map: number[][];
     constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d){
         this.tracer = tracer;
@@ -190,6 +193,16 @@ class Unit{
             this.tm = 0;
             if (this.path && this.path.length){
                 const next = this.path.pop();
+                if(this.wait && map[next.y][next.x] != 0 && this.noCorrectCounter>10){
+                    this.noCorrectCounter = 0;
+                    const tracer = new TwoLevelHPA(map);
+                    if (this.clickedPoint){
+                        this.path = tracer.trace(this.pos, this.clickedPoint).ph;
+                        console.log('retraced');
+                    } else {
+                        console.log('no path 0');
+                    }
+                } else
                 if(this.wait && map[next.y][next.x] != 0){
                     //map.forEach(row=>row.forEach((cell, j)=> row[j] != 0 ? -1 : maxValue))
                     const indMap = this.indMap; //not full map to index
@@ -208,6 +221,8 @@ class Unit{
                     verbose && console.log('try correct');
                     if (!correctPoint){
                         verbose && console.log('no correct');
+                        this.noCorrectCounter++;
+                        this.path.push(next);
                         return;
                     }
                     const correctIndex = this.path.findIndex(it=> it.x == correctPoint.x && it.y == correctPoint.y);
@@ -232,7 +247,12 @@ class Unit{
     }
 
     trace(point:Vector){
+        this.clickedPoint = point;
         this.path = this.tracer.trace(this.pos, point).ph;
+        if (!this.path[0]){
+            console.log('path 0 error');
+        }
+        this.finishPoint = this.path[0];
     }
 
     render(ctx:CanvasRenderingContext2D){
@@ -247,7 +267,7 @@ function indexateCorrect(map:Array<Array<number>>, path:Array<Vector>, points:Ar
         const pathPoint = path.find(pp=> pp.x == point.x && pp.y == point.y);
         return pathPoint;
     })
-    if (generation>10){
+    if (generation>100){
         return null;
     }
     if (stopPoint){
@@ -313,7 +333,7 @@ export class TestScene {
         }
         this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue));
-        for (let i=0; i<1500; i++){
+        for (let i=0; i<500; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (map[pos.y][pos.x]!=0){
                 i--;
