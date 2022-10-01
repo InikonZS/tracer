@@ -58,7 +58,8 @@ export function findChunkPath(tree: Record<string , IChunk>, destHash: string) {
 
     }
     if (crashDetector <= 0) {
-        throw new Error('Infinity cycle');
+        return null;
+        //throw new Error('Infinity cycle');
     }
     return path;
 }

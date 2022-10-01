@@ -2,7 +2,7 @@ import Control from "../../common/control";
 import { IVector, Vector } from '../../common/vector';
 import { RenderTicker } from './ticker';
 import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageDataTools';
-import mapFile from './assets/map5.png';
+import mapFile from './assets/map4.png';
 import {findPath, indexate, tracePath} from '../tracelib/tracer';
 import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap, dublicateChunkTree, updateChunkTree, getHash, limitTree, getPathBreaks} from '../tracelib/getIsolated';
 import {createTracer, ITracer} from '../tracelib/tracePack';
@@ -13,7 +13,7 @@ import { iteration } from "../tracelib/traceCore/tracerBase";
 import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
 import { steps } from "../tracelib/traceCore/traceSteps";
 
-const mapSize = 512;
+const mapSize = 256;
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     public ctx: CanvasRenderingContext2D;
@@ -54,7 +54,7 @@ export class Canvas extends Control {
             e.preventDefault();
         }
         this.canvas.node.onmousedown = (e: MouseEvent) => {
-
+            
         }
 
         this.ticker.onTick.add((delta) => {
@@ -172,6 +172,7 @@ class Unit{
     indMap: Array2d;
     finishPoint: Vector;
     clickedPoint: Vector;
+    noRetraceCounter: any;
     //map: number[][];
     constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d){
         this.tracer = tracer;
@@ -191,6 +192,23 @@ class Unit{
         this.tm+=delta;
         if (this.tm>10.5){
             this.tm = 0;
+            if ((!this.path || !this.path.length) && this.clickedPoint && this.clickedPoint.clone().sub(this.pos).abs()>10){
+                if (this.noRetraceCounter< 150){
+                    this.noRetraceCounter++;
+                    return;
+                }{
+                    this.noRetraceCounter =0;
+                    this.noCorrectCounter =0;
+                }
+                const tracer = getUtracer();
+                tracer.updateTree([{pos: this.pos, val:0}])
+                const nextPath= tracer.trace(this.pos, this.clickedPoint).ph;
+                tracer.updateTree([{pos: this.pos, val:1}])
+                if (nextPath && nextPath.length){
+                    this.path = nextPath;
+                }
+                console.log('hard retraced');
+            }else
             if (this.path && this.path.length){
                 const next = this.path.pop();
                 if(this.wait && map[next.y][next.x] != 0 && this.noCorrectCounter>50){
@@ -198,8 +216,11 @@ class Unit{
                     const tracer =getUtracer();// new TwoLevelHPA(map);
                     if (this.clickedPoint){
                         tracer.updateTree([{pos: this.pos, val:0}])
-                        this.path = tracer.trace(this.pos, this.clickedPoint).ph;
+                        const nextPath= tracer.trace(this.pos, this.clickedPoint).ph;
                         tracer.updateTree([{pos: this.pos, val:1}])
+                        if (nextPath){
+                            this.path = nextPath;
+                        }
                         console.log('retraced');
                     } else {
                         console.log('no path 0');
@@ -362,7 +383,36 @@ export class TestScene {
         const tileSize = 2;
         this.canvas.onClick = (e)=>{
             const vector = new Vector(Math.round(e.offsetX / tileSize), Math.round(e.offsetY / tileSize));
-            this.startPoint = vector;
+            //this.startPoint = vector;
+
+            const changed:Array<{pos:Vector, val:number}> = [];
+           // this.map.forEach((row, y)=>{
+             //   row.forEach((cell, x)=>{
+    
+                    //if (Math.random()<0.01){
+                        //row[x] = 1;
+                        //const val = (Math.random() < 0.01 ? 1 : row[x]);
+                        //if (val != row[x]){
+                            for (let y1 = -12; y1<12; y1++){
+                                for (let x1 = -12; x1<12; x1++){
+                                    //const size = this.chunks[0][0][0].length;
+                                    //if (this.canvas.canvasBack[ (pos.y + y)]){
+                                     //   this.canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = '#0ff';
+                                    //}
+                                    changed.push({pos: new Vector(vector.x + x1, vector.y +y1), val: 0 })
+                                }
+                            }
+                            
+                            //row[x] = val;
+                        //};
+                   // }
+                    //ctx.fillStyle = ['#fff', '#ff0', '#f0f'][cell] || '#0ff';
+                   // ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+               // )
+            //});
+            if (changed.length){
+                this.tracers.forEach(it=> it.updateTree(changed));
+            }
         }
 
         this.canvas.onMove = (e)=>{
