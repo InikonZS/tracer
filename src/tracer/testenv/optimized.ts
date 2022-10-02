@@ -137,6 +137,26 @@ export class TestScene {
         showTime(indFind, [data[data.length-1]], 1000, 'find i');
         showTime(indFind, [data[data.length-1]], 1000, 'find i');
 
+        const arr1 = fill2(10000);
+        showTime(fill2, [10000], 100, 'fill 10000');
+        showTime(filterTest, [10000, 1000], 100, 'filter');
+        showTime(spliceTest, [10000, 1000], 100, 'splice');
+        showTime(swapRemoveTest, [10000, 1000], 100, 'swap');
+        showTime(swap2RemoveTest, [10000, 1000], 100, 'swap2');
+        showTime(swap2EachRemoveTest, [10000, 1000], 100, 'swap2each');
+        showTime(fill2, [100000], 100, 'fill 100000');
+        showTime(filterTest, [100000, 1000], 100, 'filter');
+        showTime(spliceTest, [100000, 1000], 100, 'splice');
+        showTime(swapRemoveTest, [100000, 1000], 100, 'swap');
+        showTime(swap2RemoveTest, [100000, 1000], 100, 'swap2');
+        showTime(swap2EachRemoveTest, [100000, 1000], 100, 'swap2each');
+        showTime(fill2, [100000], 100, 'fill 100000');
+        showTime(filterTest, [100000, 10000], 100, 'filter');
+        showTime(spliceTest, [100000, 10000], 100, 'splice');
+        showTime(swapRemoveTest, [100000, 10000], 100, 'swap');
+        showTime(swap2RemoveTest, [100000, 10000], 100, 'swap2');
+        showTime(swap2EachRemoveTest, [100000, 10000], 100, 'swap2each');
+
         const image = await loadImage(mapFile);
         const map = getMapFromImageData(getImageData(image));
        /* tracePath(map, this.startPoint, this.endPoint, (path)=>{
@@ -440,6 +460,7 @@ function fill2(iterations: number){
     for (let i = 0; i< iterations; i++){
         arr[i] = Math.random();
     }
+    return arr;
 }
 
 function fill2d1(iterations: number){
@@ -478,6 +499,53 @@ function iterate2(arr:Array<Array<any>>){
            const a = row[j] * 2; 
         }
     }
+}
+
+let testArr = fill2(10000);
+
+
+function filterTest(la:number, ld:number){
+    const arr = fill2(la);
+    return arr.filter((it, i)=>{return i>=100 && i<100+ld});
+}
+
+function spliceTest(la:number, ld:number){
+    const arr = fill2(la);
+    for (let i = 0; i< ld; i++){
+        arr.splice(100, 1);
+    }
+    return arr;
+}
+
+function swapRemoveTest(la:number, ld:number){
+    const arr = fill2(la);
+    for (let i = 0; i< ld; i++){
+        //const buf = arr[100];
+        arr[100] = arr[arr.length-1];
+        arr.pop();
+    }
+    return arr;
+}
+
+function swap2RemoveTest(la:number, ld:number){
+    const arr = fill2(la);
+    for (let i = 0; i< ld; i++){
+        //const buf = arr[100];
+        arr[100] = arr[arr.length-1 - i];
+    }
+    arr.length = arr.length-ld;
+    return arr;
+}
+
+function swap2EachRemoveTest(la:number, ld:number){
+    const arr = fill2(la);
+    arr.forEach((it, i)=>{
+        if(i>=100 && i<100+ld){
+            arr[100] = arr[arr.length-1 - i];
+        }
+    });
+    arr.length = arr.length-ld;
+    return arr;
 }
 
 const data = new Array(100).fill(null).map((it, i)=>{
