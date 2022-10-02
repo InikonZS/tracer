@@ -61,7 +61,7 @@ class View extends Control{
         this.field = model.field.map((row, y)=>{
             const rowView = new Control(this.node, 'div', 'row');
             return row.map((cellData, x)=>{
-                const ctor = viewMap[cellData.type];
+                const ctor: ICellViewCtor = viewMap[cellData.type];
                 const view = new ctor(rowView.node, cellData);
                 view.update(cellData.health);
                 /*view.onClick = ()=>{
@@ -190,8 +190,42 @@ class CellModel{
     }
 }
 
-const viewMap: Record<number, typeof CellView> = {
+const viewMap: Record<number, /*typeof CellView*/ICellViewCtor> = {
     0: CellView,
     1: CellView1,
     2: CellView
 };
+
+const viewMap1 = {
+    0: CellView,
+    1: CellView1,
+    2: CellView
+};
+
+interface ViewMap1{
+    0: CellView,
+    1: CellView1,
+    2: CellView
+}
+
+interface ICellViewCtor{
+    new(parentNode:HTMLElement, cellModel: CellModel):ICellView;
+}
+
+const mp: Record<string, number> = {};
+mp['dsffs'] = 4324;
+
+/*function f<T extends keyof typeof viewMap1>(type:T): ViewMap1[T]{//typeof viewMap1[T]{
+    const ctor: typeof viewMap1[T] = viewMap1[type];
+    if (type === 1){
+    const inst = new ctor(document.body, new CellModel(32));
+    }
+    return new viewMap1[type];
+}
+*/
+//f(0);
+
+const ob = {sd:43, fd:453} 
+const sdf: keyof typeof ob = 'sd'
+
+addEventListener
