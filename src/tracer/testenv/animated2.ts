@@ -172,7 +172,7 @@ class Unit{
     }
 
     correctPath(next:Vector, map: Array2d){
-        const verbose = false;
+        //const verbose = false;
         const indMap = this.indMap; //not full map to index
         for (let y=-20; y<20; y++){
             for (let x=-20; x<20; x++){
@@ -185,7 +185,7 @@ class Unit{
             } 
         }
         //const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue))
-        const correctPoint = this.correct(indMap);
+        /*const correctPoint = this.correct(indMap);
         verbose && console.log('try correct');
         if (!correctPoint){
             verbose && console.log('no correct');
@@ -197,7 +197,14 @@ class Unit{
         const correctPath = findPath(indMap, this.pos, correctPoint);
         this.noCorrectCounter=0;
         verbose && console.log('correct points ', correctPath.length, 'cutted ', this.path.length - correctIndex);
-        //this.path.splice(correctIndex);
+        //this.path.splice(correctIndex);*/
+        const res = getCorrectionPath(this.path, this.pos, indMap);
+        if (res == null){
+            this.noCorrectCounter++;
+            this.path.push(next);
+            return;
+        }
+        const {correctPath, correctIndex} = res;
         this.path.length = correctIndex+1;
         this.path = this.path.concat(correctPath);
     }
@@ -214,6 +221,26 @@ class Unit{
     render(ctx:CanvasRenderingContext2D){
        // ctx.fillRect()
     }
+}
+
+function getCorrectionPath(path:Vector[], pos:Vector, indMap:Array2d){
+    const verbose = false;
+    const correctPoint = indexateCorrect(indMap, path, [pos], 0);
+        verbose && console.log('try correct');
+        if (!correctPoint){
+            verbose && console.log('no correct');
+            //this.noCorrectCounter++;
+            //this.path.push(next);
+            return null;
+        }
+        const correctIndex = path.findIndex(it=> it.x == correctPoint.x && it.y == correctPoint.y);
+        const correctPath = findPath(indMap, pos, correctPoint);
+        //this.noCorrectCounter=0;
+        verbose && console.log('correct points ', correctPath.length, 'cutted ', path.length - correctIndex);
+        //this.path.splice(correctIndex);
+        //path.length = correctIndex+1;
+        //path = this.path.concat(correctPath);
+        return {correctPath, correctIndex};
 }
 
 function indexateCorrect(map:Array<Array<number>>, path:Array<Vector>, points:Array<{x:number, y:number}>, generation:number):Vector | null{
@@ -380,7 +407,7 @@ export class TestScene {
                         //row[x] = 1;
                         const val = (Math.random() < 0.01 ? 1 : row[x]);
                         if (val != row[x]){
-                          //  changed.push({pos: new Vector(x, y), val: val })
+                            //changed.push({pos: new Vector(x, y), val: val })
                             //row[x] = val;
                         };
                     }
