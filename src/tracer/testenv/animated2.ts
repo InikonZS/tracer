@@ -14,6 +14,17 @@ import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
 import { steps } from "../tracelib/traceCore/traceSteps";
 
 const mapSize = 512;
+
+function deleteElementFromArray<T>(array:Array<T>, element:T):T | null{
+    const index = array.findIndex(it=> it === element);
+    if (index !=-1){
+        //array.splice(index, 1);
+        array[index] = array[array.length - 1];
+        array.pop();
+        return element;
+    }
+    return null;
+}
 export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     public ctx: CanvasRenderingContext2D;
@@ -118,13 +129,14 @@ class ChunkedArray<T extends IPositioned>{
             return;
         }
         //console.log('upd ')
-        const index = lastChunk.findIndex(it=> it == item);
+        /*const index = lastChunk.findIndex(it=> it == item);
         if (index !=-1){
             lastChunk.splice(index, 1);
             this.length--;
         } else {
             console.log('shit no item')
-        }
+        }*/
+        const deleted = deleteElementFromArray(lastChunk, item);
         chunk.push(item);
         this.length++;
     }

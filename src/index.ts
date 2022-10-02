@@ -12,6 +12,7 @@ const rootWrapper = new Control(document.body, 'div', 'screen');
 //runBabylonExample(rootWrapper.node);
 //const testScene = new TestScene(rootWrapper.node);
 const optScene2 = new OptScene2(rootWrapper.node);
+//const optScene = new OptScene(rootWrapper.node);
 //const workerScene = new WorkerScene(rootWrapper.node);
 //new MiniMapTestScene(rootWrapper.node)
 //const demo = new Demo(rootWrapper.node);
