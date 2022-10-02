@@ -220,7 +220,7 @@ class Unit{
                 if (nextPath && nextPath.length){
                     this.path = nextPath;
                 }
-                console.log('hard retraced');
+                verbose && console.log('hard retraced');
             }else
             if (this.path && this.path.length){
                 const next = this.path.pop();
@@ -235,7 +235,7 @@ class Unit{
                         if (nextPath){
                             this.path = nextPath;
                         }
-                        console.log('retraced');
+                        verbose && console.log('retraced');
                     } else {
                         console.log('no path 0');
                     }
@@ -266,7 +266,8 @@ class Unit{
                     const correctPath = findPath(indMap, this.pos, correctPoint);
                     this.noCorrectCounter=0;
                     verbose && console.log('correct points ', correctPath.length, 'cutted ', this.path.length - correctIndex);
-                    this.path.splice(correctIndex);
+                    //this.path.splice(correctIndex);
+                    this.path.length = correctIndex+1;
                     this.path = this.path.concat(correctPath);
                 } else
                 if (map[next.y][next.x] != 0){
@@ -372,7 +373,7 @@ export class TestScene {
         }
         this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue));
-        for (let i=0; i<200; i++){
+        for (let i=0; i<700; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (map[pos.y][pos.x]!=0){
                 i--;
@@ -588,134 +589,7 @@ export class TestScene {
         }
 
         if (this.units && this.builds){
-            //const map = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
-            this.units.forEach(unit=>{
-                this.units.forEach(unit2=>{
-                    if  (unit == unit2) {
-                        return;
-                    }
-                    if (unit.pos.x == unit2.pos.x && unit.pos.y == unit2.pos.y){
-                        console.log('shit');
-                    }
-                });
-            });
-            /*this.units.forEach(unit=>{
-                map[unit.pos.y][unit.pos.x] = 1;
-                if (unit.path && unit.path[unit.path.length-1]){
-                    const next = unit.path[unit.path.length-1];
-                    map[next.y][next.x] = 1;
-                }
-            });*/
-            const map1 = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
-            //this.units.forEach(unit2=>{
-                this.units.forEach(unit2=>{
-                    //if (unit === unit2) return;
-                    map1[unit2.pos.y][unit2.pos.x] = 1;
-                    if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
-                        const next = unit2.path[unit2.path.length-1];
-                        map1[next.y][next.x] = 1;
-                    }
-                });
-                //const u1 = this.units.find(u=>{
-                //    return u.noCorrectCounter>=50;
-                //})
-                let updatedTree = false;
-                if (!this.utracer){
-                    this.utracer = new TwoLevelHPA(this.map);
-                    this.tracers.push(this.utracer);
-                }
-                const ps = this.units.map(it=> ({pos:it.pos.clone(), val:1}))
-            this.units.forEach((unit)=>{
-                
-                /*if (unit.path && unit.path[unit.path.length-1]){
-                    const next = unit.path[unit.path.length-1];
-                    map[next.y][next.x] = 0;//this.map[next.y][next.x];
-                
-                
-                    unit.tick(delta, map);
-                    //if (unit.path && unit.path[unit.path.length-1]){
-                      //  const next = unit.path[unit.path.length-1];
-                        map[next.y][next.x] = 1;//this.map[next.y][next.x];
-                    //}
-                }*/
-                const curPoints = [unit.pos.clone()];
-                if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
-                    curPoints.push(unit.path[unit.path.length-1])
-                }
-                curPoints.forEach(last=>{
-                    map1[last.y][last.x] = 0;
-                })
-                
-                //this.units.forEach(unit2=>{
-                this.cUnits.getWithClosestItems(unit.pos).forEach(unit2=>{
-                    if (unit === unit2) return;
-                    map1[unit2.pos.y][unit2.pos.x] = 1;
-                    if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
-                        const next = unit2.path[unit2.path.length-1];
-                        map1[next.y][next.x] = 1;
-                    }
-                });
-                const lastPos =unit.pos.clone();
-                const lastPoints = [lastPos];
-                if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
-                    lastPoints.push(unit.path[unit.path.length-1])
-                }
-                unit.tick(delta, map1, ()=>{
-                    
-                    if (!updatedTree){
-                        updatedTree =true;
-                        this.utracer.updateTree(ps.map(it=> ({pos:it.pos, val:1})))
-                    }
-
-                    return this.utracer; 
-                });
-                lastPoints.forEach(last=>{
-                   // map1[last.y][last.x] = 1;
-                })
-                const pos = unit.pos;
-                map1[pos.y][pos.x] = 1;
-                this.cUnits.updateItem(unit, lastPos);
-              /*  this.cUnits.getWithClosestItems(lastPos).forEach(unit2=>{
-                    if (unit === unit2) return;
-                    map1[unit2.pos.y][unit2.pos.x] = 0;
-                    if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
-                        const next = unit2.path[unit2.path.length-1];
-                        map1[next.y][next.x] = 0;
-                    }
-                });*/
-                //ctx.fillStyle = '#f009';
-                const usize = 1;
-                for (let y = -2; y<2; y++){
-                    for (let x = -2; x<2; x++){
-                        //const size = this.chunks[0][0][0].length;
-                        if (this.canvas.canvasBack[ (pos.y + y)]){
-                            this.canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = '#0ff';
-                        }
-                    }
-                }
-
-                const drawPath = true;
-                if (unit.path && drawPath){
-                    unit.path.forEach((pos)=>{
-                        //ctx.fillStyle = '#fffe';
-                        //ctx.fillRect(pos.x * tileSize, pos.y * tileSize, tileSize, tileSize);
-                        this.canvas.canvasBack[(pos.y)][(pos.x)] = '#fffe';
-                    });
-                }
-                
-                
-            })
-            this.utracer && updatedTree && this.utracer.updateTree(ps.map(it=> ({pos:it.pos, val:0})))
-
-            this.builds.forEach(build=>{
-                const pos = build.pos;
-                for (let y = -2; y<2; y++){
-                    for (let x = -2; x<2; x++){
-                        //const size = this.chunks[0][0][0].length;
-                        this.canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = '#909';
-                    }
-                }
-            })
+            this.processUnits(delta);
         }
 
         if (this.canvas){
@@ -736,5 +610,108 @@ export class TestScene {
 
         ctx.fillStyle = '#9f0';
         //ctx.fillRect(this.endPoint.x * tileSize, this.endPoint.y * tileSize, tileSize, tileSize);
+    }
+
+    debugIntersectUnitsValidate(){
+        this.units.forEach(unit=>{
+            this.units.forEach(unit2=>{
+                if  (unit == unit2) {
+                    return;
+                }
+                if (unit.pos.x == unit2.pos.x && unit.pos.y == unit2.pos.y){
+                    console.log('shit');
+                }
+            });
+        });
+    }
+
+    fillUnitsMap(){
+        const map1 = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
+        this.units.forEach(unit2=>{
+            map1[unit2.pos.y][unit2.pos.x] = 1;
+            if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
+                const next = unit2.path[unit2.path.length-1];
+                map1[next.y][next.x] = 1;
+            }
+        });
+        return map1;
+    }
+
+    drawMarker(pos:Vector, size:number, color:string){
+        for (let y = -size; y<size; y++){
+            for (let x = -size; x<size; x++){
+                if (this.canvas.canvasBack[ (pos.y + y)]){
+                    this.canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = color;
+                }
+            }
+        }
+    }
+
+    processUnits(delta:number){
+        this.debugIntersectUnitsValidate();
+
+        const map1 = this.fillUnitsMap();
+
+        let updatedTree = false;
+        let updatedCounter =0;
+        if (!this.utracer){
+            this.utracer = new TwoLevelHPA(this.map);
+            this.tracers.push(this.utracer);
+        }
+        const ps = this.units.map(it=> ({pos:it.pos.clone(), val:1}));
+
+        this.units.forEach((unit)=>{
+        
+            const curPoints = [unit.pos.clone()];
+            if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
+                curPoints.push(unit.path[unit.path.length-1])
+            }
+            curPoints.forEach(last=>{
+                map1[last.y][last.x] = 0;
+            })
+            
+            this.cUnits.getWithClosestItems(unit.pos).forEach(unit2=>{
+                if (unit === unit2) return;
+                map1[unit2.pos.y][unit2.pos.x] = 1;
+                if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
+                    const next = unit2.path[unit2.path.length-1];
+                    map1[next.y][next.x] = 1;
+                }
+            });
+            const lastPos =unit.pos.clone();
+
+            updatedCounter++;
+            unit.tick(delta, map1, ()=>{
+                
+                if (!updatedTree && updatedCounter>50){
+                    updatedTree =true;
+                    updatedCounter = 0;
+                    this.utracer.updateTree(ps.map(it=> ({pos:it.pos, val:1})))
+                }
+
+                return this.utracer; 
+            });
+
+            const pos = unit.pos;
+            map1[pos.y][pos.x] = 1;
+            this.cUnits.updateItem(unit, lastPos);
+
+            this.drawMarker(pos, 2, "#0ff");
+
+            const drawPath = true;
+            if (unit.path && drawPath){
+                unit.path.forEach((pos)=>{
+                    this.canvas.canvasBack[(pos.y)][(pos.x)] = '#fffe';
+                });
+            }
+            
+            
+        })
+        this.utracer && updatedTree && this.utracer.updateTree(ps.map(it=> ({pos:it.pos, val:0})))
+
+        this.builds.forEach(build=>{
+            const pos = build.pos;
+            this.drawMarker(pos, 2, "#909");
+        })
     }
 }
