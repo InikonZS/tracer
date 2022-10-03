@@ -13,6 +13,7 @@ import { iteration } from "../tracelib/traceCore/tracerBase";
 import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
 import { steps } from "../tracelib/traceCore/traceSteps";
 import { ChunkedArray} from "../tracelib/traceCore/chunkedArray";
+import {getCorrectionPath, indexateCorrect} from "../tracelib/traceCore/correction";
 
 const mapSize = 512;
 
@@ -223,7 +224,7 @@ class Unit{
     }
 }
 
-function getCorrectionPath(path:Vector[], pos:Vector, indMap:Array2d){
+/*function getCorrectionPath(path:Vector[], pos:Vector, indMap:Array2d){
     const verbose = false;
     const correctPoint = indexateCorrect(indMap, path, [pos], 0);
         verbose && console.log('try correct');
@@ -259,7 +260,7 @@ function indexateCorrect(map:Array<Array<number>>, path:Array<Vector>, points:Ar
     if (!points.length) { return null; }
     return indexateCorrect(map, path, nextPoints, generation+1);
   }
-
+*/
 class Build{
     pos: Vector;
     health: number;
