@@ -14,6 +14,7 @@ import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
 import { steps } from "../tracelib/traceCore/traceSteps";
 import { ChunkedArray, deleteElementFromArray, IPositioned} from "../tracelib/traceCore/chunkedArray";
 import {getCorrectionPath, indexateCorrect} from "../tracelib/traceCore/correction";
+import { smoothPath } from "../tracelib/traceCore/smoothPath";
 
 const mapSize = 512;
 
@@ -122,6 +123,10 @@ class Unit{
         this.tm+=delta;
         if (this.tm>10.5){
             this.tm = 0;
+            if (this.enemy && this.clickedPoint.clone().sub(this.enemy.pos).abs()>5){
+                this.correctPathEnd(this.enemy.pos.clone(), map);
+                this.clickedPoint = this.enemy.pos.clone();
+            }
             if (this.enemy && this.enemy.pos.clone().sub(this.pos).abs() <=10){
                 //if (this.enemy.health == 0){
                     //this.enemy = null;
@@ -227,6 +232,34 @@ class Unit{
         const {correctPath, correctIndex} = res;
         this.path.length = correctIndex+1;
         this.path = this.path.concat(correctPath);
+    }
+
+    correctPathEnd(next:Vector, map: Array2d){
+        //const verbose = false;
+        const indMap = this.indMap; //not full map to index
+        for (let y=-20; y<20; y++){
+            for (let x=-20; x<20; x++){
+                if (indMap[next.y+y] && indMap[next.y+y][next.x+x]!=null){
+                    indMap[next.y+y][next.x+x] = map[next.y+y][next.x+x] !=0 ? -1 : maxValue;
+                }
+                if (x == -10 || x == 10-1 || y==-10 || y ==10-1){
+                    //   indMap[next.y+y][next.x+x] = map[next.y+y][next.x+x] = -1;
+                }
+            } 
+        }
+        const res = getCorrectionPath(this.path, next, indMap);
+        if (res == null){
+            this.noCorrectCounter++;
+            this.path.push(next);
+            return;
+        }
+        const {correctPath, correctIndex} = res;
+        //this.path.length = correctIndex+1;
+        const path = this.path.reverse();
+        //console.log(correctIndex);
+        path.length = path.length - correctIndex;
+        this.path = (path.concat(correctPath)).reverse();
+        this.path = smoothPath(this.path, map)
     }
 
     trace(/*point:Vector*/enemy: Build | Unit){
@@ -432,8 +465,8 @@ export class TestScene {
         this.cUnits = new ChunkedArray(this.units, mapSize);
         */
         this.builds = [];
-        this.cUnits = this.generateUnits(indMap, map, 50, this.builds);
-        this.eUnits = this.generateUnits(indMap, map, 50, this.cUnits.items);
+        this.cUnits = this.generateUnits(indMap, map, 10, this.builds);
+        this.eUnits = this.generateUnits(indMap, map, 10, this.cUnits.items);
         //[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         /*for (let i=0; i<10; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
