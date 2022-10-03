@@ -336,6 +336,38 @@ export class TestScene {
         this.build();
     }
 
+    generateUnits(indMap:Array2d, map:Array2d){
+        const units: Array<Unit> = [];
+        for (let i=0; i<170; i++){
+            const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+            if (map[pos.y][pos.x]!=0){
+                i--;
+                continue;
+            }
+            const unit = new Unit(this.tracers[0] as TwoLevelHPA, pos, indMap);
+            unit.onIdle = ()=>{
+                let closestBuild:Build = null;
+                let dist = maxValue;
+                this.builds.forEach(build=>{
+                    if (build.pos.clone().sub(unit.pos).abs()<dist){
+                        const dst = build.pos.clone().sub(unit.pos).abs();
+                        const atks = units.reduce(((ac, it)=>ac + (it.enemy == build ? 1 : 0)), 0);
+                        if (atks<3) {
+                        dist = dst;// + atks * 50;
+                        closestBuild = build;
+                        }
+                    }
+                });
+                if (closestBuild){
+                    unit.trace(closestBuild);
+                }
+            }
+            units.push(unit);
+        }
+        const cUnits = new ChunkedArray(units, mapSize);
+        return cUnits;
+    }
+
     async build() {
         const image = await loadImage(mapFile);
         const map = getMapFromImageData(getImageData(image));
@@ -345,8 +377,9 @@ export class TestScene {
             const tracer = new TwoLevelHPA(this.map);//createTracer(map);
             this.tracers.push(tracer);
         }
-        this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
+        //[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue));
+        /*this.units = [];
         for (let i=0; i<170; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (map[pos.y][pos.x]!=0){
@@ -374,7 +407,8 @@ export class TestScene {
             this.units.push(unit);
         }
         this.cUnits = new ChunkedArray(this.units, mapSize);
-
+        */
+        this.cUnits = this.generateUnits(indMap, map);
         this.builds = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         for (let i=0; i<10; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
@@ -385,8 +419,8 @@ export class TestScene {
             const build = new Build(pos);
             build.onDestroy = ()=>{
                 deleteElementFromArray(this.builds, build);
-                this.units.forEach(unit=>{
-                    if (unit.enemy == build){ 
+                this.cUnits.items.forEach(unit=>{
+                    if (unit.enemy == build){  
                         unit.enemy = null;
                         unit.path = null;
                     }
@@ -395,10 +429,10 @@ export class TestScene {
             this.builds.push(build);
         }
 
-        this.units.forEach((it, i)=> i<1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)]));
+        this.cUnits.items.forEach((it, i)=> i<1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)]));
         
         setTimeout(()=>{
-            this.units.forEach((it, i)=> i>=1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)]))
+            this.cUnits.items.forEach((it, i)=> i>=1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)]))
         },1000);
         this.chunks = this.tracers[0].chunks;
         const tileSize = 2;
@@ -469,7 +503,7 @@ export class TestScene {
                 const build = new Build(pos);
                 build.onDestroy = ()=>{
                     deleteElementFromArray(this.builds, build);
-                    this.units.forEach(unit=>{
+                    this.cUnits.items.forEach(unit=>{
                         if (unit.enemy == build){ 
                             unit.enemy = null;
                             unit.path = null;
@@ -616,7 +650,7 @@ export class TestScene {
             }));
         }
 
-        if (this.units && this.builds){
+        if (this.cUnits && this.builds){
             this.processUnits(delta);
         }
 
@@ -641,8 +675,8 @@ export class TestScene {
     }
 
     debugIntersectUnitsValidate(){
-        this.units.forEach(unit=>{
-            this.units.forEach(unit2=>{
+        this.cUnits.items.forEach(unit=>{
+            this.cUnits.items.forEach(unit2=>{
                 if  (unit == unit2) {
                     return;
                 }
@@ -655,7 +689,7 @@ export class TestScene {
 
     fillUnitsMap(){
         const map1 = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
-        this.units.forEach(unit2=>{
+        this.cUnits.items.forEach(unit2=>{
             map1[unit2.pos.y][unit2.pos.x] = 1;
             if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
                 const next = unit2.path[unit2.path.length-1];
@@ -686,9 +720,9 @@ export class TestScene {
             this.utracer = new TwoLevelHPA(this.map);
             this.tracers.push(this.utracer);
         }
-        const ps = this.units.map(it=> ({pos:it.pos.clone(), val:1}));
+        const ps = this.cUnits.items.map(it=> ({pos:it.pos.clone(), val:1}));
 
-        this.units.forEach((unit)=>{
+        this.cUnits.items.forEach((unit)=>{
         
             const curPoints = [unit.pos.clone()];
             if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
