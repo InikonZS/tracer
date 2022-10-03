@@ -347,7 +347,7 @@ export class TestScene {
         }
         this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue));
-        for (let i=0; i<70; i++){
+        for (let i=0; i<170; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (map[pos.y][pos.x]!=0){
                 i--;
@@ -359,8 +359,12 @@ export class TestScene {
                 let dist = maxValue;
                 this.builds.forEach(build=>{
                     if (build.pos.clone().sub(unit.pos).abs()<dist){
-                        dist = build.pos.clone().sub(unit.pos).abs();
+                        const dst = build.pos.clone().sub(unit.pos).abs();
+                        const atks = this.units.reduce(((ac, it)=>ac + (it.enemy == build ? 1 : 0)), 0);
+                        if (atks<3) {
+                        dist = dst;// + atks * 50;
                         closestBuild = build;
+                        }
                     }
                 });
                 if (closestBuild){
@@ -456,7 +460,7 @@ export class TestScene {
         this.buildCounter+=delta;
         if (this.buildCounter>1000){
             this.buildCounter = 0;
-            for (let i=0; i<10; i++){
+            for (let i=0; i<50; i++){
                 const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
                 if (this.map[pos.y][pos.x]!=0){
                     i--;
