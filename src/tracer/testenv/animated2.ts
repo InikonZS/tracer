@@ -104,6 +104,7 @@ class Unit{
     health: number = 100;
     onIdle: ()=>void;
     onDestroy: ()=>void;
+    destroyed: boolean = false;
     //map: number[][];
     constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d){
         this.tracer = tracer;
@@ -139,8 +140,12 @@ class Unit{
                     //this.path = null;
                 //}
             }
-            if (!this.enemy || !this.path || this.path.length<=1){
+            if (!this.enemy || !this.path || this.path.length<=0){
+                if (!this.enemy){
+                   // console.log('no enemy')
+                }
                 this.onIdle?.();
+                return;
             }
             if ((!this.path || !this.path.length) && this.clickedPoint && this.clickedPoint.clone().sub(this.pos).abs()>10){
                 //return;
@@ -278,9 +283,11 @@ class Unit{
     }
 
     damage(){
+        if (this.destroyed) return;
         this.health -=10;
         if (this.health<=0){
             this.health = 0;
+            this.destroyed = true;
             this.onDestroy?.();
         }
     }
@@ -404,11 +411,14 @@ export class TestScene {
                 });
                 if (closestBuild){
                     unit.trace(closestBuild);
+                } else {
+                    unit.path = [];
                 }
             }
             unit.onDestroy = ()=>{
+                const enemies = this.eUnits.items;/// all enemies
                 deleteElementFromArray(units, unit);
-                
+                console.log('destroy unit ', units.length, enemies.length);
                 enemies.forEach(unit1=>{
                     if (unit1 instanceof Unit){
                         if (unit1.enemy == unit){ 
