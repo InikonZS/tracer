@@ -387,7 +387,7 @@ export class TestScene {
         this.build();
     }
 
-    generateUnits(indMap:Array2d, map:Array2d, count:number, enemies: Array<Build | Unit>){
+    generateUnits(indMap:Array2d, map:Array2d, count:number, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>){
         const units: Array<Unit> = [];
         for (let i=0; i<count; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
@@ -399,7 +399,7 @@ export class TestScene {
             unit.onIdle = ()=>{
                 let closestBuild:Build|Unit = null;
                 let dist = maxValue;
-                enemies.forEach(build=>{
+                getEnemies().forEach(build=>{
                     if (build.pos.clone().sub(unit.pos).abs()<dist){
                         const dst = build.pos.clone().sub(unit.pos).abs();
                         const atks = units.reduce(((ac, it)=>ac + (it.enemy == build ? 1 : 0)), 0);
@@ -416,9 +416,9 @@ export class TestScene {
                 }
             }
             unit.onDestroy = ()=>{
-                const enemies = this.eUnits.items;/// all enemies
+                const enemies = defendEnemies();//this.eUnits.items;/// all enemies
                 deleteElementFromArray(units, unit);
-                console.log('destroy unit ', units.length, enemies.length);
+                //console.log('destroy unit ', units.length, enemies.length);
                 enemies.forEach(unit1=>{
                     if (unit1 instanceof Unit){
                         if (unit1.enemy == unit){ 
@@ -475,8 +475,8 @@ export class TestScene {
         this.cUnits = new ChunkedArray(this.units, mapSize);
         */
         this.builds = [];
-        this.cUnits = this.generateUnits(indMap, map, 10, this.builds);
-        this.eUnits = this.generateUnits(indMap, map, 10, this.cUnits.items);
+        this.cUnits = this.generateUnits(indMap, map, 50, /*this.builds*/()=>this.eUnits.items, ()=>this.eUnits.items);
+        this.eUnits = this.generateUnits(indMap, map, 70, ()=>this.cUnits.items, ()=>this.cUnits.items);
         //[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         /*for (let i=0; i<10; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
