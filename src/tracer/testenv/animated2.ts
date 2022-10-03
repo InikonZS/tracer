@@ -12,7 +12,7 @@ import {SimpleWave} from '../tracelib/tracePacks/SimpleWave';
 import { iteration } from "../tracelib/traceCore/tracerBase";
 import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
 import { steps } from "../tracelib/traceCore/traceSteps";
-import { ChunkedArray} from "../tracelib/traceCore/chunkedArray";
+import { ChunkedArray, deleteElementFromArray, IPositioned} from "../tracelib/traceCore/chunkedArray";
 import {getCorrectionPath, indexateCorrect} from "../tracelib/traceCore/correction";
 
 const mapSize = 512;
@@ -99,6 +99,8 @@ class Unit{
     finishPoint: Vector;
     clickedPoint: Vector;
     noRetraceCounter: any;
+    enemy: Build;
+    onIdle: ()=>void;
     //map: number[][];
     constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d){
         this.tracer = tracer;
@@ -118,6 +120,21 @@ class Unit{
         this.tm+=delta;
         if (this.tm>10.5){
             this.tm = 0;
+            if (this.enemy && this.enemy.pos.clone().sub(this.pos).abs() <=10){
+                //if (this.enemy.health == 0){
+                    //this.enemy = null;
+                    //this.path = null;
+                //    return;
+                //}
+                this.enemy.damage();
+                //if (this.enemy.health == 0){
+                    //this.enemy = null;
+                    //this.path = null;
+                //}
+            }
+            if (!this.enemy){
+                this.onIdle?.();
+            }
             if ((!this.path || !this.path.length) && this.clickedPoint && this.clickedPoint.clone().sub(this.pos).abs()>10){
                 //return;
                 if (this.noRetraceCounter< 150){
@@ -210,7 +227,9 @@ class Unit{
         this.path = this.path.concat(correctPath);
     }
 
-    trace(point:Vector){
+    trace(/*point:Vector*/enemy: Build){
+        this.enemy = enemy;
+        const point = enemy.pos.clone();
         this.clickedPoint = point;
         this.path = this.tracer.trace(this.pos, point).ph;
         if (!this.path[0]){
@@ -265,6 +284,7 @@ class Build{
     pos: Vector;
     health: number;
     tm:number = 0;
+    onDestroy: ()=>void;
     //map: number[][];
     constructor(pos: Vector){
         this.health = 100;
@@ -277,6 +297,14 @@ class Build{
 
     render(ctx:CanvasRenderingContext2D){
        // ctx.fillRect()
+    }
+
+    damage(){
+        this.health -=10;
+        if (this.health<=0){
+            this.health = 0;
+            this.onDestroy?.();
+        }
     }
 }
 
@@ -300,6 +328,7 @@ export class TestScene {
     units: Array<Unit>;
     builds: Build[];
     cUnits: ChunkedArray<Unit>;
+    buildCounter: number = 0;
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render);
@@ -318,26 +347,54 @@ export class TestScene {
         }
         this.units = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue));
-        for (let i=0; i<700; i++){
+        for (let i=0; i<70; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (map[pos.y][pos.x]!=0){
                 i--;
                 continue;
             }
             const unit = new Unit(this.tracers[0] as TwoLevelHPA, pos, indMap);
+            unit.onIdle = ()=>{
+                let closestBuild:Build = null;
+                let dist = maxValue;
+                this.builds.forEach(build=>{
+                    if (build.pos.clone().sub(unit.pos).abs()<dist){
+                        dist = build.pos.clone().sub(unit.pos).abs();
+                        closestBuild = build;
+                    }
+                });
+                if (closestBuild){
+                    unit.trace(closestBuild);
+                }
+            }
             this.units.push(unit);
         }
         this.cUnits = new ChunkedArray(this.units, mapSize);
 
         this.builds = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         for (let i=0; i<10; i++){
-            const build = new Build(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)));
+            const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+            if (map[pos.y][pos.x]!=0){
+                i--;
+                continue;
+            }
+            const build = new Build(pos);
+            build.onDestroy = ()=>{
+                deleteElementFromArray(this.builds, build);
+                this.units.forEach(unit=>{
+                    if (unit.enemy == build){ 
+                        unit.enemy = null;
+                        unit.path = null;
+                    }
+                })
+            }
             this.builds.push(build);
         }
 
-        this.units.forEach((it, i)=> i<1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)].pos))
+        this.units.forEach((it, i)=> i<1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)]));
+        
         setTimeout(()=>{
-            this.units.forEach((it, i)=> i>=1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)].pos))
+            this.units.forEach((it, i)=> i>=1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)]))
         },1000);
         this.chunks = this.tracers[0].chunks;
         const tileSize = 2;
@@ -396,6 +453,28 @@ export class TestScene {
     }
 
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
+        this.buildCounter+=delta;
+        if (this.buildCounter>1000){
+            this.buildCounter = 0;
+            for (let i=0; i<10; i++){
+                const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+                if (this.map[pos.y][pos.x]!=0){
+                    i--;
+                    continue;
+                }
+                const build = new Build(pos);
+                build.onDestroy = ()=>{
+                    deleteElementFromArray(this.builds, build);
+                    this.units.forEach(unit=>{
+                        if (unit.enemy == build){ 
+                            unit.enemy = null;
+                            unit.path = null;
+                        }
+                    })
+                }
+                this.builds.push(build);
+            }
+        }
         if (!this.canvas) return;
         
         const tileSize = 2;
