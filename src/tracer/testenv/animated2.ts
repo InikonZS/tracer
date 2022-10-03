@@ -99,8 +99,10 @@ class Unit{
     finishPoint: Vector;
     clickedPoint: Vector;
     noRetraceCounter: any;
-    enemy: Build;
+    enemy: Build | Unit;
+    health: number = 100;
     onIdle: ()=>void;
+    onDestroy: ()=>void;
     //map: number[][];
     constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d){
         this.tracer = tracer;
@@ -132,7 +134,7 @@ class Unit{
                     //this.path = null;
                 //}
             }
-            if (!this.enemy){
+            if (!this.enemy || !this.path || this.path.length<=1){
                 this.onIdle?.();
             }
             if ((!this.path || !this.path.length) && this.clickedPoint && this.clickedPoint.clone().sub(this.pos).abs()>10){
@@ -227,7 +229,7 @@ class Unit{
         this.path = this.path.concat(correctPath);
     }
 
-    trace(/*point:Vector*/enemy: Build){
+    trace(/*point:Vector*/enemy: Build | Unit){
         this.enemy = enemy;
         const point = enemy.pos.clone();
         this.clickedPoint = point;
@@ -240,6 +242,14 @@ class Unit{
 
     render(ctx:CanvasRenderingContext2D){
        // ctx.fillRect()
+    }
+
+    damage(){
+        this.health -=10;
+        if (this.health<=0){
+            this.health = 0;
+            this.onDestroy?.();
+        }
     }
 }
 
@@ -329,6 +339,7 @@ export class TestScene {
     builds: Build[];
     cUnits: ChunkedArray<Unit>;
     buildCounter: number = 0;
+    eUnits: ChunkedArray<Unit>;
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render);
@@ -336,9 +347,9 @@ export class TestScene {
         this.build();
     }
 
-    generateUnits(indMap:Array2d, map:Array2d){
+    generateUnits(indMap:Array2d, map:Array2d, count:number, enemies: Array<Build | Unit>){
         const units: Array<Unit> = [];
-        for (let i=0; i<170; i++){
+        for (let i=0; i<count; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (map[pos.y][pos.x]!=0){
                 i--;
@@ -346,21 +357,33 @@ export class TestScene {
             }
             const unit = new Unit(this.tracers[0] as TwoLevelHPA, pos, indMap);
             unit.onIdle = ()=>{
-                let closestBuild:Build = null;
+                let closestBuild:Build|Unit = null;
                 let dist = maxValue;
-                this.builds.forEach(build=>{
+                enemies.forEach(build=>{
                     if (build.pos.clone().sub(unit.pos).abs()<dist){
                         const dst = build.pos.clone().sub(unit.pos).abs();
                         const atks = units.reduce(((ac, it)=>ac + (it.enemy == build ? 1 : 0)), 0);
-                        if (atks<3) {
+                        //if (atks<3) {
                         dist = dst;// + atks * 50;
                         closestBuild = build;
-                        }
+                        //}
                     }
                 });
                 if (closestBuild){
                     unit.trace(closestBuild);
                 }
+            }
+            unit.onDestroy = ()=>{
+                deleteElementFromArray(units, unit);
+                
+                enemies.forEach(unit1=>{
+                    if (unit1 instanceof Unit){
+                        if (unit1.enemy == unit){ 
+                            unit1.enemy = null;
+                            unit1.path = null;
+                        }
+                    }
+                })
             }
             units.push(unit);
         }
@@ -408,9 +431,11 @@ export class TestScene {
         }
         this.cUnits = new ChunkedArray(this.units, mapSize);
         */
-        this.cUnits = this.generateUnits(indMap, map);
-        this.builds = [];//[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
-        for (let i=0; i<10; i++){
+        this.builds = [];
+        this.cUnits = this.generateUnits(indMap, map, 50, this.builds);
+        this.eUnits = this.generateUnits(indMap, map, 50, this.cUnits.items);
+        //[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
+        /*for (let i=0; i<10; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (map[pos.y][pos.x]!=0){
                 i--;
@@ -427,13 +452,13 @@ export class TestScene {
                 })
             }
             this.builds.push(build);
-        }
+        }*/
 
-        this.cUnits.items.forEach((it, i)=> i<1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)]));
-        
+        this.eUnits.items.forEach((it, i)=> i<1000 && it.trace(this.cUnits.items[Math.floor(Math.random()*this.cUnits.items.length)]));
+        /*
         setTimeout(()=>{
             this.cUnits.items.forEach((it, i)=> i>=1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)]))
-        },1000);
+        },1000);*/
         this.chunks = this.tracers[0].chunks;
         const tileSize = 2;
         this.canvas.onClick = (e)=>{
@@ -494,7 +519,7 @@ export class TestScene {
         this.buildCounter+=delta;
         if (this.buildCounter>1000){
             this.buildCounter = 0;
-            for (let i=0; i<50; i++){
+            for (let i=0; i<10; i++){
                 const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
                 if (this.map[pos.y][pos.x]!=0){
                     i--;
@@ -651,7 +676,8 @@ export class TestScene {
         }
 
         if (this.cUnits && this.builds){
-            this.processUnits(delta);
+            this.processUnits(delta, this.cUnits, 0);
+            this.processUnits(delta, this.eUnits, 1);
         }
 
         if (this.canvas){
@@ -674,9 +700,9 @@ export class TestScene {
         //ctx.fillRect(this.endPoint.x * tileSize, this.endPoint.y * tileSize, tileSize, tileSize);
     }
 
-    debugIntersectUnitsValidate(){
-        this.cUnits.items.forEach(unit=>{
-            this.cUnits.items.forEach(unit2=>{
+    debugIntersectUnitsValidate(units: ChunkedArray<Unit>){
+        units.items.forEach(unit=>{
+            units.items.forEach(unit2=>{
                 if  (unit == unit2) {
                     return;
                 }
@@ -709,8 +735,8 @@ export class TestScene {
         }
     }
 
-    processUnits(delta:number){
-        this.debugIntersectUnitsValidate();
+    processUnits(delta:number, units:ChunkedArray<Unit>, playerIndex: number){
+        this.debugIntersectUnitsValidate(units);
 
         const map1 = this.fillUnitsMap();
 
@@ -720,9 +746,9 @@ export class TestScene {
             this.utracer = new TwoLevelHPA(this.map);
             this.tracers.push(this.utracer);
         }
-        const ps = this.cUnits.items.map(it=> ({pos:it.pos.clone(), val:1}));
+        const ps = units.items.map(it=> ({pos:it.pos.clone(), val:1}));
 
-        this.cUnits.items.forEach((unit)=>{
+        units.items.forEach((unit)=>{
         
             const curPoints = [unit.pos.clone()];
             if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
@@ -732,7 +758,7 @@ export class TestScene {
                 map1[last.y][last.x] = 0;
             })
             
-            this.cUnits.getWithClosestItems(unit.pos).forEach(unit2=>{
+            units.getWithClosestItems(unit.pos).forEach(unit2=>{
                 if (unit === unit2) return;
                 map1[unit2.pos.y][unit2.pos.x] = 1;
                 if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
@@ -756,9 +782,9 @@ export class TestScene {
 
             const pos = unit.pos;
             map1[pos.y][pos.x] = 1;
-            this.cUnits.updateItem(unit, lastPos);
+            units.updateItem(unit, lastPos);
 
-            this.drawMarker(pos, 2, "#0ff");
+            this.drawMarker(pos, 2, ["#0ff", "#f90"][playerIndex]);
 
             const drawPath = true;
             if (unit.path && drawPath){
