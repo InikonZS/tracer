@@ -20,6 +20,7 @@ const rootWrapper = new Control(document.body, 'div', 'screen');
 class MainRouter extends Control{
     menu: Control<HTMLElement>;
     content: Control<HTMLElement>;
+    currentScene: {destroy: ()=>void} = null;
 
     constructor(parentNode:HTMLElement){
         super(parentNode);
@@ -28,23 +29,43 @@ class MainRouter extends Control{
 
         const item = new Control(this.menu.node, 'button', '', 'route1');
         item.node.onclick = ()=>{
+            if (this.currentScene){
+                this.currentScene.destroy();
+                this.currentScene = null;
+            }
             const scene = new OptScene2(this.content.node);
-            const backButton = new Control(this.content.node, 'button', '', 'back');
+            this.currentScene = scene;
+            /*const backButton = new Control(this.content.node, 'button', '', 'back');
             backButton.node.onclick = ()=>{
                 scene.destroy();
                 backButton.destroy();
-            }
+            }*/
         }
 
-        const item2 = new Control(this.menu.node, 'button', '', 'route2');
+        const item1 = new Control(this.menu.node, 'button', '', 'route1');
+        item1.node.onclick = ()=>{
+            if (this.currentScene){
+                this.currentScene.destroy();
+                this.currentScene = null;
+            }
+            const scene = new OptScene(this.content.node);
+            this.currentScene = scene;
+            /*const backButton = new Control(this.content.node, 'button', '', 'back');
+            backButton.node.onclick = ()=>{
+                scene.destroy();
+                backButton.destroy();
+            }*/
+        }
+
+        /*const item2 = new Control(this.menu.node, 'button', '', 'route2');
         item2.node.onclick = ()=>{
-            const scene = new OptScene2(this.content.node);
+            const scene = new OptScene(this.content.node);
             const backButton = new Control(this.content.node, 'button', '', 'back');
             backButton.node.onclick = ()=>{
                 scene.destroy();
                 backButton.destroy();
             }
-        }
+        }*/
     }
 }
 
