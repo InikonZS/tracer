@@ -17,17 +17,67 @@ const rootWrapper = new Control(document.body, 'div', 'screen');
 //new MiniMapTestScene(rootWrapper.node)
 //const demo = new Demo(rootWrapper.node);
 
+
+interface IRouteScene{
+    destroy: ()=>void
+}
+
+interface IRoute{
+    name:string;
+    component: (parent:HTMLElement)=> IRouteScene;
+}
+
+const routes = [
+    {
+        name: 'optimized path',
+        component: (parent: HTMLElement)=>{
+            const scene = new OptScene(parent);
+            return scene;
+            /*
+            return ()=>{
+                scene.destroy();
+            }
+            */
+        }
+    },
+    {
+        name: 'units fight',
+        component: (parent: HTMLElement)=>{
+            const scene = new OptScene2(parent);
+            return scene;
+        }
+    },
+    {
+        name: 'babylon init',
+        component: (parent: HTMLElement)=>{
+            const destroy = runBabylonExample(parent);
+            return {destroy};
+        }
+    },
+]
+
 class MainRouter extends Control{
     menu: Control<HTMLElement>;
     content: Control<HTMLElement>;
-    currentScene: {destroy: ()=>void} = null;
+    currentScene: IRouteScene = null;
 
-    constructor(parentNode:HTMLElement){
+    constructor(parentNode:HTMLElement, routes: Array<IRoute>){
         super(parentNode);
         this.menu = new Control(this.node);
-        this.content = new Control(this.node);
+        this.content = new Control(this.node);   
 
-        const item = new Control(this.menu.node, 'button', '', 'route1');
+        routes.map(route=>{
+            const item = new Control(this.menu.node, 'button', '', route.name);
+            item.node.onclick = ()=>{
+                if (this.currentScene){
+                    this.currentScene.destroy();
+                    this.currentScene = null;
+                }
+                const scene = route.component(this.content.node);//new OptScene2(this.content.node);
+                this.currentScene = scene;
+            } 
+        })
+/*
         item.node.onclick = ()=>{
             if (this.currentScene){
                 this.currentScene.destroy();
@@ -40,22 +90,8 @@ class MainRouter extends Control{
                 scene.destroy();
                 backButton.destroy();
             }*/
-        }
+      //  }
 
-        const item1 = new Control(this.menu.node, 'button', '', 'route1');
-        item1.node.onclick = ()=>{
-            if (this.currentScene){
-                this.currentScene.destroy();
-                this.currentScene = null;
-            }
-            const scene = new OptScene(this.content.node);
-            this.currentScene = scene;
-            /*const backButton = new Control(this.content.node, 'button', '', 'back');
-            backButton.node.onclick = ()=>{
-                scene.destroy();
-                backButton.destroy();
-            }*/
-        }
 
         /*const item2 = new Control(this.menu.node, 'button', '', 'route2');
         item2.node.onclick = ()=>{
@@ -69,4 +105,4 @@ class MainRouter extends Control{
     }
 }
 
-const router = new MainRouter(rootWrapper.node);
+const router = new MainRouter(rootWrapper.node, routes);

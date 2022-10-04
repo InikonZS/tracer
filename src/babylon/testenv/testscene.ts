@@ -52,4 +52,9 @@ export function runBabylonExample(parentNode: HTMLElement){
         })
         scene.render();
     });
+    return ()=>{
+        engine.stopRenderLoop();
+        engine.dispose();
+        canvas.remove();
+    }
 }
