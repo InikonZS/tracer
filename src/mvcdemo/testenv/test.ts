@@ -4,8 +4,10 @@ import { Vector } from "../../common/vector";
 import './style.css';
 
 export class Demo{
+    wrapper: HTMLDivElement;
     constructor(parentNode:HTMLElement){
         const wrapper = document.createElement('div');
+        this.wrapper = wrapper;
         parentNode.append(wrapper);
 
         const model = new Model(data);
@@ -24,6 +26,10 @@ export class Demo{
         }
         /*const view1 = new View(wrapper, model);
         const view2 = new View(wrapper, model);*/
+    }
+
+    destroy(){
+        this.wrapper.remove();
     }
 }
 

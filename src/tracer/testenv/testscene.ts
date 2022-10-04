@@ -5,7 +5,9 @@ import { getMapFromImageData, getImageData, loadImage } from '../tracelib/imageD
 import mapFile from './assets/map5.png';
 import {findPath, indexate, tracePath} from '../tracelib/tracer';
 import {getAreaFromPoint, getChunks, getIsolated, getIsolatedChunks, getAllConnections, getChunkTree, chunkIndexate, findChunkPath, IChunk, getLimitPathMap} from '../tracelib/getIsolated';
-export class Canvas extends Control {
+import { Canvas } from "./canvasRenderer";
+
+/*export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     private ctx: CanvasRenderingContext2D;
     private ticker = new RenderTicker();
@@ -67,7 +69,7 @@ export class Canvas extends Control {
         window.removeEventListener('resize', this.autoSize);
         super.destroy();
     }
-}
+}*/
 
 export class TestScene {
     private canvas: Canvas;
@@ -78,9 +80,13 @@ export class TestScene {
     area: number[][];
     chunks: number[][][][];
     chunkPath: IChunk[];
+    
+    destroy(){
+        this.canvas.destroy();
+    }
 
     constructor(parentNode: HTMLElement) {
-        this.canvas = new Canvas(parentNode, this.render);
+        this.canvas = new Canvas(parentNode, this.render, 128);
 
         this.build();
     }

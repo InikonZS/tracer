@@ -7,8 +7,8 @@ import {runBabylonExample} from './babylon/testenv/testscene';
 import {MiniMapTestScene} from './minimap/testenv/minimapscene';
 import './style.css'
 import {Demo} from './mvcdemo/testenv/test';
+import {MainRouter, IRoute, IRouteScene} from './router';
 
-const rootWrapper = new Control(document.body, 'div', '');
 //runBabylonExample(rootWrapper.node);
 //const testScene = new TestScene(rootWrapper.node);
 //const optScene2 = new OptScene2(rootWrapper.node);
@@ -18,26 +18,12 @@ const rootWrapper = new Control(document.body, 'div', '');
 //const demo = new Demo(rootWrapper.node);
 
 
-interface IRouteScene{
-    destroy: ()=>void
-}
-
-interface IRoute{
-    name:string;
-    component: (parent:HTMLElement)=> IRouteScene;
-}
-
-const routes = [
+const routes: Array<IRoute> = [
     {
         name: 'optimized path',
         component: (parent: HTMLElement)=>{
             const scene = new OptScene(parent);
             return scene;
-            /*
-            return ()=>{
-                scene.destroy();
-            }
-            */
         }
     },
     {
@@ -54,62 +40,35 @@ const routes = [
             return {destroy};
         }
     },
+    {
+        name: 'worker',
+        component: (parent: HTMLElement)=>{
+            const scene = new WorkerScene(parent);
+            return scene
+        }
+    },
+    {
+        name: 'mvc',
+        component: (parent: HTMLElement)=>{
+            const scene = new  Demo(parent);
+            return scene
+        }
+    },
+    {
+        name: 'testScene',
+        component: (parent: HTMLElement)=>{
+            const scene = new TestScene(parent);
+            return scene
+        }
+    },
+    {
+        name: 'miniMap',
+        component: (parent: HTMLElement)=>{
+            const scene = new MiniMapTestScene(parent);
+            return scene
+        }
+    },
 ]
 
-class MainRouter extends Control{
-    menu: Control<HTMLElement>;
-    content: Control<HTMLElement>;
-    currentScene: IRouteScene = null;
-    selectedIndex: number = null;
-
-    constructor(parentNode:HTMLElement, routes: Array<IRoute>){
-        super(parentNode, 'div', 'router');
-        this.menu = new Control(this.node, 'div', 'menu');
-        this.content = new Control(this.node, 'div', 'screen');   
-
-        const buttons = routes.map((route, index)=>{
-            const item = new Control(this.menu.node, 'button', 'menu_button', route.name);
-            item.node.onclick = ()=>{
-                if (this.selectedIndex != null){
-                    buttons[this.selectedIndex].node.classList.remove('menu_button_active');
-                }
-                this.selectedIndex = index;
-                buttons[this.selectedIndex].node.classList.add('menu_button_active');
-                if (this.currentScene){
-                    this.currentScene.destroy();
-                    this.currentScene = null;
-                }
-                const scene = route.component(this.content.node);//new OptScene2(this.content.node);
-                this.currentScene = scene;
-            } 
-            return item;
-        })
-/*
-        item.node.onclick = ()=>{
-            if (this.currentScene){
-                this.currentScene.destroy();
-                this.currentScene = null;
-            }
-            const scene = new OptScene2(this.content.node);
-            this.currentScene = scene;
-            /*const backButton = new Control(this.content.node, 'button', '', 'back');
-            backButton.node.onclick = ()=>{
-                scene.destroy();
-                backButton.destroy();
-            }*/
-      //  }
-
-
-        /*const item2 = new Control(this.menu.node, 'button', '', 'route2');
-        item2.node.onclick = ()=>{
-            const scene = new OptScene(this.content.node);
-            const backButton = new Control(this.content.node, 'button', '', 'back');
-            backButton.node.onclick = ()=>{
-                scene.destroy();
-                backButton.destroy();
-            }
-        }*/
-    }
-}
-
+const rootWrapper = new Control(document.body, 'div', '');
 const router = new MainRouter(rootWrapper.node, routes);

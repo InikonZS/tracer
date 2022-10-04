@@ -6,29 +6,30 @@ import Control from '../../common/control';
 import wscript from './worker.w.js';
 
 console.log('path: ', wscript);
-export class TestScene {
-    constructor(parent: HTMLElement) {
+export class TestScene extends Control {
+    constructor(parentNode: HTMLElement) {
+        super(parentNode);
         const worker = new Worker(wscript);
 
         worker.onmessage = (msg) => {
             console.log(msg.data);
         }
 
-        const buttonFreeze = new Control(parent, 'button', '', 'freeze');
+        const buttonFreeze = new Control(this.node, 'button', '', 'freeze');
         buttonFreeze.node.onclick = () => {
             //worker.postMessage({ a: 32423, b: 'dafsada' });
             heavyOne();
             //worker.postMessage({route: 'heaveOne'});
         }
 
-        const button = new Control(parent, 'button', '', 'send');
+        const button = new Control(this.node, 'button', '', 'send');
         button.node.onclick = () => {
             //worker.postMessage({ a: 32423, b: 'dafsada' });
             //heavyOne();
             worker.postMessage({route: 'heaveOne'});
         }
 
-        const iterateButton = new Control(parent, 'button', '', 'iterate');
+        const iterateButton = new Control(this.node, 'button', '', 'iterate');
         iterateButton.node.onclick = () => {
             const res: Array<number> = [];
             console.log('start async');
@@ -39,7 +40,7 @@ export class TestScene {
             })
         }
 
-        const iterateButtonB = new Control(parent, 'button', '', 'iterateBatch');
+        const iterateButtonB = new Control(this.node, 'button', '', 'iterateBatch');
         iterateButtonB.node.onclick = () => {
             const res: Array<number> = [];
             console.log('start async');
@@ -50,7 +51,7 @@ export class TestScene {
             }, 100)
         }
 
-        const startOnceWorkerButton = new Control(parent, 'button', '', 'onceWorker');
+        const startOnceWorkerButton = new Control(this.node, 'button', '', 'onceWorker');
         startOnceWorkerButton.node.onclick = async () => {
            /* const onceWorker = new Worker(wscript);
             onceWorker.onmessage = (msg) => {
@@ -70,7 +71,7 @@ export class TestScene {
             console.log(response);
         }
 
-        const animated = new Control(parent, 'div', 'animated');
+        const animated = new Control(this.node, 'div', 'animated');
 
         let angle = 0;
         const render = () => {

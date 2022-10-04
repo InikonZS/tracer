@@ -1,8 +1,9 @@
 import Control from "../../common/control";
 import { IVector, Vector } from '../../common/vector';
+import { Canvas } from "../../tracer/testenv/canvasRenderer";
 import { RenderTicker } from '../../tracer/testenv/ticker';
 
-export class Canvas extends Control {
+/*export class Canvas extends Control {
     private canvas: Control<HTMLCanvasElement>;
     public ctx: CanvasRenderingContext2D;
     private ticker = new RenderTicker();
@@ -64,14 +65,18 @@ export class Canvas extends Control {
         window.removeEventListener('resize', this.autoSize);
         super.destroy();
     }
-}
+}*/
 
 export class MiniMapTestScene {
     private canvas: Canvas;
     private map: Array<Array<number>>;
 
+    destroy(){
+        this.canvas.destroy();
+    }
+
     constructor(parentNode: HTMLElement) {
-        this.canvas = new Canvas(parentNode, this.render);
+        this.canvas = new Canvas(parentNode, this.render, 128);
 
         this.build();
     }
