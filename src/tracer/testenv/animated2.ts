@@ -85,6 +85,7 @@ export class Canvas extends Control {
 
     destroy(): void {
         window.removeEventListener('resize', this.autoSize);
+        this.ticker.stop();
         super.destroy();
     }
 }
@@ -385,6 +386,10 @@ export class TestScene {
         this.canvas = new Canvas(parentNode, this.render);
 
         this.build();
+    }
+
+    destroy(){
+        this.canvas.destroy();
     }
 
     generateUnits(indMap:Array2d, map:Array2d, count:number, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>){

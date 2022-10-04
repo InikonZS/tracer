@@ -2,6 +2,7 @@ import Signal from "../../common/signal";
 
 export class RenderTicker{
   onTick: Signal<number> = new Signal();
+  tickId: number = null;
 
   constructor(){
 
@@ -10,7 +11,7 @@ export class RenderTicker{
   startRender(){
     let lastTime: number = null;
     const render = () => {
-      requestAnimationFrame((timeStamp) => {
+      this.tickId = requestAnimationFrame((timeStamp) => {
         if (!lastTime) {
           lastTime = timeStamp;
         }
@@ -22,5 +23,12 @@ export class RenderTicker{
       
     }
     render();
+  }
+
+  stop(){
+    if (this.tickId !=null){
+      cancelAnimationFrame(this.tickId);
+      this.tickId = null;
+    }
   }
 }
