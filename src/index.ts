@@ -8,7 +8,7 @@ import {MiniMapTestScene} from './minimap/testenv/minimapscene';
 import './style.css'
 import {Demo} from './mvcdemo/testenv/test';
 
-const rootWrapper = new Control(document.body, 'div', 'screen');
+const rootWrapper = new Control(document.body, 'div', '');
 //runBabylonExample(rootWrapper.node);
 //const testScene = new TestScene(rootWrapper.node);
 //const optScene2 = new OptScene2(rootWrapper.node);
@@ -60,15 +60,21 @@ class MainRouter extends Control{
     menu: Control<HTMLElement>;
     content: Control<HTMLElement>;
     currentScene: IRouteScene = null;
+    selectedIndex: number = null;
 
     constructor(parentNode:HTMLElement, routes: Array<IRoute>){
-        super(parentNode);
-        this.menu = new Control(this.node);
-        this.content = new Control(this.node);   
+        super(parentNode, 'div', 'router');
+        this.menu = new Control(this.node, 'div', 'menu');
+        this.content = new Control(this.node, 'div', 'screen');   
 
-        routes.map(route=>{
-            const item = new Control(this.menu.node, 'button', '', route.name);
+        const buttons = routes.map((route, index)=>{
+            const item = new Control(this.menu.node, 'button', 'menu_button', route.name);
             item.node.onclick = ()=>{
+                if (this.selectedIndex != null){
+                    buttons[this.selectedIndex].node.classList.remove('menu_button_active');
+                }
+                this.selectedIndex = index;
+                buttons[this.selectedIndex].node.classList.add('menu_button_active');
                 if (this.currentScene){
                     this.currentScene.destroy();
                     this.currentScene = null;
@@ -76,6 +82,7 @@ class MainRouter extends Control{
                 const scene = route.component(this.content.node);//new OptScene2(this.content.node);
                 this.currentScene = scene;
             } 
+            return item;
         })
 /*
         item.node.onclick = ()=>{
