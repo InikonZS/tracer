@@ -223,6 +223,43 @@ class Unit{
     }
 }
 
+/*function getCorrectionPath(path:Vector[], pos:Vector, indMap:Array2d){
+    const verbose = false;
+    const correctPoint = indexateCorrect(indMap, path, [pos], 0);
+        verbose && console.log('try correct');
+        if (!correctPoint){
+            verbose && console.log('no correct');
+            //this.noCorrectCounter++;
+            //this.path.push(next);
+            return null;
+        }
+        const correctIndex = path.findIndex(it=> it.x == correctPoint.x && it.y == correctPoint.y);
+        const correctPath = findPath(indMap, pos, correctPoint);
+        //this.noCorrectCounter=0;
+        verbose && console.log('correct points ', correctPath.length, 'cutted ', path.length - correctIndex);
+        //this.path.splice(correctIndex);
+        //path.length = correctIndex+1;
+        //path = this.path.concat(correctPath);
+        return {correctPath, correctIndex};
+}
+
+function indexateCorrect(map:Array<Array<number>>, path:Array<Vector>, points:Array<{x:number, y:number}>, generation:number):Vector | null{
+    const nextPoints = iteration(map, points, generation);
+    let stopPoint =
+    nextPoints.find(point=>{
+        const pathPoint = path.find(pp=> pp.x == point.x && pp.y == point.y);
+        return pathPoint;
+    })
+    if (generation>100){
+        return null;
+    }
+    if (stopPoint){
+        return Vector.fromIVector(stopPoint);
+    }
+    if (!points.length) { return null; }
+    return indexateCorrect(map, path, nextPoints, generation+1);
+  }
+*/
 class Build{
     pos: Vector;
     health: number;
@@ -342,14 +379,63 @@ export class TestScene {
         }
         //[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
         const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue));
-        
+        /*this.units = [];
+        for (let i=0; i<170; i++){
+            const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+            if (map[pos.y][pos.x]!=0){
+                i--;
+                continue;
+            }
+            const unit = new Unit(this.tracers[0] as TwoLevelHPA, pos, indMap);
+            unit.onIdle = ()=>{
+                let closestBuild:Build = null;
+                let dist = maxValue;
+                this.builds.forEach(build=>{
+                    if (build.pos.clone().sub(unit.pos).abs()<dist){
+                        const dst = build.pos.clone().sub(unit.pos).abs();
+                        const atks = this.units.reduce(((ac, it)=>ac + (it.enemy == build ? 1 : 0)), 0);
+                        if (atks<3) {
+                        dist = dst;// + atks * 50;
+                        closestBuild = build;
+                        }
+                    }
+                });
+                if (closestBuild){
+                    unit.trace(closestBuild);
+                }
+            }
+            this.units.push(unit);
+        }
+        this.cUnits = new ChunkedArray(this.units, mapSize);
+        */
         this.builds = [];
         this.cUnits = this.generateUnits(indMap, map, 50, /*this.builds*/()=>this.eUnits.items, ()=>this.eUnits.items);
-        this.eUnits = this.generateUnits(indMap, map, 50, ()=>this.cUnits.items, ()=>this.cUnits.items);
-        
+        this.eUnits = this.generateUnits(indMap, map, 90, ()=>this.cUnits.items, ()=>this.cUnits.items);
+        //[new Unit(this.tracers[0] as TwoLevelHPA, new Vector(10, 10)), new Unit(this.tracers[0] as TwoLevelHPA, new Vector(100, 100))];
+        /*for (let i=0; i<10; i++){
+            const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+            if (map[pos.y][pos.x]!=0){
+                i--;
+                continue;
+            }
+            const build = new Build(pos);
+            build.onDestroy = ()=>{
+                deleteElementFromArray(this.builds, build);
+                this.cUnits.items.forEach(unit=>{
+                    if (unit.enemy == build){  
+                        unit.enemy = null;
+                        unit.path = null;
+                    }
+                })
+            }
+            this.builds.push(build);
+        }*/
 
-        //this.eUnits.items.forEach((it, i)=> i<1000 && it.trace(this.cUnits.items[Math.floor(Math.random()*this.cUnits.items.length)]));
-
+        this.eUnits.items.forEach((it, i)=> i<1000 && it.trace(this.cUnits.items[Math.floor(Math.random()*this.cUnits.items.length)]));
+        /*
+        setTimeout(()=>{
+            this.cUnits.items.forEach((it, i)=> i>=1000 && it.trace(this.builds[Math.floor(Math.random()*this.builds.length)]))
+        },1000);*/
         this.chunks = this.tracers[0].chunks;
         const tileSize = 2;
         this.canvas.onClick = (e)=>{
