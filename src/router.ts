@@ -38,6 +38,6 @@ export class MainRouter extends Control{
             return item;
         });
 
-        buttons[0].node.click();
+        buttons[1].node.click();
     }
 }

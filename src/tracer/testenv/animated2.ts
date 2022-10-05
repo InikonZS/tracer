@@ -144,20 +144,7 @@ class Unit{
                 }
             } 
         }
-        //const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue))
-        /*const correctPoint = this.correct(indMap);
-        verbose && console.log('try correct');
-        if (!correctPoint){
-            verbose && console.log('no correct');
-            this.noCorrectCounter++;
-            this.path.push(next);
-            return;
-        }
-        const correctIndex = this.path.findIndex(it=> it.x == correctPoint.x && it.y == correctPoint.y);
-        const correctPath = findPath(indMap, this.pos, correctPoint);
-        this.noCorrectCounter=0;
-        verbose && console.log('correct points ', correctPath.length, 'cutted ', this.path.length - correctIndex);
-        //this.path.splice(correctIndex);*/
+
         const res = getCorrectionPath(this.path, this.pos, indMap);
         if (res == null){
             this.noCorrectCounter++;
@@ -251,6 +238,75 @@ class Build{
     }
 }
 
+class Player{
+    units:ChunkedArray<Unit>;
+    builds:Array<Build> =[];
+    tracer: TwoLevelHPA;
+    indMap: Array2d;
+    map: Array2d;
+    getPlayers: () => Array<Player>;
+
+    constructor(tracer: TwoLevelHPA, indMap:Array2d, map: Array2d, getPlayers: ()=>Array<Player>){
+        this.tracer = tracer;
+        this.indMap = indMap;
+        this.map = map;
+        this.getPlayers = getPlayers;
+        this.units = this.generateUnits();
+    }
+
+    generateUnits(){
+        return generateUnits(this.tracer, this.indMap, this.map, 50, /*this.builds*/()=>this.getPlayers()[0].units.items, ()=>this.getPlayers()[0].units.items);  
+    }
+}
+
+
+function generateUnits(tracer:TwoLevelHPA, indMap:Array2d, map:Array2d, count:number, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>){
+    const units: Array<Unit> = [];
+    for (let i=0; i<count; i++){
+        const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+        if (map[pos.y][pos.x]!=0){
+            i--;
+            continue;
+        }
+        const unit = new Unit(tracer, pos, indMap);
+        unit.onIdle = ()=>{
+            let closestBuild:Build|Unit = null;
+            let dist = maxValue;
+            getEnemies().forEach(build=>{
+                if (build.pos.clone().sub(unit.pos).abs()<dist){
+                    const dst = build.pos.clone().sub(unit.pos).abs();
+                    const atks = units.reduce(((ac, it)=>ac + (it.enemy == build ? 1 : 0)), 0);
+                    //if (atks<3) {
+                    dist = dst;// + atks * 50;
+                    closestBuild = build;
+                    //}
+                }
+            });
+            if (closestBuild){
+                unit.trace(closestBuild);
+            } else {
+                unit.path = [];
+            }
+        }
+        unit.onDestroy = ()=>{
+            const enemies = defendEnemies();//this.eUnits.items;/// all enemies
+            deleteElementFromArray(units, unit);
+            //console.log('destroy unit ', units.length, enemies.length);
+            enemies.forEach(unit1=>{
+                if (unit1 instanceof Unit){
+                    if (unit1.enemy == unit){ 
+                        unit1.enemy = null;
+                        unit1.path = null;
+                    }
+                }
+            })
+        }
+        units.push(unit);
+    }
+    const cUnits = new ChunkedArray(units, mapSize);
+    return cUnits;
+}
+
 export class TestScene {
     private utracer:TwoLevelHPA = null;
     private canvas: Canvas;
@@ -270,9 +326,10 @@ export class TestScene {
     tracers: (TwoLevelHPA | ThreeLevelHPA | SimpleWave)[] = [];
     units: Array<Unit>;
     builds: Build[];
-    cUnits: ChunkedArray<Unit>;
+    //cUnits: ChunkedArray<Unit>;
     buildCounter: number = 0;
-    eUnits: ChunkedArray<Unit>;
+    players: Player[];
+    //eUnits: ChunkedArray<Unit>;
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render, mapSize);
@@ -282,53 +339,6 @@ export class TestScene {
 
     destroy(){
         this.canvas.destroy();
-    }
-
-    generateUnits(indMap:Array2d, map:Array2d, count:number, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>){
-        const units: Array<Unit> = [];
-        for (let i=0; i<count; i++){
-            const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
-            if (map[pos.y][pos.x]!=0){
-                i--;
-                continue;
-            }
-            const unit = new Unit(this.tracers[0] as TwoLevelHPA, pos, indMap);
-            unit.onIdle = ()=>{
-                let closestBuild:Build|Unit = null;
-                let dist = maxValue;
-                getEnemies().forEach(build=>{
-                    if (build.pos.clone().sub(unit.pos).abs()<dist){
-                        const dst = build.pos.clone().sub(unit.pos).abs();
-                        const atks = units.reduce(((ac, it)=>ac + (it.enemy == build ? 1 : 0)), 0);
-                        //if (atks<3) {
-                        dist = dst;// + atks * 50;
-                        closestBuild = build;
-                        //}
-                    }
-                });
-                if (closestBuild){
-                    unit.trace(closestBuild);
-                } else {
-                    unit.path = [];
-                }
-            }
-            unit.onDestroy = ()=>{
-                const enemies = defendEnemies();//this.eUnits.items;/// all enemies
-                deleteElementFromArray(units, unit);
-                //console.log('destroy unit ', units.length, enemies.length);
-                enemies.forEach(unit1=>{
-                    if (unit1 instanceof Unit){
-                        if (unit1.enemy == unit){ 
-                            unit1.enemy = null;
-                            unit1.path = null;
-                        }
-                    }
-                })
-            }
-            units.push(unit);
-        }
-        const cUnits = new ChunkedArray(units, mapSize);
-        return cUnits;
     }
 
     async build() {
@@ -344,8 +354,27 @@ export class TestScene {
         const indMap = map.map(row=>row.map(cell=> cell != 0 ? -1 : maxValue));
         
         this.builds = [];
-        this.cUnits = this.generateUnits(indMap, map, 50, /*this.builds*/()=>this.eUnits.items, ()=>this.eUnits.items);
-        this.eUnits = this.generateUnits(indMap, map, 50, ()=>this.cUnits.items, ()=>this.cUnits.items);
+        this.players = [];
+        {
+            const player: Player = new Player(this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
+                return this.players.filter(_player=> _player != player)
+            })
+            this.players.push(player);
+        }
+        {
+            const player: Player = new Player(this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
+                return this.players.filter(_player=> _player != player)
+            })
+            this.players.push(player);
+        }
+       /* {
+            const player: Player = new Player(this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
+                return this.players.filter(_player=> _player != player)
+            })
+            this.players.push(player);
+        }*/
+        //this.cUnits = this.generateUnits(indMap, map, 50, /*this.builds*/()=>this.eUnits.items, ()=>this.eUnits.items);
+        //this.eUnits = this.generateUnits(indMap, map, 50, ()=>this.cUnits.items, ()=>this.cUnits.items);
         
 
         //this.eUnits.items.forEach((it, i)=> i<1000 && it.trace(this.cUnits.items[Math.floor(Math.random()*this.cUnits.items.length)]));
@@ -419,12 +448,12 @@ export class TestScene {
                 const build = new Build(pos);
                 build.onDestroy = ()=>{
                     deleteElementFromArray(this.builds, build);
-                    this.cUnits.items.forEach(unit=>{
+                    /*this.cUnits.items.forEach(unit=>{
                         if (unit.enemy == build){ 
                             unit.enemy = null;
                             unit.path = null;
                         }
-                    })
+                    })*/
                 }
                 this.builds.push(build);
             }
@@ -566,9 +595,14 @@ export class TestScene {
             }));
         }
 
-        if (this.cUnits && this.builds){
+        /*if (this.cUnits && this.builds){
             this.processUnits(delta, this.cUnits, 0);
             this.processUnits(delta, this.eUnits, 1);
+        }*/
+        if (this.players){
+            this.players.forEach((player, i)=>{
+                this.processUnits(delta, player.units, i);
+            })
         }
 
         if (this.canvas){
@@ -605,14 +639,18 @@ export class TestScene {
     }
 
     fillUnitsMap(){
-        const map1 = this.map.map(row=>row.map(cell=>cell == 0 ? 0 : 1));
-        this.cUnits.items.forEach(unit2=>{
-            map1[unit2.pos.y][unit2.pos.x] = 1;
-            if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
-                const next = unit2.path[unit2.path.length-1];
-                map1[next.y][next.x] = 1;
-            }
-        });
+        const map1 = this.map.map(row => row.map(cell => cell == 0 ? 0 : 1));
+        //this.cUnits.items.forEach(unit2=>{
+        this.players.forEach((player, i) => {
+            player.units.items.forEach(unit2 => {
+                map1[unit2.pos.y][unit2.pos.x] = 1;
+                if (unit2.path && unit2.path[unit2.path.length - 1] && !unit2.wait) {
+                    const next = unit2.path[unit2.path.length - 1];
+                    map1[next.y][next.x] = 1;
+                }
+                //}); this.processUnits(delta, player.units, i);
+            });
+        })
         return map1;
     }
 
@@ -675,7 +713,7 @@ export class TestScene {
             map1[pos.y][pos.x] = 1;
             units.updateItem(unit, lastPos);
 
-            this.drawMarker(pos, 2, ["#0ff", "#f90"][playerIndex]);
+            this.drawMarker(pos, 2, ["#0ff", "#f90", "#90f"][playerIndex]);
 
             const drawPath = true;
             if (unit.path && drawPath){
