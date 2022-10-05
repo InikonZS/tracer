@@ -255,7 +255,8 @@ class Player{
     }
 
     generateUnits(){
-        return generateUnits(this.tracer, this.indMap, this.map, 50, /*this.builds*/()=>this.getPlayers()[0].units.items, ()=>this.getPlayers()[0].units.items);  
+        const getEnemies = ()=>this.getPlayers().map(player=>player.units.items).flat();
+        return generateUnits(this.tracer, this.indMap, this.map, 50, /*this.builds*/()=>getEnemies(), ()=>getEnemies());  
     }
 }
 
@@ -355,24 +356,18 @@ export class TestScene {
         
         this.builds = [];
         this.players = [];
-        {
+        const createPlayer = ()=>{
             const player: Player = new Player(this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
                 return this.players.filter(_player=> _player != player)
             })
             this.players.push(player);
         }
-        {
-            const player: Player = new Player(this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
-                return this.players.filter(_player=> _player != player)
-            })
-            this.players.push(player);
-        }
-       /* {
-            const player: Player = new Player(this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
-                return this.players.filter(_player=> _player != player)
-            })
-            this.players.push(player);
-        }*/
+
+        createPlayer();
+        createPlayer();
+        createPlayer();
+        createPlayer();
+        createPlayer();
         //this.cUnits = this.generateUnits(indMap, map, 50, /*this.builds*/()=>this.eUnits.items, ()=>this.eUnits.items);
         //this.eUnits = this.generateUnits(indMap, map, 50, ()=>this.cUnits.items, ()=>this.cUnits.items);
         
@@ -713,7 +708,7 @@ export class TestScene {
             map1[pos.y][pos.x] = 1;
             units.updateItem(unit, lastPos);
 
-            this.drawMarker(pos, 2, ["#0ff", "#f90", "#90f"][playerIndex]);
+            this.drawMarker(pos, 2, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][playerIndex]);
 
             const drawPath = true;
             if (unit.path && drawPath){
