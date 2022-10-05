@@ -38,6 +38,22 @@ export class ChunkedArray<T extends IPositioned>{
         this.length = items.length;
     }
 
+    addItem(item:T){
+        this.items.push(item);
+        const chunk = this.getChunk(item.pos);
+        chunk.push(item);
+        this.length = this.items.length;
+    }
+
+    removeItem(item:T){
+        //this.items.push(item);
+        const chunk = this.getChunk(item.pos);
+        deleteElementFromArray(chunk, item);
+        deleteElementFromArray(this.items, item);
+        //chunk.push(item);
+        this.length = this.items.length;
+    }
+
     updateItem(item:T, lastPos:Vector){
         const lastChunk = this.getChunk(lastPos);
         const chunk = this.getChunk(item.pos);
