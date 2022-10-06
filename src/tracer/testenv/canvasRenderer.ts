@@ -47,7 +47,7 @@ export class Canvas extends Control {
         this.ticker.onTick.add((delta) => {
             this.render(delta);
         });
-        this.ticker.startRender();
+        // this.ticker.startRender();
 
         window.addEventListener('resize', this.autoSize);
         this.autoSize();
@@ -64,6 +64,10 @@ export class Canvas extends Control {
         this.canvas.node.width = this.node.clientWidth;
         this.canvas.node.height = this.node.clientHeight;
         this.render(0);
+    }
+
+    startRender() {
+        this.ticker.startRender();
     }
 
     destroy(): void {

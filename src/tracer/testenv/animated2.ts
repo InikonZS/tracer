@@ -37,12 +37,14 @@ class Unit{
     onIdle: ()=>void;
     onDestroy: ()=>void;
     destroyed: boolean = false;
+    model: MenuModel;
     //map: number[][];
-    constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d){
+    constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel){
         this.tracer = tracer;
         //this.map = map;
         this.pos = pos;
         this.path = [];
+        this.model = model;
 
         this.indMap = indMap;
     }
@@ -54,7 +56,7 @@ class Unit{
         }
         
         this.tm+=delta;
-        if (this.tm>10.5){
+        if (this.tm>this.model.data.unitStepTime){
             this.tm = 0;
             if (this.enemy && this.clickedPoint.clone().sub(this.enemy.pos).abs()>5){
                 this.correctPathEnd(this.enemy.pos.clone(), map);
@@ -248,13 +250,15 @@ class Player{
     map: Array2d;
     getPlayers: () => Array<Player>;
     counter: number = 0;
+    model: MenuModel;
 
-    constructor(tracer: TwoLevelHPA, indMap:Array2d, map: Array2d, getPlayers: ()=>Array<Player>){
+    constructor(model: MenuModel, tracer: TwoLevelHPA, indMap:Array2d, map: Array2d, getPlayers: ()=>Array<Player>){
+        this.model = model;
         this.tracer = tracer;
         this.indMap = indMap;
         this.map = map;
         this.getPlayers = getPlayers;
-        this.generateUnits(1);
+        this.generateUnits(1);      
     }
 
     getEnemies(){
@@ -263,7 +267,7 @@ class Player{
 
     generateUnits(count:number){
         //const getEnemies = ()=>
-        return generateUnits(this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies());  
+        return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies());  
     }
 
     tick(delta:number){
@@ -279,7 +283,7 @@ class Player{
 }
 
 
-function generateUnits(player:Player, tracer:TwoLevelHPA, indMap:Array2d, map:Array2d, count:number, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>){
+function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indMap:Array2d, map:Array2d, count:number, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>){
     //const units: Array<Unit> = [];
     for (let i=0; i<count; i++){
         const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
@@ -287,7 +291,7 @@ function generateUnits(player:Player, tracer:TwoLevelHPA, indMap:Array2d, map:Ar
             i--;
             continue;
         }
-        const unit = new Unit(tracer, pos, indMap);
+        const unit = new Unit(tracer, pos, indMap, model);
         unit.onIdle = ()=>{
             let closestEnemy:Build|Unit = null;
             let dist = maxValue;
@@ -353,14 +357,17 @@ export class TestScene {
     menu: Menu;
     //eUnits: ChunkedArray<Unit>;
 
-    constructor(parentNode: HTMLElement) {
-        this.canvas = new Canvas(parentNode, this.render, mapSize);
-
+    constructor(parentNode: HTMLElement) {        
         this.model = new MenuModel({
             drawPath: true,
+            unitStepTime: 50,
         })
         this.menu = new Menu(parentNode, this.model);
-        this.build();
+        this.canvas = new Canvas(parentNode, this.render, mapSize);
+
+        this.build().then(() => {
+            this.canvas.startRender();
+        });
     }
 
     destroy(){
@@ -383,7 +390,7 @@ export class TestScene {
         this.builds = [];
         this.players = [];
         const createPlayer = ()=>{
-            const player: Player = new Player(this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
+            const player: Player = new Player(this.model, this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
                 return this.players.filter(_player=> _player != player)
             })
             this.players.push(player);
