@@ -16,6 +16,8 @@ import { ChunkedArray, deleteElementFromArray, IPositioned} from "../tracelib/tr
 import {getCorrectionPath, indexateCorrect} from "../tracelib/traceCore/correction";
 import { smoothPath } from "../tracelib/traceCore/smoothPath";
 import { Canvas } from "./canvasRenderer";
+import { Menu } from "./menu";
+import { MenuModel } from "./menu-model";
 
 const mapSize = 512;
 
@@ -266,9 +268,9 @@ class Player{
 
     tick(delta:number){
         this.counter+=delta;
-        if (this.counter> 500){
+        if (this.counter> 1500){
             this.counter = 0;
-            const spawned = this.generateUnits(5);
+            const spawned = this.generateUnits(3);
             //spawned.items.forEach(it=>{
             //    this.units.addItem(it);
             //});
@@ -347,16 +349,23 @@ export class TestScene {
     //cUnits: ChunkedArray<Unit>;
     buildCounter: number = 0;
     players: Player[];
+    model: MenuModel;
+    menu: Menu;
     //eUnits: ChunkedArray<Unit>;
 
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render, mapSize);
 
+        this.model = new MenuModel({
+            drawPath: true,
+        })
+        this.menu = new Menu(parentNode, this.model);
         this.build();
     }
 
     destroy(){
         this.canvas.destroy();
+        this.menu.destroy();
     }
 
     async build() {
@@ -448,6 +457,7 @@ export class TestScene {
     }
 
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
+        if (!this.map) return;
         this.buildCounter+=delta;
         if (this.buildCounter>1000){
             this.buildCounter = 0;
@@ -728,7 +738,7 @@ export class TestScene {
 
             this.drawMarker(pos, 2, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][playerIndex]);
 
-            const drawPath = true;
+            const drawPath = this.model.data.drawPath;
             if (unit.path && drawPath){
                 unit.path.forEach((pos)=>{
                     this.canvas.canvasBack[(pos.y)][(pos.x)] = '#fffe';
