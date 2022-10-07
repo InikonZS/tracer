@@ -107,6 +107,7 @@ export class TestScene {
         showTime(filterT, [], 100, 'filter');
         showTime(()=>indexed.getIndexed('b', 'a'), [], 100, 'get indexed');
         console.log(indexed.getIndexed('b', 'a'));
+        //indexed.getIndexed("")
 
         const image = await loadImage(mapFile);
         const map = getMapFromImageData(getImageData(image));

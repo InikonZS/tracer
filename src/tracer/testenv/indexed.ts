@@ -24,6 +24,7 @@ arr.filter(it=> it.b == 'a');
 arr.push({
     a: 23234314,
     b: 'a'
+   // hashAB: 'a:23234314, b:a'
 });
 
 export class Indexed<T extends Record<string | number, string | number>>{
@@ -89,7 +90,7 @@ export class Indexed<T extends Record<string | number, string | number>>{
         this.add(nextValue);
     }
 
-    getIndexed(index:string, value: string | number){
+    getIndexed(index:keyof T, value: string | number){
         return this.indexes[index][value];
     }
 
