@@ -39,9 +39,11 @@ class Unit{
     destroyed: boolean = false;
     model: MenuModel;
     type: number;
+    playerId: number;
     //map: number[][];
-    constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number){
+    constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number, playerId:number){
         this.tracer = tracer;
+        this.playerId = playerId;
         //this.map = map;
         this.pos = pos;
         this.path = [];
@@ -71,7 +73,7 @@ class Unit{
                     //this.path = null;
                 //    return;
                 //}
-                this.enemy.damage();
+                this.enemy.damage(this);
                 //return;
                 //if (this.enemy.health == 0){
                     //this.enemy = null;
@@ -228,7 +230,7 @@ class Build{
     pos: Vector;
     health: number;
     tm:number = 0;
-    onDestroy: ()=>void;
+    onDestroy: (by:Unit)=>void;
     //map: number[][];
     constructor(pos: Vector){
         this.health = 100;
@@ -243,11 +245,11 @@ class Build{
        // ctx.fillRect()
     }
 
-    damage(){
+    damage(by:Unit){
         this.health -=10;
         if (this.health<=0){
             this.health = 0;
-            this.onDestroy?.();
+            this.onDestroy?.(by);
         }
     }
 }
@@ -262,9 +264,12 @@ class Player{
     counter: number = 0;
     model: MenuModel;
     getRes: () => Array<Build>;
+    id:number;
+    money:number = 0;
 
-    constructor(model: MenuModel, tracer: TwoLevelHPA, indMap:Array2d, map: Array2d, getPlayers: ()=>Array<Player>, getRes: ()=>Array<Build>){
+    constructor(id:number, model: MenuModel, tracer: TwoLevelHPA, indMap:Array2d, map: Array2d, getPlayers: ()=>Array<Player>, getRes: ()=>Array<Build>){
         this.model = model;
+        this.id = id;
         this.tracer = tracer;
         this.indMap = indMap;
         this.map = map;
@@ -308,7 +313,7 @@ function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indM
             i--;
             continue;
         }
-        const unit = new Unit(tracer, pos, indMap, model, Math.random()<0.5? 0: 1);
+        const unit = new Unit(tracer, pos, indMap, model, Math.random()<0.5? 0: 1, player.id);
         model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
         unit.onIdle = ()=>{
             let closestEnemy:Build|Unit = null;
@@ -382,7 +387,8 @@ export class TestScene {
             unitStepTime: 50,
             destroyed: 0,
             count:0,
-            spawned: 0
+            spawned: 0,
+            players: [{money:0}, {money:0}]
         })
         this.menu = new Menu(parentNode, this.model);
         this.canvas = new Canvas(parentNode, this.render, mapSize);
@@ -411,8 +417,8 @@ export class TestScene {
         
         this.builds = [];
         this.players = [];
-        const createPlayer = ()=>{
-            const player: Player = new Player(this.model, this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
+        const createPlayer = (id:number)=>{
+            const player: Player = new Player(id, this.model, this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
                 return this.players.filter(_player=> _player != player)
             }, ()=>{
                 return this.builds
@@ -420,8 +426,8 @@ export class TestScene {
             this.players.push(player);
         }
 
-        createPlayer();
-        createPlayer();
+        createPlayer(0);
+        createPlayer(1);
         /*createPlayer();
         createPlayer();
         createPlayer();*/
@@ -499,8 +505,13 @@ export class TestScene {
                     continue;
                 }
                 const build = new Build(pos);
-                build.onDestroy = ()=>{
+                build.onDestroy = (by)=>{
                     deleteElementFromArray(this.builds, build);
+                    this.players[by.playerId].money+=1;
+                    this.model.setPlayerData(by.playerId, (last)=>({...last, money: this.players[by.playerId].money}))
+                    //console.log(by.playerId, 'money ', this.players[by.playerId].money)
+                    //this.model.setPlayerData();
+                    //this.players[by.playerId].
                     /*this.cUnits.items.forEach(unit=>{
                         if (unit.enemy == build){ 
                             unit.enemy = null;

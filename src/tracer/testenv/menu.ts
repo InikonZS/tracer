@@ -1,6 +1,20 @@
 import Control from "../../common/control";
-import { IMenuData, MenuModel } from "./menu-model";
+import { IMenuData, IPlayerData, MenuModel } from "./menu-model";
 import "./menu.css";
+
+class PlayerView extends Control{
+    id: Control<HTMLElement>;
+    money: Control<HTMLElement>;
+    constructor(parentNode: HTMLElement) {
+        super(parentNode);
+        this.id = new Control(this.node);
+        this.money = new Control(this.node);
+    }
+
+    update(data:IPlayerData){
+        this.money.node.textContent = 'money '+ data.money.toString();
+    }
+}
 
 export class Menu extends Control {
     private model: MenuModel;
@@ -9,6 +23,7 @@ export class Menu extends Control {
     destroyed: Control<HTMLElement>;
     count: Control<HTMLElement>;
     spawned: Control<HTMLElement>;
+    players: PlayerView[];
     constructor(parentNode: HTMLElement, model: MenuModel) {
         super(parentNode);
         this.model = model;
@@ -35,6 +50,7 @@ export class Menu extends Control {
         this.count = new Control(this.node);
         this.spawned = new Control(this.node);
 
+        this.players = model.data.players.map(player=> new PlayerView(this.node));
         this.model.onChange.add(this.update);
         this.update(model.data);
     } 
@@ -44,6 +60,7 @@ export class Menu extends Control {
         this.destroyed.node.textContent = 'destroyed ' + data.destroyed.toString();
         this.count.node.textContent = 'count ' + data.count.toString();
         this.spawned.node.textContent = 'spawned ' + data.spawned.toString();
+        this.players.forEach((player, id)=> player.update(data.players[id]))
     }
     destroy() {
         this.model.onChange.remove(this.update);
