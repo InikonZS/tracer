@@ -176,14 +176,20 @@ class Unit{
         const res = getCorrectionPath(this.path, next, indMap);
         if (res == null){
             this.noCorrectCounter++;
-            this.path.push(next);
+            //this.path.push(next);
             return;
         }
         const {correctPath, correctIndex} = res;
+        if (!correctPath){
+            console.log('no corrected end');
+        }
+        if (this.path.length - correctIndex < 0){
+            console.log('wrong path length');
+        }
         //this.path.length = correctIndex+1;
         const path = this.path.reverse();
         //console.log(correctIndex);
-        path.length = path.length - correctIndex;
+        path.length = path.length - correctIndex/*-1*/;
         this.path = (path.concat(correctPath)).reverse();
         this.path = smoothPath(this.path, map)
     }
