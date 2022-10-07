@@ -10,6 +10,7 @@ import {TwoLevelHPA} from '../tracelib/tracePacks/TwoLevelHPA';
 import {ThreeLevelHPA} from '../tracelib/tracePacks/ThreeLevelHPA';
 import {SimpleWave} from '../tracelib/tracePacks/SimpleWave';
 import { Canvas } from "./canvasRenderer";
+import { Indexed } from "./indexed";
 
 const mapSize = 512;
 
@@ -91,6 +92,21 @@ export class TestScene {
         showTime(swapRemoveTest, [100000, 10000], 100, 'swap');
         showTime(swap2RemoveTest, [100000, 10000], 100, 'swap2');
         showTime(swap2EachRemoveTest, [100000, 10000], 100, 'swap2each');*/
+
+        const arr2 = new Array(100000).fill(null).map(it=>{
+            return {
+                a: Math.random(),
+                b: Math.random()<0.5 ? 'a': 'b',
+                c: '43'
+            }
+        })
+        const indexed = new Indexed(arr2, ['b']);
+        const filterT = ()=>{
+            return arr2.filter(it=> it.b == 'a');
+        }
+        showTime(filterT, [], 100, 'filter');
+        showTime(()=>indexed.getIndexed('b', 'a'), [], 100, 'get indexed');
+        console.log(indexed.getIndexed('b', 'a'));
 
         const image = await loadImage(mapFile);
         const map = getMapFromImageData(getImageData(image));

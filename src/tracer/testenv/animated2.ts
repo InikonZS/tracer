@@ -18,6 +18,7 @@ import { smoothPath } from "../tracelib/traceCore/smoothPath";
 import { Canvas } from "./canvasRenderer";
 import { Menu } from "./menu";
 import { MenuModel } from "./menu-model";
+import {Indexed} from "./indexed";
 
 const mapSize = 512;
 
