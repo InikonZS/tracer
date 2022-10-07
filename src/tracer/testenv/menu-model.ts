@@ -3,6 +3,9 @@ import Signal from "../../common/signal";
 export interface IMenuData {
     drawPath: boolean;
     unitStepTime: number;
+    destroyed: number;
+    spawned: number;
+    count: number
 }
 
 export class MenuModel {   

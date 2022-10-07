@@ -309,6 +309,7 @@ function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indM
             continue;
         }
         const unit = new Unit(tracer, pos, indMap, model, Math.random()<0.5? 0: 1);
+        model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
         unit.onIdle = ()=>{
             let closestEnemy:Build|Unit = null;
             let dist = maxValue;
@@ -340,6 +341,7 @@ function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indM
                     }
                 }
             })
+            model.setData((last)=> ({...last, destroyed: last.destroyed+1, count: last.count-1}));
         }
         player.units.addItem(unit);
         //units.push(unit);
@@ -378,6 +380,9 @@ export class TestScene {
         this.model = new MenuModel({
             drawPath: true,
             unitStepTime: 50,
+            destroyed: 0,
+            count:0,
+            spawned: 0
         })
         this.menu = new Menu(parentNode, this.model);
         this.canvas = new Canvas(parentNode, this.render, mapSize);
