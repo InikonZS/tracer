@@ -38,8 +38,9 @@ class Unit{
     onDestroy: ()=>void;
     destroyed: boolean = false;
     model: MenuModel;
+    type: number;
     //map: number[][];
-    constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel){
+    constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number){
         this.tracer = tracer;
         //this.map = map;
         this.pos = pos;
@@ -47,6 +48,8 @@ class Unit{
         this.model = model;
 
         this.indMap = indMap;
+        this.type = type;
+        this.health = 100 * (this.type==0?1 : 5)
     }
 
     tick(delta:number, map:number[][], getUtracer:()=>TwoLevelHPA){
@@ -56,25 +59,26 @@ class Unit{
         }
         
         this.tm+=delta;
-        if (this.tm>this.model.data.unitStepTime){
+        if (this.tm>this.model.data.unitStepTime * (this.type==0?1 : 15)){
             this.tm = 0;
-            if (this.enemy && this.clickedPoint.clone().sub(this.enemy.pos).abs()>5){
+            if (this.enemy && this.clickedPoint.clone().sub(this.enemy.pos).abs()>1){
                 this.correctPathEnd(this.enemy.pos.clone(), map);
                 this.clickedPoint = this.enemy.pos.clone();
             }
-            if (this.enemy && this.enemy.pos.clone().sub(this.pos).abs() <=10){
+            if (this.enemy && this.enemy.health>0 && this.enemy.pos.clone().sub(this.pos).abs() <=10){
                 //if (this.enemy.health == 0){
                     //this.enemy = null;
                     //this.path = null;
                 //    return;
                 //}
                 this.enemy.damage();
+                //return;
                 //if (this.enemy.health == 0){
                     //this.enemy = null;
                     //this.path = null;
                 //}
-            }
-            if (!this.enemy || !this.path || this.path.length<=0){
+            } else
+            if (!this.enemy || (this.enemy && (!this.path || this.path.length<=0))){
                 if (!this.enemy){
                    // console.log('no enemy')
                 }
@@ -257,14 +261,16 @@ class Player{
     getPlayers: () => Array<Player>;
     counter: number = 0;
     model: MenuModel;
+    getRes: () => Array<Build>;
 
-    constructor(model: MenuModel, tracer: TwoLevelHPA, indMap:Array2d, map: Array2d, getPlayers: ()=>Array<Player>){
+    constructor(model: MenuModel, tracer: TwoLevelHPA, indMap:Array2d, map: Array2d, getPlayers: ()=>Array<Player>, getRes: ()=>Array<Build>){
         this.model = model;
         this.tracer = tracer;
         this.indMap = indMap;
         this.map = map;
         this.getPlayers = getPlayers;
-        this.generateUnits(1);      
+        this.generateUnits(1);  
+        this.getRes = getRes;    
     }
 
     getEnemies(){
@@ -273,7 +279,12 @@ class Player{
 
     generateUnits(count:number){
         //const getEnemies = ()=>
-        return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies());  
+        if (Math.random()<0.5){
+            return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies());  
+        } else {
+            return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, 
+                /*this.builds*/()=>this.getRes(), ()=>this.getEnemies());  
+        }
     }
 
     tick(delta:number){
@@ -297,7 +308,7 @@ function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indM
             i--;
             continue;
         }
-        const unit = new Unit(tracer, pos, indMap, model);
+        const unit = new Unit(tracer, pos, indMap, model, Math.random()<0.5? 0: 1);
         unit.onIdle = ()=>{
             let closestEnemy:Build|Unit = null;
             let dist = maxValue;
@@ -398,6 +409,8 @@ export class TestScene {
         const createPlayer = ()=>{
             const player: Player = new Player(this.model, this.tracers[0] as TwoLevelHPA, indMap, map, ()=>{
                 return this.players.filter(_player=> _player != player)
+            }, ()=>{
+                return this.builds
             })
             this.players.push(player);
         }
