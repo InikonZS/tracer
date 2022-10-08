@@ -10,6 +10,7 @@ export class Canvas extends Control {
     public canvasBack: Array<Array<string>>;
     onMove: (e:MouseEvent)=>void;
     onClick: (e:MouseEvent)=>void;
+    mapSize: number;
 
     constructor(parentNode: HTMLElement, onRender: (ctx: CanvasRenderingContext2D, delta: number) => void, mapSize:number) {
         super(parentNode, 'div', 'canvas');
@@ -19,7 +20,7 @@ export class Canvas extends Control {
         this.canvas.node.width = 1200;
         this.canvas.node.height = 600;
 
-        
+        this.mapSize = mapSize;
         this.canvasBackLast = new Array(mapSize).fill(0).map(it=> new Array(mapSize).fill(undefined));
         this.canvasBack = new Array(mapSize).fill(0).map(it=> new Array(mapSize).fill(0));
 
@@ -49,8 +50,7 @@ export class Canvas extends Control {
         });
         // this.ticker.startRender();
 
-        window.addEventListener('resize', this.autoSize);
-        this.autoSize();
+        
     }
 
     render(delta: number) {
@@ -61,13 +61,18 @@ export class Canvas extends Control {
     }
 
     private autoSize = () => {
+        const mapSize = this.mapSize;
         this.canvas.node.width = this.node.clientWidth;
         this.canvas.node.height = this.node.clientHeight;
+        this.canvasBackLast = new Array(mapSize).fill(0).map(it=> new Array(mapSize).fill(undefined));
+        this.canvasBack = new Array(mapSize).fill(0).map(it=> new Array(mapSize).fill(0));
         this.render(0);
     }
 
     startRender() {
         this.ticker.startRender();
+        window.addEventListener('resize', this.autoSize);
+        this.autoSize();
     }
 
     destroy(): void {
