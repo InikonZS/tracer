@@ -27,7 +27,7 @@ arr.push({
    // hashAB: 'a:23234314, b:a'
 });
 
-export class Indexed<T extends Record<string | number, string | number>>{
+export class Indexed2<T extends Record<string | number, string | number>>{
     private items:Array<T>
 
     private indexes: Record<keyof T, Record<string | number, Array<T>>> = {} as Record<keyof T, Record<string | number, Array<T>>>;
@@ -92,6 +92,99 @@ export class Indexed<T extends Record<string | number, string | number>>{
 
     getIndexed(index:keyof T, value: string | number){
         return this.indexes[index][value];
+    }
+
+    getItems(){
+        return this.items;
+    }
+}
+
+export class Indexed<T extends /*Record<string | number, string | number>*/{}>{
+    private items:Array<T>
+
+    private indexes: Record<string, Record<string | number, Array<T>>> = {}// as Record<string, Record<string | number, Array<T>>>;
+    private indexFields: Array<{key: string, indexator: (input: T)=> string | number}>;
+    /* 'a', 'b' */
+    constructor(initial:Array<T>, indexFields: Array<{key: string, indexator: (input: T)=> string | number}>){
+        this.items = initial;
+        this.indexFields = indexFields;
+        initial.forEach(item=>{
+            this.add(item);
+            /*indexFields.forEach(index=>{
+                if (!this.indexes[index]){
+                    this.indexes[index] = {};
+                }
+                const collection = this.indexes[index];
+                if (!collection[item[index]]){
+                    collection[item[index]] = [];
+                }
+                collection[item[index]].push(item);
+            })
+            */
+        });
+    }
+
+    add(item:T){
+        this.indexFields.forEach(index=>{
+            if (!this.indexes[index.key]){
+                this.indexes[index.key] = {};
+            }
+            const collection: Record<string | number, Array<T>> = this.indexes[index.key];
+            //const itemIndex = item[index.key];
+            const hash = index.indexator(item);
+           // if (typeof itemIndex != 'string' && typeof itemIndex != 'number') throw new Error();
+            if (!collection[hash]){
+                collection[hash] = [];
+            }
+            collection[hash].push(item);
+        })
+    }
+
+    remove(item:T){
+       /* if (this.indexes[item.b]){
+            deleteElementFromArray(this.indexes[item.b], item);
+        }
+        deleteElementFromArray(this.items, item);*/
+        
+        this.indexFields.forEach(index=>{
+            const collection: Record<string | number, Array<T>> = this.indexes[index.key];
+            //const itemIndex = item[index.key];
+            const hash = index.indexator(item);
+            //if (typeof itemIndex != 'string' && typeof itemIndex != 'number') throw new Error();
+            if (!collection[hash]){
+                return
+            }
+            /*if (!this.indexes[index]){
+                this.indexes[index] = {};
+            }
+            const collection = this.indexes[index];
+            if (!collection[item[index]]){
+                collection[item[index]] = [];
+            }*/
+            deleteElementFromArray(collection[hash], item);
+            //collection[item[index]].push(item);
+        })
+        deleteElementFromArray(this.items, item);
+    }
+
+    update(item: T, changed:T)/*getItem:(last:T)=>T*/{
+        this.remove(item);
+        const nextValue = changed;
+        this.add(nextValue);
+    }
+
+    /*getIndexed(index:string, value: T){
+        const indexItem = this.indexFields.find(it=> index == it.key);
+        return this.indexes[index][indexItem.indexator(value)];
+    }*/
+
+    getIndexed(index:string, value: string){
+        //const indexItem = this.indexFields.find(it=> index == it.key);
+        return this.indexes[index][value];
+    }
+
+    getIndexator(index:string){
+        return this.indexFields.find(it=> index == it.key);
     }
 
     getItems(){

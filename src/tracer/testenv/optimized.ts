@@ -97,14 +97,18 @@ export class TestScene {
             return {
                 a: Math.random(),
                 b: Math.random()<0.5 ? 'a': 'b',
-                c: '43'
+                c: {fd: Math.random()<0.5 ? Math.random()<0.5 ? 'a': 'b': 'c'}
             }
         })
-        const indexed = new Indexed(arr2, ['b']);
+        const indexed = new Indexed(arr2, [{key: 'b', indexator: (item)=> {return item.c.fd}}]);
         const filterT = ()=>{
             return arr2.filter(it=> it.b == 'a');
         }
+        console.log(indexed);
         showTime(filterT, [], 100, 'filter');
+        showTime(()=>indexed.getIndexed('b', 'a'), [], 100, 'get indexed');
+        console.log(indexed.getIndexed('b', 'a'));
+        indexed.update(indexed.getIndexed('b', 'a')[3], {a:32, b:'b', c:{fd: 'dd'}});
         showTime(()=>indexed.getIndexed('b', 'a'), [], 100, 'get indexed');
         console.log(indexed.getIndexed('b', 'a'));
         //indexed.getIndexed("")
