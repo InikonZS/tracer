@@ -44,7 +44,10 @@ class Player{
         this.map = map;
         this.getPlayers = getPlayers;
         this.generateUnits(1);  
-        this.getRes = getRes;    
+        this.getRes = getRes;   
+        
+        const base = new Build(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)));
+        this.builds.push(base);
     }
 
     getEnemies(){
@@ -54,7 +57,7 @@ class Player{
     generateUnits(count:number){
         //const getEnemies = ()=>
         if (Math.random()<0.5){
-            return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies());  
+            //return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies());  
         } else {
             return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, 
                 /*this.builds*/()=>this.getRes(), ()=>this.getEnemies());  
@@ -147,7 +150,12 @@ class Game{
             build.onDestroy = (by)=>{
                 deleteElementFromArray(this.builds, build);
                 this.players[by.playerId].money+=1;
-                this.model.setPlayerData(by.playerId, (last)=>({...last, money: this.players[by.playerId].money}))
+                this.model.setPlayerData(by.playerId, (last)=>({...last, money: this.players[by.playerId].money}));
+                this.players.forEach(it=>it.units.items.forEach(unit=>{
+                    if (unit.enemy == build){
+                        unit.enemy = null;
+                    }
+                }))
             }
             this.builds.push(build);
         }
