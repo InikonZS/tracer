@@ -24,6 +24,8 @@ export class Unit{
     model: MenuModel;
     type: number;
     playerId: number;
+    rescount:number = 0;
+    onReload: ()=>void;
     //map: number[][];
     constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number, playerId:number){
         this.tracer = tracer;
@@ -47,6 +49,9 @@ export class Unit{
         this.tm+=delta;
         if (this.tm>this.model.data.unitStepTime * (this.type==0?1 : 15)){
             this.tm = 0;
+            if (this.rescount>=1){
+                this.onReload();
+            }
             if (this.enemy && this.clickedPoint.clone().sub(this.enemy.pos).abs()>1){
                 this.correctPathEnd(this.enemy.pos.clone(), map);
                 this.clickedPoint = this.enemy.pos.clone();
@@ -207,6 +212,7 @@ export class Unit{
             this.destroyed = true;
             this.onDestroy?.();
         }
+        //this.onDamage();
     }
 }
 
@@ -241,5 +247,41 @@ export class Build{
             this.destroyed = true;
             this.onDestroy?.(by);
         }
+    }
+}
+
+export class BuildOreFactory{
+    pos: Vector;
+    health: number;
+    tm:number = 0;
+    destroyed: boolean = false;
+    onDestroy: (by:Unit)=>void;
+    onDamage: (by:Unit)=>void;
+    //map: number[][];
+    constructor(pos: Vector){
+        this.health = 100;
+        this.pos = pos;
+    }
+
+    tick(delta:number){
+        
+    }
+
+    render(ctx:CanvasRenderingContext2D){
+       // ctx.fillRect()
+    }
+
+    damage(by:Unit){
+        if (this.destroyed){
+            console.log('damage destroyed')
+            return;
+        }
+        //this.health -=10;
+        if (this.health<=0){
+            this.health = 0;
+            this.destroyed = true;
+            this.onDestroy?.(by);
+        }
+        this.onDamage(by);
     }
 }

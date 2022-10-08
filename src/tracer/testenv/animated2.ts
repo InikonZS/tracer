@@ -19,7 +19,7 @@ import { Canvas } from "./canvasRenderer";
 import { Menu } from "./menu";
 import { MenuModel } from "./menu-model";
 import {Indexed} from "./indexed";
-import { Unit, Build } from "./unit";
+import { Unit, Build, BuildOreFactory } from "./unit";
 
 const mapSize = 512;
 
@@ -46,8 +46,18 @@ class Player{
         this.generateUnits(1);  
         this.getRes = getRes;   
         
-        const base = new Build(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)));
+        const base = new BuildOreFactory(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)));
         this.builds.push(base);
+        base.onDamage = (by)=>{
+            if (by.rescount>0){
+                this.money += by.rescount;
+                this.model.setPlayerData(by.playerId, (last)=>({...last, money: this.money}));
+                by.rescount = 0;
+                by.enemy = null;
+                //console.log(by.rescount);
+            }
+            
+        }
     }
 
     getEnemies(){
@@ -57,7 +67,7 @@ class Player{
     generateUnits(count:number){
         //const getEnemies = ()=>
         if (Math.random()<0.5){
-            //return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies());  
+            return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies());  
         } else {
             return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, 
                 /*this.builds*/()=>this.getRes(), ()=>this.getEnemies());  
@@ -136,6 +146,9 @@ class Game{
         this.players.forEach((player, i)=>{
             player.tick(delta);
             this.processUnits(canvas, delta, player.units, i);
+            player.builds.forEach(build=>{
+                this.drawMarker(canvas, build.pos, 4, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][player.id])
+            })
         })
     }
 
@@ -149,8 +162,10 @@ class Game{
             const build = new Build(pos);
             build.onDestroy = (by)=>{
                 deleteElementFromArray(this.builds, build);
-                this.players[by.playerId].money+=1;
-                this.model.setPlayerData(by.playerId, (last)=>({...last, money: this.players[by.playerId].money}));
+                //this.players[by.playerId].money+=1;
+                by.rescount +=1;
+                //console.log(by.rescount);
+                //this.model.setPlayerData(by.playerId, (last)=>({...last, money: this.players[by.playerId].money}));
                 this.players.forEach(it=>it.units.items.forEach(unit=>{
                     if (unit.enemy == build){
                         unit.enemy = null;
@@ -280,6 +295,9 @@ function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indM
         }
         const unit = new Unit(tracer, pos, indMap, model, Math.random()<0.5? 0: 1, player.id);
         model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
+        unit.onReload = ()=>{
+            unit.trace(player.builds[0]);
+        }
         unit.onIdle = ()=>{
             let closestEnemy:Build|Unit = null;
             let dist = maxValue;
