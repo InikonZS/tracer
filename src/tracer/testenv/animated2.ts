@@ -105,6 +105,11 @@ class Game{
         createPlayer(1);
     }
 
+    updateTracers(changed:{pos: Vector, val:number}[]){
+        this.tracer.updateTree(changed);
+        this.utracer.updateTree(changed);
+    }
+
     renderChunks(canvas:Canvas, delta:number){
         this.tracer.chunks.forEach((chunkRow, i)=>{
             chunkRow.forEach((chunk, j)=>{
@@ -359,72 +364,27 @@ export class TestScene {
     async build() {
         const image = await loadImage(mapFile);
         const map = getMapFromImageData(getImageData(image));
-        //this.map = map;
-
         this.game = new Game(map, this.model);
-        /*createPlayer();
-        createPlayer();
-        createPlayer();*/
-        //this.cUnits = this.generateUnits(indMap, map, 50, /*this.builds*/()=>this.eUnits.items, ()=>this.eUnits.items);
-        //this.eUnits = this.generateUnits(indMap, map, 50, ()=>this.cUnits.items, ()=>this.cUnits.items);
-        
 
-        //this.eUnits.items.forEach((it, i)=> i<1000 && it.trace(this.cUnits.items[Math.floor(Math.random()*this.cUnits.items.length)]));
-
-        //this.chunks = this.tracers[0].chunks;
         const tileSize = 2;
+
         this.canvas.onClick = (e)=>{
             const vector = new Vector(Math.round(e.offsetX / tileSize), Math.round(e.offsetY / tileSize));
-            //this.startPoint = vector;
-
             const changed:Array<{pos:Vector, val:number}> = [];
-           // this.map.forEach((row, y)=>{
-             //   row.forEach((cell, x)=>{
-    
-                    //if (Math.random()<0.01){
-                        //row[x] = 1;
-                        //const val = (Math.random() < 0.01 ? 1 : row[x]);
-                        //if (val != row[x]){
-                            for (let y1 = -12; y1<12; y1++){
-                                for (let x1 = -12; x1<12; x1++){
-                                    //const size = this.chunks[0][0][0].length;
-                                    //if (this.canvas.canvasBack[ (pos.y + y)]){
-                                     //   this.canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = '#0ff';
-                                    //}
-                                    changed.push({pos: new Vector(vector.x + x1, vector.y +y1), val: 0 })
-                                    this.map[vector.y +y1][vector.x + x1] = 0;
-                                }
-                            }
-                            
-                            //row[x] = val;
-                        //};
-                   // }
-                    //ctx.fillStyle = ['#fff', '#ff0', '#f0f'][cell] || '#0ff';
-                   // ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-               // )
-            //});
+            for (let y1 = -12; y1<12; y1++){
+                for (let x1 = -12; x1<12; x1++){
+                    changed.push({pos: new Vector(vector.x + x1, vector.y +y1), val: 0 })
+                    this.game.map[vector.y +y1][vector.x + x1] = 0;
+                }
+            }
+
             if (changed.length){
-                //this.tracers.forEach(it=> it.updateTree(changed));
-                //update game tracers
+                this.game.updateTracers(changed);
             }
         }
 
         this.canvas.onMove = (e)=>{
-            const verbose = false;
-            const startTime = Date.now();
             const vector = new Vector(Math.round(e.offsetX / tileSize), Math.round(e.offsetY / tileSize));
-            this.endPoint = vector;
-
-            //this.units.forEach(it=> it.trace(this.endPoint))
-
-            if (vector.y < map.length && vector.x < map[0].length && vector.x>=0 && vector.y>=0){
-                const paths = this.tracers.map(tracer=>tracer.trace(this.startPoint, this.endPoint));
-                this.chunkPathes =  paths.map(it=> it.ch); 
-                this.pathes =paths.map(it=> it.ph);
-            } else {
-                this.chunkPath = [];
-            }
-  
         }
     }
 
@@ -445,300 +405,5 @@ export class TestScene {
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
         this.game.render(this.canvas, delta);
         this.visualize();
-        ctx.fillStyle = '#9f0';
-
-        if (!this.map) return;
-        this.buildCounter+=delta;
-        if (this.buildCounter>1000){
-            this.buildCounter = 0;
-            for (let i=0; i<1; i++){
-                const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
-                if (this.map[pos.y][pos.x]!=0){
-                    i--;
-                    continue;
-                }
-                const build = new Build(pos);
-                build.onDestroy = (by)=>{
-                    deleteElementFromArray(this.builds, build);
-                    this.players[by.playerId].money+=1;
-                    //by.enemy = null;
-                    this.model.setPlayerData(by.playerId, (last)=>({...last, money: this.players[by.playerId].money}))
-                    //console.log(by.playerId, 'money ', this.players[by.playerId].money)
-                    //this.model.setPlayerData();
-                    //this.players[by.playerId].
-                    /*this.cUnits.items.forEach(unit=>{
-                        if (unit.enemy == build){ 
-                            unit.enemy = null;
-                            unit.path = null;
-                        }
-                    })*/
-                }
-                this.builds.push(build);
-            }
-        }
-        if (!this.canvas) return;
-        
-        
-        const changed: {pos:Vector, val:number}[] = [];
-        if (this.map){
-            this.map.forEach((row, y)=>{
-                row.forEach((cell, x)=>{
-    
-                    if (Math.random()<0.01){
-                        //row[x] = 1;
-                        const val = (Math.random() < 0.01 ? 1 : row[x]);
-                        if (val != row[x]){
-                            //changed.push({pos: new Vector(x, y), val: val })
-                            //row[x] = val;
-                        };
-                    }
-                    //ctx.fillStyle = ['#fff', '#ff0', '#f0f'][cell] || '#0ff';
-                   // ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                })
-            });
-            if (changed.length){
-                this.tracers.forEach(it=> it.updateTree(changed));
-            }
-
-            if (this.pathes && this.pathes[0] && getPathBreaks(this.pathes[0] as Vector[], this.map).length){
-                //this.canvas.onMove({offsetX: this.endPoint.x * tileSize, offsetY: this.endPoint.y * tileSize} as MouseEvent);
-            }
-        }
-       
-
-        if (this.area){
-            this.area.forEach((row, y)=>{
-                //console.log(row[0])
-                row.forEach((cell, x)=>{
-                    if (cell != -1){
-                       // ctx.fillStyle = ['#0909', '#ff09', '#f0f9'][-(cell + 2)] || '#0ff9';
-                        //ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                    }
-                })
-            })
-        }
-
-        if (this.chunks){
-            this.chunks.forEach((chunkRow, i)=>{
-                chunkRow.forEach((chunk, j)=>{
-                    chunk.forEach((row, y)=>{
-                        //console.log(row[0])
-                        row.forEach((cell, x)=>{
-                            //if (cell != -1){
-                                //if (this.canvas.canvasBack[(i * chunk.length + y)]){
-                                    this.canvas.canvasBack[(i * chunk.length + y)][(j * row.length + x)] = ['#000','#090', '#ff0', '#f0f', '#574'][-(cell + 1)] || '#0ff';
-                                //}// ctx.fillStyle = ['#0909', '#ff09', '#f0f9', '#5749'][-(cell + 2)] || '#0ff9';
-                                //ctx.fillStyle = ['#0909', '#ff09', '#f0f9', '#0ff9', '#5749'][i % 5];
-                                //ctx.fillRect((j * row.length + x) * tileSize, (i * chunk.length + y) * tileSize, tileSize, tileSize);
-                            //}
-                        })
-                    })
-                });
-            });
-        }
-
-        
-
-        if (this.chunkPath){
-            this.chunkPath.forEach((chunk)=>{
-                const pos = chunk.original.pos;
-                //ctx.fillStyle = '#f009';
-                const size = this.chunks[0][0][0].length;
-                //ctx.fillRect(pos.x * tileSize * size, pos.y * tileSize * size, tileSize * size, tileSize * size);
-            })
-        }
-        
-        if (this.chunkPath2){
-            this.chunkPath2.forEach((chunk)=>{
-                const pos = chunk.original.pos;
-                //ctx.fillStyle = '#f009';
-                const size = this.chunks2[0][0][0].length;
-                this.chunks2[pos.y][pos.x].forEach((row, y)=>row.forEach((cell, x)=>{
-                    if (cell == chunk.original.i){
-                        //this.canvas.canvasBack[ (pos.y * size + y)][ (pos.x * size + x)] = '#f90';
-                       // ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
-                    }
-                }))
-                
-            })
-        }
-        
-
-        if (this.chunkPath){
-            this.chunkPath.forEach((chunk)=>{
-                const pos = chunk.original.pos;
-                //ctx.fillStyle = '#f009';
-                const size = this.chunks[0][0][0].length;
-                this.chunks[pos.y][pos.x].forEach((row, y)=>row.forEach((cell, x)=>{
-                    //if (cell == chunk.original.i){
-                      //  this.canvas.canvasBack[ (pos.y * size + y)][ (pos.x * size + x)] = '#f00';
-                       // ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
-                    //}
-                }))
-                
-            })
-        }
-
-
-
-        if (this.chunkPathes){
-            this.chunkPathes.forEach(chunkPath=>{chunkPath.forEach((chunk)=>{
-                const pos = chunk.original.pos;
-                //ctx.fillStyle = '#f009';
-                const size = this.chunks[0][0][0].length;
-                this.chunks[pos.y][pos.x].forEach((row, y)=>row.forEach((cell, x)=>{
-                   // if (cell == chunk.original.i){
-                     //   this.canvas.canvasBack[ (pos.y * size + y)][ (pos.x * size + x)] = '#f00';
-                       // ctx.fillRect((pos.x * size + x) * tileSize, (pos.y * size + y) * tileSize, tileSize, tileSize);
-                  //  }
-                }))
-                
-            })});
-        }
-        
-        if (this.path){
-            this.path.forEach((pos)=>{
-                //ctx.fillStyle = '#fffe';
-                //ctx.fillRect(pos.x * tileSize, pos.y * tileSize, tileSize, tileSize);
-                this.canvas.canvasBack[(pos.y)][(pos.x)] = '#fffe';
-            })
-        }
-
-                
-        if (this.pathes){
-            this.pathes.forEach(path=>path.forEach((pos)=>{
-                //ctx.fillStyle = '#fffe';
-                //ctx.fillRect(pos.x * tileSize, pos.y * tileSize, tileSize, tileSize);
-                this.canvas.canvasBack[(pos.y)][(pos.x)] = '#fffe';
-            }));
-        }
-
-        /*if (this.cUnits && this.builds){
-            this.processUnits(delta, this.cUnits, 0);
-            this.processUnits(delta, this.eUnits, 1);
-        }*/
-        if (this.players){
-            this.players.forEach((player, i)=>{
-                player.tick(delta);
-                this.processUnits(delta, player.units, i);
-            })
-        }
-
-      
-
-        
-       
-        ctx.fillStyle = '#9f0';
-        //ctx.fillRect(this.startPoint.x * tileSize, this.startPoint.y * tileSize, tileSize, tileSize);
-
-        ctx.fillStyle = '#9f0';
-        //ctx.fillRect(this.endPoint.x * tileSize, this.endPoint.y * tileSize, tileSize, tileSize);
-    }
-
-    debugIntersectUnitsValidate(units: ChunkedArray<Unit>){
-        units.items.forEach(unit=>{
-            units.items.forEach(unit2=>{
-                if  (unit == unit2) {
-                    return;
-                }
-                if (unit.pos.x == unit2.pos.x && unit.pos.y == unit2.pos.y){
-                    console.log('shit');
-                }
-            });
-        });
-    }
-
-    fillUnitsMap(){
-        const map1 = this.map.map(row => row.map(cell => cell == 0 ? 0 : 1));
-        //this.cUnits.items.forEach(unit2=>{
-        this.players.forEach((player, i) => {
-            player.units.items.forEach(unit2 => {
-                map1[unit2.pos.y][unit2.pos.x] = 1;
-                if (unit2.path && unit2.path[unit2.path.length - 1] && !unit2.wait) {
-                    const next = unit2.path[unit2.path.length - 1];
-                    map1[next.y][next.x] = 1;
-                }
-                //}); this.processUnits(delta, player.units, i);
-            });
-        })
-        return map1;
-    }
-
-    drawMarker(pos:Vector, size:number, color:string){
-        for (let y = -size; y<size; y++){
-            for (let x = -size; x<size; x++){
-                if (this.canvas.canvasBack[ (pos.y + y)]){
-                    this.canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = color;
-                }
-            }
-        }
-    }
-
-    processUnits(delta:number, units:ChunkedArray<Unit>, playerIndex: number){
-        this.debugIntersectUnitsValidate(units);
-
-        const map1 = this.fillUnitsMap();
-
-        let updatedTree = false;
-        let updatedCounter =0;
-        if (!this.utracer){
-            this.utracer = new TwoLevelHPA(this.map);
-            this.tracers.push(this.utracer);
-        }
-        const ps = units.items.map(it=> ({pos:it.pos.clone(), val:1}));
-
-        units.items.forEach((unit)=>{
-        
-            const curPoints = [unit.pos.clone()];
-            if (unit.path && unit.path[unit.path.length-1] && !unit.wait){
-                curPoints.push(unit.path[unit.path.length-1])
-            }
-            curPoints.forEach(last=>{
-                map1[last.y][last.x] = 0;
-            })
-            
-            units.getWithClosestItems(unit.pos).forEach(unit2=>{
-                if (unit === unit2) return;
-                map1[unit2.pos.y][unit2.pos.x] = 1;
-                if (unit2.path && unit2.path[unit2.path.length-1] && !unit2.wait){
-                    const next = unit2.path[unit2.path.length-1];
-                    map1[next.y][next.x] = 1;
-                }
-            });
-            const lastPos =unit.pos.clone();
-
-            updatedCounter++;
-            unit.tick(delta, map1, ()=>{
-                
-                if (!updatedTree && updatedCounter>50){
-                    updatedTree =true;
-                    updatedCounter = 0;
-                    this.utracer.updateTree(ps.map(it=> ({pos:it.pos, val:1})))
-                }
-
-                return this.utracer; 
-            });
-
-            const pos = unit.pos;
-            map1[pos.y][pos.x] = 1;
-            units.updateItem(unit, lastPos);
-
-            this.drawMarker(pos, 2, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][playerIndex]);
-
-            const drawPath = this.model.data.drawPath;
-            if (unit.path && drawPath){
-                unit.path.forEach((pos)=>{
-                    this.canvas.canvasBack[(pos.y)][(pos.x)] = '#fffe';
-                });
-            }
-            
-            
-        })
-        this.utracer && updatedTree && this.utracer.updateTree(ps.map(it=> ({pos:it.pos, val:0})))
-
-        this.builds.forEach(build=>{
-            const pos = build.pos;
-            this.drawMarker(pos, 2, "#909");
-        })
     }
 }
