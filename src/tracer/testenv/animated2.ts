@@ -19,7 +19,7 @@ import { Canvas } from "./canvasRenderer";
 import { Menu } from "./menu";
 import { MenuModel } from "./menu-model";
 import {Indexed} from "./indexed";
-import { Unit, Build, BuildOreFactory } from "./unit";
+import { Unit, Build, BuildOreFactory, BuildAttack } from "./unit";
 
 const mapSize = 512;
 
@@ -36,7 +36,7 @@ class Player{
     id:number;
     money:number = 0;
 
-    constructor(id:number, model: MenuModel, tracer: TwoLevelHPA, indMap:Array2d, map: Array2d, getPlayers: ()=>Array<Player>, getRes: ()=>Array<Build>){
+    constructor(id:number, model: MenuModel, tracer: TwoLevelHPA, indMap:Array2d, map: Array2d, getPlayers: ()=>Array<Player>, getRes: ()=>Array<Build>, game: Game){
         this.model = model;
         this.id = id;
         this.tracer = tracer;
@@ -57,6 +57,11 @@ class Player{
                 //console.log(by.rescount);
             }
             
+        }
+
+        for (let i = 0; i< 30; i++){
+            const base = new BuildAttack(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)), id, game);
+            this.builds.push(base);
         }
     }
 
@@ -86,7 +91,7 @@ class Player{
     }
 }
 
-class Game{
+export class Game{
     map: Array2d;
     tracer: TwoLevelHPA;
     players: Player[];
@@ -110,7 +115,7 @@ class Game{
                 return this.players.filter(_player=> _player != player)
             }, ()=>{
                 return this.builds
-            })
+            }, this)
             this.players.push(player);
         }
 
@@ -147,6 +152,7 @@ class Game{
             player.tick(delta);
             this.processUnits(canvas, delta, player.units, i);
             player.builds.forEach(build=>{
+                build.tick(delta);
                 build.render(canvas);
                 //this.drawMarker(canvas, build.pos, 4, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][player.id])
             })
@@ -290,6 +296,7 @@ class Game{
         this.utracer && updatedTree && this.utracer.updateTree(ps.map(it=> ({pos:it.pos, val:0})))
 
         this.builds.forEach(build=>{
+            build.tick(delta);
             build.render(canvas);
             //const pos = build.pos;
            // this.drawMarker(canvas, pos, 2, "#909");
@@ -387,7 +394,7 @@ export class TestScene {
             destroyed: 0,
             count:0,
             spawned: 0,
-            players: [{money:0}, {money:0}]
+            players: [{money:0}, {money:0}, {money:0}]
         })
         this.menu = new Menu(parentNode, this.model);
         this.canvas = new Canvas(parentNode, this.render, mapSize);

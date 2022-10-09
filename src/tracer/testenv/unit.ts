@@ -3,6 +3,7 @@ import { getCorrectionPath, indexateCorrect } from "../tracelib/traceCore/correc
 import { smoothPath } from "../tracelib/traceCore/smoothPath";
 import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
 import { TwoLevelHPA } from "../tracelib/tracePacks/TwoLevelHPA";
+import { Game } from "./animated2";
 import { Canvas } from "./canvasRenderer";
 import { MenuModel } from "./menu-model";
 
@@ -327,6 +328,69 @@ export class BuildOreFactory extends Build{
             return;
         }
         //this.health -=10;
+        if (this.health<=0){
+            this.health = 0;
+            this.destroyed = true;
+            this.onDestroy?.(by);
+        }
+        this.onDamage(by);
+    }
+
+}
+
+export class BuildAttack extends Build{
+    pos: Vector;
+    health: number;
+    tm:number = 0;
+    destroyed: boolean = false;
+    onDestroy: (by:Unit)=>void;
+    onDamage: (by:Unit)=>void;
+    private game: Game;
+    enemy: Unit;
+    attactCounter: number =0;
+    //map: number[][];
+    constructor(pos: Vector, playerId: number, game: Game){
+        super(pos, playerId);
+        this.health = 100;
+        this.pos = pos;
+        this.game = game;
+    }
+
+    tick(delta:number){
+        if (!this.enemy){
+            this.attactCounter = 0;
+            this.game.players.forEach(it=>{
+                const enemies = it.units.getWithClosestItems(this.pos);
+                const enemy = enemies.find(en=> (en.pos.clone().sub(this.pos).abs() < 20));
+                if (enemy){
+                    this.enemy = enemy;
+                    //console.log('enemy in radius');
+                }
+            })   
+        } else {
+            this.attactCounter+=delta;
+            if (this.attactCounter>50){
+                this.attactCounter = 0;
+                this.enemy.damage();
+                //console.log('enemy in radius damaged');
+                this.enemy = null;
+            }
+        }
+    }
+
+    render(canvas:Canvas){
+        this.drawMarker(canvas, this.pos, 3, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][this.playerId])
+        if (this.enemy){
+            this.drawMarker(canvas, this.enemy.pos, 3, "#f00")
+        }
+    }
+
+    damage(by:Unit){
+        if (this.destroyed){
+            console.log('damage destroyed')
+            return;
+        }
+        this.health -=10;
         if (this.health<=0){
             this.health = 0;
             this.destroyed = true;
