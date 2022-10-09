@@ -28,6 +28,7 @@ export class Unit{
     rescount:number = 0;
     onReload: ()=>void;
     tp: number;
+    initialHealth: number;
     //map: number[][];
     constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number, playerId:number, tp:number =0){
         this.tracer = tracer;
@@ -41,6 +42,7 @@ export class Unit{
         this.indMap = indMap;
         this.type = type;
         this.health = 100 * (this.type==0?1 : 5)
+        this.initialHealth = 100 * (this.type==0?1 : 5);
     }
 
     tick(delta:number, map:number[][], getUtracer:()=>TwoLevelHPA){
@@ -52,7 +54,7 @@ export class Unit{
         this.tm+=delta;
         if (this.tm>this.model.data.unitStepTime * (this.type==0?1 : 15)){
             this.tm = 0;
-            if (this.rescount>=1){
+            if (this.rescount>=3){
                 this.onReload();
             }
             if (this.enemy && this.clickedPoint.clone().sub(this.enemy.pos).abs()>1){
@@ -234,8 +236,18 @@ export class Unit{
         const colorType2 = ["#0fa", "#a90", "#90a", "#fa0", "#f0a", "#9fa"];
         
         this.drawMarker(canvas, unit.pos, 2, (unit.tp==1? colorType1 : colorType2)[unit.playerId]);
-        if (unit.rescount){
+        /*if (unit.rescount){
             this.drawMarker(canvas, unit.pos, 1, "#f00");
+        }*/
+        for (let i = 0; i< unit.rescount; i++){
+            this.drawMarker(canvas, new Vector(unit.pos.x + (i-2)*3, unit.pos.y), 1, "#f00");
+        }
+        const hlth = (this.health / this.initialHealth) * 5;
+        if (hlth> 5 || isNaN(hlth) || hlth ==null){
+            throw new Error();
+        }
+        for (let i = 0; i< hlth; i++){
+            this.drawMarker(canvas, new Vector(unit.pos.x + (i-2)*3, unit.pos.y-3), 1, "#0f0");
         }
     }
 }
