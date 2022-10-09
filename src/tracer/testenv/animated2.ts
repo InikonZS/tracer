@@ -46,7 +46,7 @@ class Player{
         this.generateUnits(1);  
         this.getRes = getRes;   
         
-        const base = new BuildOreFactory(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)));
+        const base = new BuildOreFactory(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)), id);
         this.builds.push(base);
         base.onDamage = (by)=>{
             if (by.rescount>0){
@@ -114,8 +114,8 @@ class Game{
             this.players.push(player);
         }
 
-        createPlayer(0);
         createPlayer(1);
+        createPlayer(2);
     }
 
     updateTracers(changed:{pos: Vector, val:number}[]){
@@ -147,7 +147,8 @@ class Game{
             player.tick(delta);
             this.processUnits(canvas, delta, player.units, i);
             player.builds.forEach(build=>{
-                this.drawMarker(canvas, build.pos, 4, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][player.id])
+                build.render(canvas);
+                //this.drawMarker(canvas, build.pos, 4, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][player.id])
             })
         })
     }
@@ -159,7 +160,7 @@ class Game{
                 i--;
                 continue;
             }
-            const build = new Build(pos);
+            const build = new Build(pos, 0);
             build.onDestroy = (by)=>{
                 deleteElementFromArray(this.builds, build);
                 //this.players[by.playerId].money+=1;
@@ -205,7 +206,7 @@ class Game{
         return map1;
     }
 
-    drawMarker(canvas: Canvas, pos:Vector, size:number, color:string){
+    /*drawMarker(canvas: Canvas, pos:Vector, size:number, color:string){
         for (let y = -size; y<size; y++){
             for (let x = -size; x<size; x++){
                 if (canvas.canvasBack[ (pos.y + y)]){
@@ -223,7 +224,7 @@ class Game{
         if (unit.rescount){
             this.drawMarker(canvas, unit.pos, 1, "#f00");
         }
-    }
+    }*/
 
     processUnits(canvas:Canvas, delta:number, units:ChunkedArray<Unit>, playerIndex: number){
         this.debugIntersectUnitsValidate(units);
@@ -275,7 +276,8 @@ class Game{
             units.updateItem(unit, lastPos);
 
             //this.drawMarker(canvas, pos, 2, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][playerIndex]);
-            this.drawUnit(canvas, unit);
+            //this.drawUnit(canvas, unit);
+            unit.render(canvas);
             const drawPath = this.model.data.drawPath;
             if (unit.path && drawPath){
                 unit.path.forEach((pos)=>{
@@ -288,8 +290,9 @@ class Game{
         this.utracer && updatedTree && this.utracer.updateTree(ps.map(it=> ({pos:it.pos, val:0})))
 
         this.builds.forEach(build=>{
-            const pos = build.pos;
-            this.drawMarker(canvas, pos, 2, "#909");
+            build.render(canvas);
+            //const pos = build.pos;
+           // this.drawMarker(canvas, pos, 2, "#909");
         })
     }
 }

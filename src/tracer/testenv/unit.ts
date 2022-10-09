@@ -3,6 +3,7 @@ import { getCorrectionPath, indexateCorrect } from "../tracelib/traceCore/correc
 import { smoothPath } from "../tracelib/traceCore/smoothPath";
 import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
 import { TwoLevelHPA } from "../tracelib/tracePacks/TwoLevelHPA";
+import { Canvas } from "./canvasRenderer";
 import { MenuModel } from "./menu-model";
 
 export class Unit{
@@ -202,7 +203,8 @@ export class Unit{
         this.finishPoint = this.path[0];
     }
 
-    render(ctx:CanvasRenderingContext2D){
+    render(canvas:Canvas){
+        this.drawUnit(canvas, this);
        // ctx.fillRect()
     }
 
@@ -216,6 +218,26 @@ export class Unit{
         }
         //this.onDamage();
     }
+
+    drawMarker(canvas: Canvas, pos:Vector, size:number, color:string){
+        for (let y = -size; y<size; y++){
+            for (let x = -size; x<size; x++){
+                if (canvas.canvasBack[ (pos.y + y)]){
+                    canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = color;
+                }
+            }
+        }
+    }
+
+    drawUnit(canvas:Canvas, unit:Unit){
+        const colorType1 = ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"];
+        const colorType2 = ["#0fa", "#a90", "#90a", "#fa0", "#f0a", "#9fa"];
+        
+        this.drawMarker(canvas, unit.pos, 2, (unit.tp==1? colorType1 : colorType2)[unit.playerId]);
+        if (unit.rescount){
+            this.drawMarker(canvas, unit.pos, 1, "#f00");
+        }
+    }
 }
 
 export class Build{
@@ -224,18 +246,21 @@ export class Build{
     tm:number = 0;
     destroyed: boolean = false;
     onDestroy: (by:Unit)=>void;
+    playerId: number;
     //map: number[][];
-    constructor(pos: Vector){
+    constructor(pos: Vector, playerId:number){
         this.health = 100;
         this.pos = pos;
+        this.playerId = playerId;
     }
 
     tick(delta:number){
         
     }
 
-    render(ctx:CanvasRenderingContext2D){
-       // ctx.fillRect()
+    render(canvas: Canvas){
+        const pos = this.pos;
+        this.drawMarker(canvas, pos, 2, "#909");
     }
 
     damage(by:Unit){
@@ -250,9 +275,19 @@ export class Build{
             this.onDestroy?.(by);
         }
     }
+
+    drawMarker(canvas: Canvas, pos:Vector, size:number, color:string){
+        for (let y = -size; y<size; y++){
+            for (let x = -size; x<size; x++){
+                if (canvas.canvasBack[ (pos.y + y)]){
+                    canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = color;
+                }
+            }
+        }
+    }
 }
 
-export class BuildOreFactory{
+export class BuildOreFactory extends Build{
     pos: Vector;
     health: number;
     tm:number = 0;
@@ -260,7 +295,8 @@ export class BuildOreFactory{
     onDestroy: (by:Unit)=>void;
     onDamage: (by:Unit)=>void;
     //map: number[][];
-    constructor(pos: Vector){
+    constructor(pos: Vector, playerId: number){
+        super(pos, playerId);
         this.health = 100;
         this.pos = pos;
     }
@@ -269,8 +305,8 @@ export class BuildOreFactory{
         
     }
 
-    render(ctx:CanvasRenderingContext2D){
-       // ctx.fillRect()
+    render(canvas:Canvas){
+        this.drawMarker(canvas, this.pos, 4, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][this.playerId])
     }
 
     damage(by:Unit){
@@ -286,4 +322,5 @@ export class BuildOreFactory{
         }
         this.onDamage(by);
     }
+
 }
