@@ -67,10 +67,10 @@ class Player{
     generateUnits(count:number){
         //const getEnemies = ()=>
         if (Math.random()<0.5){
-            return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies());  
+            return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies(), 0);  
         } else {
             return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, 
-                /*this.builds*/()=>this.getRes(), ()=>this.getEnemies());  
+                /*this.builds*/()=>this.getRes(), ()=>this.getEnemies(), 1);  
         }
     }
 
@@ -215,6 +215,16 @@ class Game{
         }
     }
 
+    drawUnit(canvas:Canvas, unit:Unit){
+        const colorType1 = ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"];
+        const colorType2 = ["#0fa", "#a90", "#90a", "#fa0", "#f0a", "#9fa"];
+        
+        this.drawMarker(canvas, unit.pos, 2, (unit.tp==1? colorType1 : colorType2)[unit.playerId]);
+        if (unit.rescount){
+            this.drawMarker(canvas, unit.pos, 1, "#f00");
+        }
+    }
+
     processUnits(canvas:Canvas, delta:number, units:ChunkedArray<Unit>, playerIndex: number){
         this.debugIntersectUnitsValidate(units);
 
@@ -264,8 +274,8 @@ class Game{
             map1[pos.y][pos.x] = 1;
             units.updateItem(unit, lastPos);
 
-            this.drawMarker(canvas, pos, 2, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][playerIndex]);
-
+            //this.drawMarker(canvas, pos, 2, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][playerIndex]);
+            this.drawUnit(canvas, unit);
             const drawPath = this.model.data.drawPath;
             if (unit.path && drawPath){
                 unit.path.forEach((pos)=>{
@@ -285,7 +295,7 @@ class Game{
 }
 
 
-function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indMap:Array2d, map:Array2d, count:number, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>){
+function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indMap:Array2d, map:Array2d, count:number, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>, tp:number){
     //const units: Array<Unit> = [];
     for (let i=0; i<count; i++){
         const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
@@ -293,7 +303,7 @@ function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indM
             i--;
             continue;
         }
-        const unit = new Unit(tracer, pos, indMap, model, Math.random()<0.5? 0: 1, player.id);
+        const unit = new Unit(tracer, pos, indMap, model, Math.random()<0.5? 0: 1, player.id, tp);
         model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
         unit.onReload = ()=>{
             if (unit.enemy!=player.builds[0]){

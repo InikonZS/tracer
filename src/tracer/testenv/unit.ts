@@ -26,14 +26,16 @@ export class Unit{
     playerId: number;
     rescount:number = 0;
     onReload: ()=>void;
+    tp: number;
     //map: number[][];
-    constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number, playerId:number){
+    constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number, playerId:number, tp:number =0){
         this.tracer = tracer;
         this.playerId = playerId;
         //this.map = map;
         this.pos = pos;
         this.path = [];
         this.model = model;
+        this.tp = tp;
 
         this.indMap = indMap;
         this.type = type;
