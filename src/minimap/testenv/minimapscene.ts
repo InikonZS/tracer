@@ -78,7 +78,9 @@ export class MiniMapTestScene {
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render, 128);
 
-        this.build();
+        this.build().then(_=>{
+            this.canvas.startRender();
+        });
     }
 
     async build() {

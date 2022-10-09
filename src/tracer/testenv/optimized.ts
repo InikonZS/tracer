@@ -34,7 +34,9 @@ export class TestScene {
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render, mapSize);
 
-        this.build();
+        this.build().then(_=>{
+            this.canvas.startRender();
+        });
     }
 
     destroy(){

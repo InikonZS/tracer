@@ -296,7 +296,9 @@ function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indM
         const unit = new Unit(tracer, pos, indMap, model, Math.random()<0.5? 0: 1, player.id);
         model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
         unit.onReload = ()=>{
-            unit.trace(player.builds[0]);
+            if (unit.enemy!=player.builds[0]){
+                unit.trace(player.builds[0]);
+            }
         }
         unit.onIdle = ()=>{
             let closestEnemy:Build|Unit = null;

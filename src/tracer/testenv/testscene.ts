@@ -80,7 +80,7 @@ export class TestScene {
     area: number[][];
     chunks: number[][][][];
     chunkPath: IChunk[];
-    
+
     destroy(){
         this.canvas.destroy();
     }
@@ -88,7 +88,9 @@ export class TestScene {
     constructor(parentNode: HTMLElement) {
         this.canvas = new Canvas(parentNode, this.render, 128);
 
-        this.build();
+        this.build().then(_=>{
+            this.canvas.startRender();
+        });
     }
 
     async build() {
