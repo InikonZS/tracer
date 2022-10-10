@@ -29,22 +29,24 @@ class Player{
     tracer: TwoLevelHPA;
     indMap: Array2d;
     map: Array2d;
-    getPlayers: () => Array<Player>;
+    //getPlayers: () => Array<Player>;
     counter: number = 0;
     model: MenuModel;
-    getRes: () => Array<Build>;
+    //getRes: () => Array<Build>;
     id:number;
     money:number = 0;
+    game: Game;
 
-    constructor(id:number, model: MenuModel, tracer: TwoLevelHPA, indMap:Array2d, map: Array2d, getPlayers: ()=>Array<Player>, getRes: ()=>Array<Build>, game: Game){
+    constructor(id:number, model: MenuModel, tracer: TwoLevelHPA, indMap:Array2d, map: Array2d/*, getPlayers: ()=>Array<Player>, getRes: ()=>Array<Build>,*/, game: Game){
         this.model = model;
+        this.game = game;
         this.id = id;
         this.tracer = tracer;
         this.indMap = indMap;
         this.map = map;
-        this.getPlayers = getPlayers;
+        //this.getPlayers = getPlayers;
         this.generateUnits(1);  
-        this.getRes = getRes;   
+        //this.getRes = getRes;   
         
         const base = new BuildOreFactory(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)), id);
         this.builds.push(base);
@@ -65,6 +67,14 @@ class Player{
         }
     }
 
+    getPlayers(){
+        return this.game.players.filter(_player=> _player != this)
+    };
+    
+    getRes(){
+        return this.game.builds
+    };
+
     getEnemies(){
         return this.getPlayers().map(player=>player.units.items).flat();
     }
@@ -72,10 +82,9 @@ class Player{
     generateUnits(count:number){
         //const getEnemies = ()=>
         if (Math.random()<0.5){
-            return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, /*this.builds*/()=>this.getEnemies(), ()=>this.getEnemies(), 0);  
+            return generateUnitsA(this.model, this, this.tracer, this.indMap, this.map, count);  
         } else {
-            return generateUnits(this.model, this, this.tracer, this.indMap, this.map, count, 
-                /*this.builds*/()=>this.getRes(), ()=>this.getEnemies(), 1);  
+            return generateUnitsB(this.model, this, this.tracer, this.indMap, this.map, count);  
         }
     }
 
@@ -111,11 +120,7 @@ export class Game{
         this.builds = [];
         this.players = [];
         const createPlayer = (id:number)=>{
-            const player: Player = new Player(id, this.model, this.tracer as TwoLevelHPA, indMap, map, ()=>{
-                return this.players.filter(_player=> _player != player)
-            }, ()=>{
-                return this.builds
-            }, this)
+            const player: Player = new Player(id, this.model, this.tracer as TwoLevelHPA, indMap, map, this);
             this.players.push(player);
         }
 
@@ -304,16 +309,76 @@ export class Game{
     }
 }
 
-
-function generateUnits(model: MenuModel, player:Player, tracer:TwoLevelHPA, indMap:Array2d, map:Array2d, count:number, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>, tp:number){
+function generateUnitsB(model: MenuModel, player:Player, tracer:TwoLevelHPA, indMap:Array2d, map:Array2d, count:number/*, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>,*/){
     //const units: Array<Unit> = [];
+    const tp = 0;
+    const getEnemies = ()=>player.getEnemies();
+    const defendEnemies = ()=>player.getEnemies();
     for (let i=0; i<count; i++){
         const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
         if (map[pos.y][pos.x]!=0){
             i--;
             continue;
         }
-        const unit = new Unit(tracer, pos, indMap, model, Math.random()<0.5? 0: 1, player.id, tp);
+        const unit = new Unit(player.game, tracer, pos, indMap, model, Math.random()<0.5? 0: 1, player.id, tp);
+        model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
+        unit.onReload = ()=>{
+            if (unit.enemy!=player.builds[0]){
+                unit.trace(player.builds[0]);
+            }
+        }
+        unit.onIdle = ()=>{
+            let closestEnemy:Build|Unit = null;
+            let dist = maxValue;
+            getEnemies().forEach(enemy=>{
+                if (enemy.pos.clone().sub(unit.pos).abs()<dist){
+                    const dst = enemy.pos.clone().sub(unit.pos).abs();
+                    const atks = player.units.items.reduce(((ac, it)=>ac + (it.enemy == enemy ? 1 : 0)), 0);
+                    //if (atks<3) {
+                    dist = dst + atks * 50;
+                    closestEnemy = enemy;
+                    //}
+                }
+            });
+            if (closestEnemy){
+                unit.trace(closestEnemy);
+            } else {
+                unit.path = [];
+            }
+        }
+        unit.onDestroy = ()=>{
+            const enemies = defendEnemies();//this.eUnits.items;/// all enemies
+            player.units.removeItem(unit);
+            //console.log('destroy unit ', units.length, enemies.length);
+            enemies.forEach(unit1=>{
+                if (unit1 instanceof Unit){
+                    if (unit1.enemy == unit){ 
+                        unit1.enemy = null;
+                        unit1.path = null;
+                    }
+                }
+            })
+            model.setData((last)=> ({...last, destroyed: last.destroyed+1, count: last.count-1}));
+        }
+        player.units.addItem(unit);
+        //units.push(unit);
+    }
+    //const cUnits = new ChunkedArray(units, mapSize);
+    //return cUnits;
+}
+
+function generateUnitsA(model: MenuModel, player:Player, tracer:TwoLevelHPA, indMap:Array2d, map:Array2d, count:number/*, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>,*/){
+    //const units: Array<Unit> = [];
+    const tp = 1;
+    const getEnemies = ()=>player.getRes();
+    const defendEnemies = ()=>player.getEnemies();
+    for (let i=0; i<count; i++){
+        const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+        if (map[pos.y][pos.x]!=0){
+            i--;
+            continue;
+        }
+        const unit = new Unit(player.game, tracer, pos, indMap, model, Math.random()<0.5? 0: 1, player.id, tp);
         model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
         unit.onReload = ()=>{
             if (unit.enemy!=player.builds[0]){

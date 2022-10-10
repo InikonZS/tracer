@@ -31,7 +31,7 @@ export class Unit{
     tp: number;
     initialHealth: number;
     //map: number[][];
-    constructor(tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number, playerId:number, tp:number =0){
+    constructor(game: Game, tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number, playerId:number, tp:number =0){
         this.tracer = tracer;
         this.playerId = playerId;
         //this.map = map;
