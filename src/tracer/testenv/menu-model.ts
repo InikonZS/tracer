@@ -6,7 +6,8 @@ export interface IMenuData {
     destroyed: number;
     spawned: number;
     count: number,
-    players: Array<IPlayerData>
+    players: Array<IPlayerData>,
+    fps: number
 }
 
 export interface IPlayerData{

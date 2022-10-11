@@ -24,6 +24,7 @@ export class Menu extends Control {
     count: Control<HTMLElement>;
     spawned: Control<HTMLElement>;
     players: PlayerView[];
+    fps: Control<HTMLElement>;
     constructor(parentNode: HTMLElement, model: MenuModel) {
         super(parentNode);
         this.model = model;
@@ -49,6 +50,7 @@ export class Menu extends Control {
         this.destroyed = new Control(this.node);
         this.count = new Control(this.node);
         this.spawned = new Control(this.node);
+        this.fps = new Control(this.node);
 
         this.players = model.data.players.map(player=> new PlayerView(this.node));
         this.model.onChange.add(this.update);
@@ -60,7 +62,8 @@ export class Menu extends Control {
         this.destroyed.node.textContent = 'destroyed ' + data.destroyed.toString();
         this.count.node.textContent = 'count ' + data.count.toString();
         this.spawned.node.textContent = 'spawned ' + data.spawned.toString();
-        this.players.forEach((player, id)=> player.update(data.players[id]))
+        this.players.forEach((player, id)=> player.update(data.players[id]));
+        this.fps.node.textContent = 'fps ' + data.fps.toFixed(2);
     }
     destroy() {
         this.model.onChange.remove(this.update);

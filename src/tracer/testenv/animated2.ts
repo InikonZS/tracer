@@ -146,6 +146,10 @@ export class Game{
     }
 
     render(canvas:Canvas, delta:number){
+        //this.fps = ;
+        if (delta>0){
+            this.model.setData(last => ({...last, fps: (last.fps * 31  + 1000/delta) / 32}))
+        }
         this.renderChunks(canvas, delta);
         this.buildCounter+=delta;
         if (this.buildCounter>1000){
@@ -459,7 +463,8 @@ export class TestScene {
             destroyed: 0,
             count:0,
             spawned: 0,
-            players: [{money:0}, {money:0}, {money:0}]
+            players: [{money:0}, {money:0}, {money:0}],
+            fps: 60
         })
         this.menu = new Menu(parentNode, this.model);
         this.canvas = new Canvas(parentNode, this.render, mapSize);
