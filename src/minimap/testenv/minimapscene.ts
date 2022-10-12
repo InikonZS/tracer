@@ -124,12 +124,12 @@ export class MiniMapTestScene {
                 
             })
              const ind = indexateAround(this.map.map(it=> it.map(jt=> jt == 0 ? maxValue : -1)), pts,0, (ind)=>{
-                /*ind.forEach(it=>{
+                ind.forEach(it=>{
                     const canvasRow = this.canvas.canvasBack[(it.y)];
                     if (canvasRow){
-                        canvasRow[(it.x)] = '#55f';
+                        canvasRow[(it.x)] = '#225';
                     }
-                }) */
+                }) 
                 }); ind.forEach(it=>{
                         const canvasRow = this.canvas.canvasBack[(it.y)];
                         if (canvasRow){
@@ -194,7 +194,7 @@ function showTime(func: Function, args: Array<any>, iterations:number = 1, text:
 export function indexateAround(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number, onIterate:(pts:IVector[])=>void):IVector[] | null{
     const nextPoints = iteration(map, points, generation);
     onIterate(nextPoints);
-    if (generation>=3){
+    if (generation>=5){
         return nextPoints;
     }
 
