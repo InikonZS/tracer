@@ -36,6 +36,7 @@ export class MiniMapTestScene {
     buildings: Array<Building> = [];
     tileSize = 4;
     mpb: number[][];
+    mpc: number[][];
 
     destroy(){
         this.canvas.destroy();
@@ -57,6 +58,11 @@ export class MiniMapTestScene {
         const map = getMapFromImageData(getImageData(image));
         this.map = map;
         this.mpb = map.map(it=> it.map(jt=>jt));
+        this.mpc = map.map(it=> it.map(jt=>0));
+        //this.mpc[30][30] = 1;
+        const rnd = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+        const building = new Building(rnd);
+        this.buildings.push(building)
     }
 
     renderMap(canvas:Canvas, delta:number){
@@ -89,7 +95,8 @@ export class MiniMapTestScene {
             const rnd = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             try {
                 const bld = checkMap(this.mpb, mask, rnd);
-                if (-1 ==(bld.findIndex(it=> -1 != it.findIndex(jt=> jt == 1)))){
+                const blc = checkMap(this.mpc, mask, rnd);
+                if (-1 ==(bld.findIndex(it=> -1 != it.findIndex(jt=> jt == 1))) && -1 !=(blc.findIndex(it=> -1 != it.findIndex(jt=> jt == 1)))){
                     const building = new Building(rnd)
                     this.buildings.push(building);
                     
@@ -123,19 +130,23 @@ export class MiniMapTestScene {
                 //indexate 
                 
             })
+            if (pts.length){
              const ind = indexateAround(this.map.map(it=> it.map(jt=> jt == 0 ? maxValue : -1)), pts,0, (ind)=>{
                 ind.forEach(it=>{
                     const canvasRow = this.canvas.canvasBack[(it.y)];
                     if (canvasRow){
                         canvasRow[(it.x)] = '#225';
+                        this.mpc[it.y][it.x] = 1;
                     }
                 }) 
-                }); ind.forEach(it=>{
+                }); 
+                ind.forEach(it=>{
                         const canvasRow = this.canvas.canvasBack[(it.y)];
                         if (canvasRow){
                             canvasRow[(it.x)] = '#55f';
                         }
                     }) 
+                }
 
             this.buildings.forEach(building=>{
                 this.renderBuilding(building, this.canvas, delta);
