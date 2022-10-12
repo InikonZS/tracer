@@ -2,82 +2,47 @@ import Control from "../../common/control";
 import { IVector, Vector } from '../../common/vector';
 import { Canvas } from "../../tracer/testenv/canvasRenderer";
 import { RenderTicker } from '../../tracer/testenv/ticker';
+import { getImageData, getMapFromImageData, loadImage } from "../../tracer/tracelib/imageDataTools";
+import mapFile from '../../tracer/testenv/assets/map4.png';
+import {checkMap} from '../../tracer/tracelib/building';
 
-/*export class Canvas extends Control {
-    private canvas: Control<HTMLCanvasElement>;
-    public ctx: CanvasRenderingContext2D;
-    private ticker = new RenderTicker();
-    private onRender: (ctx: CanvasRenderingContext2D, delta: number) => void;
-    onMove: (e:MouseEvent)=>void;
+const mapSize = 256;
 
-    constructor(parentNode: HTMLElement, onRender: (ctx: CanvasRenderingContext2D, delta: number) => void) {
-        super(parentNode, 'div', 'canvas');
-        this.onRender = onRender;
+const mask = [
+    [0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [1, 1, 1, 1],
+    [1, 1, 1, 1]
+]
 
-        this.canvas = new Control(this.node, 'canvas');
-        this.canvas.node.width = 1200;
-        this.canvas.node.height = 600;
-
-        const context = this.canvas.node.getContext('2d');
-        if (context == null) {
-            throw new Error('Canvas 2d context is not available.');
-        }
-        this.ctx = context;
-
-        this.canvas.node.onmousemove = (e) => {
-            //this.onMove(e);
-        }
-
-        this.canvas.node.onclick = (e: MouseEvent) => {
-
-        }
-
-        this.canvas.node.oncontextmenu = (e) => {
-            e.preventDefault();
-        }
-        this.canvas.node.onmousedown = (e: MouseEvent) => {
-
-        }
-
-        this.ticker.onTick.add((delta) => {
-            this.render(delta);
-        });
-        this.ticker.startRender();
-
-        window.addEventListener('resize', this.autoSize);
-        this.autoSize();
+class Building{
+    pos: Vector;
+    mask = mask;
+    
+    constructor(pos:Vector){
+        this.pos = pos;
     }
-
-    render(delta: number) {
-        const ctx = this.ctx;
-        //ctx.fillStyle = "#000";
-        //ctx.fillRect(0, 0, this.canvas.node.width, this.canvas.node.height);
-        this.onRender(ctx, delta);
-    }
-
-    private autoSize = () => {
-        this.canvas.node.width = this.node.clientWidth;
-        this.canvas.node.height = this.node.clientHeight;
-        this.render(0);
-    }
-
-    destroy(): void {
-        window.removeEventListener('resize', this.autoSize);
-        super.destroy();
-    }
-}*/
+}
 
 export class MiniMapTestScene {
     private canvas: Canvas;
     private map: Array<Array<number>>;
+
+    /*building: Array<Array<number>> = mask;*/
+    pos: Vector = new Vector(0, 0);
+    buildings: Array<Building> = [];
+    tileSize = 4;
+    mpb: number[][];
 
     destroy(){
         this.canvas.destroy();
     }
 
     constructor(parentNode: HTMLElement) {
-        this.canvas = new Canvas(parentNode, this.render, 128);
-
+        this.canvas = new Canvas(parentNode, this.render, mapSize);
+        this.canvas.onMove = (e)=>{
+            this.pos = new Vector(Math.floor(e.offsetX / this.tileSize), Math.floor(e.offsetY / this.tileSize));
+        }
         this.build().then(_=>{
             this.canvas.startRender();
         });
@@ -85,87 +50,89 @@ export class MiniMapTestScene {
 
     async build() {
         this.map = fill2d1(256);
+        const image = await loadImage(mapFile);
+        const map = getMapFromImageData(getImageData(image));
+        this.map = map;
+        this.mpb = map.map(it=> it.map(jt=>jt));
+    }
 
-        showTime(()=>{
-            this.map.forEach((row, y)=>{
-                row.forEach((cell, x)=>{
-                    row[x] = Math.random() < 0.01 ? 1 : (Math.random() < 0.01 ? 0 : row[x]);
-                })
-            })
-        }, [], 10, 'map change ');
-
-        showTime(()=>{
-            const newMap = this.map.map((row, y)=>{
-            return row.map((cell, x)=>{
-                return Math.random() < 0.01 ? 1 : (Math.random() < 0.01 ? 0 : row[x]);
+    renderMap(canvas:Canvas, delta:number){
+        this.map.forEach((row, y)=>{
+            row.forEach((cell, x)=>{
+                canvas.canvasBack[(y)][(x)] = ['#000','#090', '#ff0', '#f0f', '#574'][cell];
             })
         })
-        }, [], 10, 'map dublicate ');
-      
+    }
 
-        showTime(()=>{
-            const tileSize = 3;
-            this.map.forEach((row, y)=>{
-                row.forEach((cell, x)=>{
-                    this.canvas.ctx.fillStyle = ['#ff9', '#f50', '#f0f'][cell] || '#0ff';
-                    this.canvas.ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                })
+    renderBuilding(building_: Building, canvas:Canvas, delta:number){
+        const building = checkMap(this.map, building_.mask, building_.pos);
+        building.forEach((row, y)=>{
+            row.forEach((cell, x)=>{
+                if (building_.mask[y][x] != 0){
+                    const canvasRow = canvas.canvasBack[(building_.pos.y + y)];
+                    if (canvasRow){
+                        canvasRow [(building_.pos.x + x)] = ['#09f', '#f00'][cell];
+                    }
+                }
             })
-        }, [], 10, 'map draw ');
-
-        for (let i=0; i< 5; i++){
-            showTime(()=>{
-                const tileSize = 3;
-                const newMap = this.map.map((row, y)=>{
-                    return row.map((cell, x)=>{
-                        return Math.random() < 0.01 ? 1 : (Math.random() < 0.01 ? 0 : row[x]);
-                    })
-                });
-                this.map.forEach((row, y)=>{
-                    row.forEach((cell, x)=>{ 
-                        if (newMap[y][x] !== this.map[y][x]){
-                            this.canvas.ctx.fillStyle = ['#ff9', '#f50', '#f0f'][cell] || '#0ff';
-                            this.canvas.ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                        }
-                    })
-                })
-                this.map = newMap;
-            }, [], 10, 'map draw optimized');
-        }
-
-
-
+        })
     }
 
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
         const tileSize = 3;
         if (this.map){
+            this.renderMap(this.canvas, delta);
+            this.buildings.forEach(building=>{
+                this.renderBuilding(building, this.canvas, delta);
+            })
 
-            /*this.map.forEach((row, y)=>{
-                row.forEach((cell, x)=>{
-                    row[x] = Math.random() < 0.01 ? 1 : (Math.random() < 0.01 ? 0 : row[x]);
-                })
-            })*/
+            const rnd = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+            try {
+                const bld = checkMap(this.mpb, mask, rnd);
+                if (-1 ==(bld.findIndex(it=> -1 != it.findIndex(jt=> jt == 1)))){
+                    const building = new Building(rnd)
+                    this.buildings.push(building);
+                    
+                    building.mask.forEach((row, y)=>{
+                        row.forEach((cell, x)=>{
+                            if (cell!=0){
+                                const canvasRow = this.mpb[(building.pos.y + y)];
+                                if (canvasRow){
+                                    canvasRow[(building.pos.x + x)] = 1;
+                                }
+                            }
+                        })
+                    })
+                }
+            } catch(e){
 
-            const newMap = this.map.map((row, y)=>{
+            }
+            
+            /*const newMap = this.map.map((row, y)=>{
                 return row.map((cell, x)=>{
                     return Math.random() < 0.01 ? 1 : (Math.random() < 0.01 ? 0 : row[x]);
                 })
-            })
+            })*/
 
 
-            this.map.forEach((row, y)=>{
-                row.forEach((cell, x)=>{
-                    if (newMap[y][x] !== this.map[y][x]){
-                        ctx.fillStyle = ['#ff9', '#f50', '#f0f'][cell] || '#0ff';
-                        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                    }
-                })
-            })
-
-            this.map = newMap;
+            this.visualize();
+            
+            //this.map = newMap;
         }
 
+    }
+    visualize(){
+        const tileSize = this.tileSize;
+        const ctx = this.canvas.ctx;
+        this.canvas.canvasBack.forEach((row, y)=>{
+            row.forEach((cell, x)=>{ 
+                if (this.canvas.canvasBackLast[y][x] !== this.canvas.canvasBack[y][x]){
+                    ctx.fillStyle = this.canvas.canvasBack[y][x];
+                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                }
+            })
+        })
+        this.canvas.canvasBackLast = this.canvas.canvasBack.map(it=>[...it]);
     }
 }
 
