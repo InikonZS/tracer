@@ -5,6 +5,9 @@ import { RenderTicker } from '../../tracer/testenv/ticker';
 import { getImageData, getMapFromImageData, loadImage } from "../../tracer/tracelib/imageDataTools";
 import mapFile from '../../tracer/testenv/assets/map4.png';
 import {checkMap} from '../../tracer/tracelib/building';
+import { iteration } from "../../tracer/tracelib/traceCore/tracerBase";
+import { maxValue } from "../../tracer/tracelib/traceCore/traceTools";
+
 
 const mapSize = 256;
 
@@ -82,10 +85,7 @@ export class MiniMapTestScene {
         const tileSize = 3;
         if (this.map){
             this.renderMap(this.canvas, delta);
-            this.buildings.forEach(building=>{
-                this.renderBuilding(building, this.canvas, delta);
-            })
-
+           
             const rnd = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             try {
                 const bld = checkMap(this.mpb, mask, rnd);
@@ -107,6 +107,41 @@ export class MiniMapTestScene {
             } catch(e){
 
             }
+
+            const pts: Vector[] = [];
+            this.buildings.forEach(bld=>{
+                const vct = bld.mask.map((row, y)=>{
+                    return row.map((cell, x)=>{
+                        if (cell!=0){
+                            //const canvasRow = this.mpb[(building.pos.y + y)];
+                            //if (canvasRow){v
+                            pts.push(new Vector((bld.pos.x + x), (bld.pos.y + y)))   
+                           // }
+                        }
+                    })
+                })
+                //indexate 
+                
+            })
+             const ind = indexateAround(this.map.map(it=> it.map(jt=> jt == 0 ? maxValue : -1)), pts,0, (ind)=>{
+                /*ind.forEach(it=>{
+                    const canvasRow = this.canvas.canvasBack[(it.y)];
+                    if (canvasRow){
+                        canvasRow[(it.x)] = '#55f';
+                    }
+                }) */
+                }); ind.forEach(it=>{
+                        const canvasRow = this.canvas.canvasBack[(it.y)];
+                        if (canvasRow){
+                            canvasRow[(it.x)] = '#55f';
+                        }
+                    }) 
+
+            this.buildings.forEach(building=>{
+                this.renderBuilding(building, this.canvas, delta);
+            })
+
+            
             
             /*const newMap = this.map.map((row, y)=>{
                 return row.map((cell, x)=>{
@@ -155,3 +190,14 @@ function showTime(func: Function, args: Array<any>, iterations:number = 1, text:
     }  
     console.log(text + ': ', Date.now()-startTime);
 }
+
+export function indexateAround(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number, onIterate:(pts:IVector[])=>void):IVector[] | null{
+    const nextPoints = iteration(map, points, generation);
+    onIterate(nextPoints);
+    if (generation>=3){
+        return nextPoints;
+    }
+
+    if (!points.length) { return null; }
+    return indexateAround(map, nextPoints, generation+1, onIterate);
+  }
