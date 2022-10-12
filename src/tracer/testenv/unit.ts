@@ -301,11 +301,11 @@ export class Build{
 }
 
 export class BuildOreFactory extends Build{
-    pos: Vector;
-    health: number;
+    //pos: Vector;
+    //health: number;
     tm:number = 0;
     destroyed: boolean = false;
-    onDestroy: (by:Unit)=>void;
+    //onDestroy: (by:Unit)=>void;
     onDamage: (by:Unit)=>void;
     //map: number[][];
     constructor(pos: Vector, playerId: number){
@@ -339,11 +339,11 @@ export class BuildOreFactory extends Build{
 }
 
 export class BuildAttack extends Build{
-    pos: Vector;
-    health: number;
+    //pos: Vector;
+    //health: number;
     tm:number = 0;
     destroyed: boolean = false;
-    onDestroy: (by:Unit)=>void;
+    //onDestroy: (by:Unit)=>void;
     onDamage: (by:Unit)=>void;
     private game: Game;
     enemy: Unit;

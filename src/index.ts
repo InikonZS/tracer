@@ -8,6 +8,7 @@ import {MiniMapTestScene} from './minimap/testenv/minimapscene';
 import './style.css'
 import {Demo} from './mvcdemo/testenv/test';
 import {MainRouter, IRoute, IRouteScene} from './router';
+import {DemoWComponent} from './webcomponent/demo';
 
 //runBabylonExample(rootWrapper.node);
 //const testScene = new TestScene(rootWrapper.node);
@@ -65,6 +66,13 @@ const routes: Array<IRoute> = [
         name: 'miniMap',
         component: (parent: HTMLElement)=>{
             const scene = new MiniMapTestScene(parent);
+            return scene
+        }
+    },
+    {
+        name: 'webComponent',
+        component: (parent: HTMLElement)=>{
+            const scene = new DemoWComponent(parent);
             return scene
         }
     },
