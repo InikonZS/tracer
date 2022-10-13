@@ -37,6 +37,7 @@ export class MiniMapTestScene {
     tileSize = 4;
     mpb: number[][];
     mpc: number[][];
+    buildPositions: Vector[];
 
     destroy(){
         this.canvas.destroy();
@@ -92,8 +93,21 @@ export class MiniMapTestScene {
         if (this.map){
             this.renderMap(this.canvas, delta);
            
-            const rnd = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+            //const rnd = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+            
             try {
+                const rnd1 = this.buildPositions[Math.floor(Math.random() * this.buildPositions.length)];
+                
+                const rndAr = this.buildPositions.filter(it=>{
+                    try{
+                    const bld = checkMap(this.mpb, mask, it);
+                    const blc = checkMap(this.mpc, mask, it);
+                    return (-1 ==(bld.findIndex(it=> -1 != it.findIndex(jt=> jt == 1))) && -1 !=(blc.findIndex(it=> -1 != it.findIndex(jt=> jt == 1))))
+                    } catch(e){
+                        return false;
+                    }
+                })
+                const rnd = rndAr[Math.floor(Math.random() * rndAr.length)];
                 const bld = checkMap(this.mpb, mask, rnd);
                 const blc = checkMap(this.mpc, mask, rnd);
                 if (-1 ==(bld.findIndex(it=> -1 != it.findIndex(jt=> jt == 1))) && -1 !=(blc.findIndex(it=> -1 != it.findIndex(jt=> jt == 1)))){
@@ -131,20 +145,26 @@ export class MiniMapTestScene {
                 
             })
             if (pts.length){
+            this.buildPositions = [];
              const ind = indexateAround(this.map.map(it=> it.map(jt=> jt == 0 ? maxValue : -1)), pts,0, (ind, gen)=>{
+                
                 ind.forEach(it=>{
                     const canvasRow = this.canvas.canvasBack[(it.y)];
                     if (canvasRow){
-                        canvasRow[(it.x)] = '#225';
-                        this.mpc[it.y][it.x] = 1;
+                        if (gen<=5){
+                            canvasRow[(it.x)] = '#225';
+                            this.mpc[it.y][it.x] = 1;
+                        }
                         if (gen<=1){
                             canvasRow[(it.x)] = '#f25';
                             this.mpb[it.y][it.x] = 1;
                         }
+                        this.buildPositions.push(Vector.fromIVector(it));
                     }
                 }) 
                 }); 
-                ind.forEach(it=>{
+                
+                ind && ind.forEach(it=>{
                         const canvasRow = this.canvas.canvasBack[(it.y)];
                         if (canvasRow){
                             canvasRow[(it.x)] = '#55f';
@@ -209,7 +229,7 @@ function showTime(func: Function, args: Array<any>, iterations:number = 1, text:
 export function indexateAround(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number, onIterate:(pts:IVector[], gen:number)=>void):IVector[] | null{
     const nextPoints = iteration(map, points, generation);
     onIterate(nextPoints, generation);
-    if (generation>=5){
+    if (generation>=10){
         return nextPoints;
     }
 
