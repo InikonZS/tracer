@@ -253,6 +253,13 @@ export class Unit{
     }
 }
 
+export const mask = [
+    [0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [1, 1, 1, 1],
+    [1, 1, 1, 1]
+]
+
 export class Build{
     pos: Vector;
     health: number;
@@ -260,6 +267,7 @@ export class Build{
     destroyed: boolean = false;
     onDestroy: (by:Unit)=>void;
     playerId: number;
+    mask = mask;
     //map: number[][];
     constructor(pos: Vector, playerId:number){
         this.health = 100;
@@ -379,7 +387,17 @@ export class BuildAttack extends Build{
     }
 
     render(canvas:Canvas){
-        this.drawMarker(canvas, this.pos, 3, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][this.playerId])
+        //this.drawMarker(canvas, this.pos, 3, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][this.playerId])
+        this.mask.forEach((row, y)=>{
+            row.forEach((cell, x)=>{
+                if (this.mask[y][x] != 0){
+                    const canvasRow = canvas.canvasBack[(this.pos.y + y)];
+                    if (canvasRow){
+                        canvasRow [(this.pos.x + x)] = ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][this.playerId];//['#09f', '#f00'][cell];
+                    }
+                }
+            })
+        })
         if (this.enemy){
             this.drawMarker(canvas, this.enemy.pos, 3, "#f00")
         }

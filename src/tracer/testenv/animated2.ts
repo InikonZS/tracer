@@ -19,8 +19,8 @@ import { Canvas } from "./canvasRenderer";
 import { Menu } from "./menu";
 import { MenuModel } from "./menu-model";
 import {Indexed} from "./indexed";
-import { Unit, Build, BuildOreFactory, BuildAttack } from "./unit";
-
+import { Unit, Build, BuildOreFactory, BuildAttack, mask } from "./unit";
+import { getBuildingPoints } from "../tracelib/buildPlacing";
 const mapSize = 512;
 
 class Player{
@@ -96,6 +96,12 @@ class Player{
             //spawned.items.forEach(it=>{
             //    this.units.addItem(it);
             //});
+            const bp = this.game.getBuildingPoints(mask);
+            const rnp = bp[Math.floor(Math.random() * bp.length)];
+            if (rnp){
+                const building = new BuildAttack(rnp, this.id, this.game);
+                this.builds.push(building);
+            }
         }
     }
 }
@@ -126,6 +132,10 @@ export class Game{
 
         createPlayer(1);
         createPlayer(2);
+    }
+
+    getBuildingPoints(mask:Array2d){
+        return getBuildingPoints(this.map, this.builds, mask);
     }
 
     updateTracers(changed:{pos: Vector, val:number}[]){
