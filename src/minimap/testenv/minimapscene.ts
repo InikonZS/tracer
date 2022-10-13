@@ -6,7 +6,7 @@ import { getImageData, getMapFromImageData, loadImage } from "../../tracer/trace
 import mapFile from '../../tracer/testenv/assets/map4.png';
 import {checkMap} from '../../tracer/tracelib/building';
 import { iteration } from "../../tracer/tracelib/traceCore/tracerBase";
-import { maxValue } from "../../tracer/tracelib/traceCore/traceTools";
+import { Array2d, maxValue } from "../../tracer/tracelib/traceCore/traceTools";
 
 
 const mapSize = 256;
@@ -91,6 +91,13 @@ export class MiniMapTestScene {
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
         const tileSize = 3;
         if (this.map){
+
+            const bp = getBuildingPoints(this.map, this.buildings);
+            const rnp = bp[Math.floor(Math.random() * bp.length)];
+            if (rnp){
+                const building = new Building(rnp);
+                this.buildings.push(building);
+            }
             
             this.renderMap(this.canvas, delta);
            
@@ -114,7 +121,7 @@ export class MiniMapTestScene {
                 const blc = checkMap(this.mpc, mask, rnd);
                 if (-1 ==(bld.findIndex(it=> -1 != it.findIndex(jt=> jt == 1))) && -1 !=(blc.findIndex(it=> -1 != it.findIndex(jt=> jt == 1)))){
                     const building = new Building(rnd)
-                    this.buildings.push(building);
+                    //this.buildings.push(building);
                     
                     /*building.mask.forEach((row, y)=>{
                         row.forEach((cell, x)=>{
@@ -223,6 +230,69 @@ export class MiniMapTestScene {
         })
         this.canvas.canvasBackLast = this.canvas.canvasBack.map(it=>[...it]);
     }
+}
+
+interface IBuilding{
+    pos:Vector, 
+    mask:Array2d
+}
+
+function flatBuildingsPlaces(buildings: Array<IBuilding>) {
+    const pts: Vector[] = [];
+    buildings.forEach(bld => {
+        bld.mask.map((row, y) => {
+            row.forEach((cell, x) => {
+                if (cell != 0) {
+                    pts.push(new Vector((bld.pos.x + x), (bld.pos.y + y)))
+                }
+            })
+        })
+    })
+    return pts;
+}
+
+function filterAvailablePlaces(positions: Array<Vector>, mpb: Array2d, mpc: Array2d){
+    const result = positions.filter(it=>{
+        try{
+        const bld = checkMap(mpb, mask, it);
+        const blc = checkMap(mpc, mask, it);
+        return (-1 ==(bld.findIndex(it=> -1 != it.findIndex(jt=> jt == 1))) && -1 !=(blc.findIndex(it=> -1 != it.findIndex(jt=> jt == 1))))
+        } catch(e){
+            return false;
+        }
+    })
+    return result;
+}
+
+function getMapsAndPositions(map: Array2d, points: Array<Vector>) {
+    const positions: Vector[] = [];
+    const mpb = map.map(it => it.map(jt => jt));
+    const mpc = map.map(it => it.map(jt => 0));
+    const ind = indexateAround(map.map(it => it.map(jt => jt == 0 ? maxValue : -1)), points, 0, (indexated, gen) => {
+
+        indexated.forEach(it => {
+            const canvasRow = map[it.y]//this.canvas.canvasBack[(it.y)];
+            if (canvasRow) {
+                if (gen <= 5) {
+                    //canvasRow[(it.x)] = '#225';
+                    mpc[it.y][it.x] = 1;
+                }
+                if (gen <= 1) {
+                    //canvasRow[(it.x)] = '#f25';
+                    mpb[it.y][it.x] = 1;
+                }
+                positions.push(Vector.fromIVector(it));
+            }
+        })
+    });
+    return { ind, mpb, mpc, positions }
+}
+
+function getBuildingPoints(map:Array2d, buildings:Array<IBuilding>){
+    const builded = flatBuildingsPlaces(buildings);
+    const {ind, mpc, mpb, positions} = getMapsAndPositions(map, builded);
+    const result = filterAvailablePlaces(positions, mpb, mpc);
+    return result;
 }
 
 function fill2d1(iterations: number){
