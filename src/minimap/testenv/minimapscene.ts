@@ -91,10 +91,12 @@ export class MiniMapTestScene {
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
         const tileSize = 3;
         if (this.map){
+            
             this.renderMap(this.canvas, delta);
            
             //const rnd = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
-            
+            const rnv = Math.random()<0.95;
+                this.buildings = this.buildings.filter(it=> Math.random()<0.95);
             try {
                 const rnd1 = this.buildPositions[Math.floor(Math.random() * this.buildPositions.length)];
                 
@@ -114,7 +116,7 @@ export class MiniMapTestScene {
                     const building = new Building(rnd)
                     this.buildings.push(building);
                     
-                    building.mask.forEach((row, y)=>{
+                    /*building.mask.forEach((row, y)=>{
                         row.forEach((cell, x)=>{
                             if (cell!=0){
                                 const canvasRow = this.mpb[(building.pos.y + y)];
@@ -123,10 +125,24 @@ export class MiniMapTestScene {
                                 }
                             }
                         })
-                    })
+                    })*/
                 }
+                
+                /*const rem = this.buildings.filter(it=> !(rnv));
+                rem.forEach(building=>{
+                    building.mask.forEach((row, y)=>{
+                        row.forEach((cell, x)=>{
+                            if (cell!=0){
+                                const canvasRow = this.mpb[(building.pos.y + y)];
+                                if (canvasRow){
+                                    canvasRow[(building.pos.x + x)] = 0;
+                                }
+                            }
+                        })
+                    })
+                })*/
             } catch(e){
-
+                //console.log('not builded')
             }
 
             const pts: Vector[] = [];
@@ -146,6 +162,8 @@ export class MiniMapTestScene {
             })
             if (pts.length){
             this.buildPositions = [];
+            this.mpb = this.map.map(it=> it.map(jt=>jt));
+            this.mpc = this.map.map(it=> it.map(jt=>0));
              const ind = indexateAround(this.map.map(it=> it.map(jt=> jt == 0 ? maxValue : -1)), pts,0, (ind, gen)=>{
                 
                 ind.forEach(it=>{
@@ -175,6 +193,7 @@ export class MiniMapTestScene {
             this.buildings.forEach(building=>{
                 this.renderBuilding(building, this.canvas, delta);
             })
+            
 
             
             
