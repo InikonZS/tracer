@@ -235,3 +235,11 @@ const ob = {sd:43, fd:453}
 const sdf: keyof typeof ob = 'sd'
 
 addEventListener
+
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : any;
+
+const r: ReturnType<string> = (sd:number)=>{
+
+}
+
+const res = r()

@@ -131,12 +131,16 @@ export class MiniMapTestScene {
                 
             })
             if (pts.length){
-             const ind = indexateAround(this.map.map(it=> it.map(jt=> jt == 0 ? maxValue : -1)), pts,0, (ind)=>{
+             const ind = indexateAround(this.map.map(it=> it.map(jt=> jt == 0 ? maxValue : -1)), pts,0, (ind, gen)=>{
                 ind.forEach(it=>{
                     const canvasRow = this.canvas.canvasBack[(it.y)];
                     if (canvasRow){
                         canvasRow[(it.x)] = '#225';
                         this.mpc[it.y][it.x] = 1;
+                        if (gen<=1){
+                            canvasRow[(it.x)] = '#f25';
+                            this.mpb[it.y][it.x] = 1;
+                        }
                     }
                 }) 
                 }); 
@@ -202,9 +206,9 @@ function showTime(func: Function, args: Array<any>, iterations:number = 1, text:
     console.log(text + ': ', Date.now()-startTime);
 }
 
-export function indexateAround(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number, onIterate:(pts:IVector[])=>void):IVector[] | null{
+export function indexateAround(map:Array<Array<number>>, points:Array<{x:number, y:number}>, generation:number, onIterate:(pts:IVector[], gen:number)=>void):IVector[] | null{
     const nextPoints = iteration(map, points, generation);
-    onIterate(nextPoints);
+    onIterate(nextPoints, generation);
     if (generation>=5){
         return nextPoints;
     }
