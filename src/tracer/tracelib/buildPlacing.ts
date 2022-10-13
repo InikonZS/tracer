@@ -59,9 +59,11 @@ function getMapsAndPositions(map: Array2d, points: Array<Vector>) {
     return { ind, mpb, mpc, positions }
 }
 
-export function getBuildingPoints(map:Array2d, buildings:Array<IBuilding>, mask: Array2d){
+export function getBuildingPoints(map:Array2d, buildings:Array<IBuilding>, ownBuildings:Array<IBuilding>, mask: Array2d){
     const builded = flatBuildingsPlaces(buildings);
-    const {ind, mpc, mpb, positions} = getMapsAndPositions(map, builded);
+    const builded1 = flatBuildingsPlaces(ownBuildings);
+    const {mpb} = getMapsAndPositions(map, builded);
+    const {ind, mpc, positions} = getMapsAndPositions(map, builded1);
     const result = filterAvailablePlaces(positions, mpb, mpc, mask);
     return result;
 }

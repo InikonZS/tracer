@@ -63,7 +63,7 @@ class Player{
 
         for (let i = 0; i< 30; i++){
             const base = new BuildAttack(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)), id, game);
-            this.builds.push(base);
+            //this.builds.push(base);
         }
     }
 
@@ -96,12 +96,13 @@ class Player{
             //spawned.items.forEach(it=>{
             //    this.units.addItem(it);
             //});
-            const bp = this.game.getBuildingPoints(mask);
+            const bp = this.game.getBuildingPoints(mask, this.builds);
             const rnp = bp[Math.floor(Math.random() * bp.length)];
             if (rnp){
                 const building = new BuildAttack(rnp, this.id, this.game);
                 this.builds.push(building);
             }
+            
         }
     }
 }
@@ -134,8 +135,8 @@ export class Game{
         createPlayer(2);
     }
 
-    getBuildingPoints(mask:Array2d){
-        return getBuildingPoints(this.map, this.builds, mask);
+    getBuildingPoints(mask:Array2d, playerBuilds: Array<Build>){
+        return getBuildingPoints(this.map, [...this.builds, ...this.players.map(it=>it.builds).flat()], playerBuilds, mask);
     }
 
     updateTracers(changed:{pos: Vector, val:number}[]){
