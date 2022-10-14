@@ -369,7 +369,7 @@ export class BuildAttack extends Build{
             this.attactCounter = 0;
             this.game.players.forEach(it=>{
                 const enemies = it.units.getWithClosestItems(this.pos);
-                const enemy = enemies.find(en=> (en.pos.clone().sub(this.pos).abs() < 20));
+                const enemy = enemies.find(en=> en.playerId != this.playerId && (en.pos.clone().sub(this.pos).abs() < 20));
                 if (enemy){
                     this.enemy = enemy;
                     //console.log('enemy in radius');

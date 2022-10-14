@@ -180,7 +180,7 @@ export class Game{
     }
 
     generateRes(){
-        for (let i=0; i<1; i++){
+        for (let i=0; i<10; i++){
             const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             if (this.map[pos.y][pos.x]!=0){
                 i--;
@@ -329,8 +329,14 @@ function generateUnitsB(model: MenuModel, player:Player, tracer:TwoLevelHPA, ind
     const tp = 0;
     const getEnemies = ()=>player.getEnemies();
     const defendEnemies = ()=>player.getEnemies();
+
+    const bp = player.game.getBuildingPoints(mask, player.builds);
+    
+
     for (let i=0; i<count; i++){
-        const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+        const rnp = bp[Math.floor(Math.random() * bp.length)];
+        if (!rnp) return;
+        const pos = rnp;//new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
         if (map[pos.y][pos.x]!=0){
             i--;
             continue;
@@ -387,8 +393,12 @@ function generateUnitsA(model: MenuModel, player:Player, tracer:TwoLevelHPA, ind
     const tp = 1;
     const getEnemies = ()=>player.getRes();
     const defendEnemies = ()=>player.getEnemies();
+    const bp = player.game.getBuildingPoints(mask, player.builds);
     for (let i=0; i<count; i++){
-        const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+        const rnp = bp[Math.floor(Math.random() * bp.length)];
+        const pos = rnp;
+        if (!rnp) return;
+        //const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
         if (map[pos.y][pos.x]!=0){
             i--;
             continue;
