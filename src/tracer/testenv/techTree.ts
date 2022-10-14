@@ -3,7 +3,7 @@ const buildingCenter = {
     deps: ['rootAccess'],
     desc: ['buildingCenter'],
     name: 'buildingCenter',
-    energy: 0,
+    energy: -1,
     cost: 2000,
     time: 100,
     mtx:[

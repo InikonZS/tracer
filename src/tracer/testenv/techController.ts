@@ -45,3 +45,5 @@ export class TechController{
     return tech.units.filter(item=>item.deps.every(elem=>nameBuild.includes(elem)))
   }
 }
+
+export const techController = new TechController();

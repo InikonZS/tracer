@@ -8,6 +8,7 @@ import {checkMap} from '../../tracer/tracelib/building';
 import { iteration } from "../../tracer/tracelib/traceCore/tracerBase";
 import { Array2d, maxValue } from "../../tracer/tracelib/traceCore/traceTools";
 import { tech } from "../../tracer/testenv/techTree";
+import { ITechBuild, techController } from "../../tracer/testenv/techController";
 
 
 const mapSize = 256;
@@ -22,14 +23,16 @@ const mask = [
 class Building{
     pos: Vector;
     mask: Array2d;
+    ti: ITechBuild;
     
-    constructor(pos:Vector, mask_?:Array2d){
+    constructor(pos:Vector, mask_?:Array2d, ti?:ITechBuild){
         this.pos = pos;
         if (mask_){
             this.mask = mask_;
         } else {
             this.mask = mask;
         }
+        this.ti = ti;
     }
 }
 
@@ -97,12 +100,23 @@ export class MiniMapTestScene {
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
         const tileSize = 3;
         if (this.map){
-            const buildInfo = tech.builds[Math.floor(Math.random() * tech.builds.length)];
-                const mask = buildInfo.mtx.map(it=> it.map(jt=> jt=='0'?0:1));
+            //const buildInfo = tech.builds[Math.floor(Math.random() * tech.builds.length)];
+            let avb = techController.getAvailableBuilds(this.buildings.map(it=> it.ti).filter(it=>it));
+            const energy = this.buildings.reduce((energy, bld)=> energy + (bld.ti? bld.ti.energy : 0) , 0)
+            console.log(energy);
+            if (energy >=0){
+                avb = avb.filter(it=> it.energy < 0);
+            };
+            if (!avb.length){
+                console.log('nolen')
+                return;
+            }
+            const buildInfo = avb[Math.floor(Math.random() * avb.length)];
+            const mask = buildInfo.mtx.map(it=> it.map(jt=> jt=='0'?0:1));
             const bp = getBuildingPoints(this.map, this.buildings);
             const rnp = bp[Math.floor(Math.random() * bp.length)];
             if (rnp){
-                const building = new Building(rnp, mask);
+                const building = new Building(rnp, mask, buildInfo);
                 this.buildings.push(building);
             }
             
