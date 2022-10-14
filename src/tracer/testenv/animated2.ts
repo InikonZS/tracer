@@ -79,7 +79,16 @@ class Player{
         return this.getPlayers().map(player=>player.units.items).flat();
     }
 
+    getBuilds(){
+        return this.getPlayers().map(player=>player.builds).flat();
+    }
+
     generateUnits(count:number){
+        if (this.money<-100){
+            return;
+        }
+        this.money -= 30;
+        this.model.setPlayerData(this.id, (last)=>({...last, money: this.money}));
         //const getEnemies = ()=>
         if (Math.random()<0.5){
             return generateUnitsA(this.model, this, this.tracer, this.indMap, this.map, count);  
@@ -327,7 +336,8 @@ export class Game{
 function generateUnitsB(model: MenuModel, player:Player, tracer:TwoLevelHPA, indMap:Array2d, map:Array2d, count:number/*, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>,*/){
     //const units: Array<Unit> = [];
     const tp = 0;
-    const getEnemies = ()=>player.getEnemies();
+    //@ts-ignore
+    const getEnemies = ()=>player.getBuilds().concat(player.getEnemies());//;
     const defendEnemies = ()=>player.getEnemies();
 
     const bp = player.game.getBuildingPoints(mask, player.builds);

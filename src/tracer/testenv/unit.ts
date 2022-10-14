@@ -1,4 +1,5 @@
 import { Vector } from "../../common/vector";
+import { deleteElementFromArray } from "../tracelib/traceCore/chunkedArray";
 import { getCorrectionPath, indexateCorrect } from "../tracelib/traceCore/correction";
 import { smoothPath } from "../tracelib/traceCore/smoothPath";
 import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
@@ -377,7 +378,7 @@ export class BuildAttack extends Build{
             })   
         } else {
             this.attactCounter+=delta;
-            if (this.attactCounter>50){
+            if (this.attactCounter>2500){
                 this.attactCounter = 0;
                 this.enemy.damage();
                 //console.log('enemy in radius damaged');
@@ -412,9 +413,10 @@ export class BuildAttack extends Build{
         if (this.health<=0){
             this.health = 0;
             this.destroyed = true;
+            deleteElementFromArray(this.game.players.find(pl => pl.id == this.playerId).builds, this);
             this.onDestroy?.(by);
         }
-        this.onDamage(by);
+        this.onDamage?.(by);
     }
 
 }
