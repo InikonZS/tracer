@@ -7,6 +7,7 @@ import mapFile from '../../tracer/testenv/assets/map4.png';
 import {checkMap} from '../../tracer/tracelib/building';
 import { iteration } from "../../tracer/tracelib/traceCore/tracerBase";
 import { Array2d, maxValue } from "../../tracer/tracelib/traceCore/traceTools";
+import { tech } from "../../tracer/testenv/techTree";
 
 
 const mapSize = 256;
@@ -20,10 +21,15 @@ const mask = [
 
 class Building{
     pos: Vector;
-    mask = mask;
+    mask: Array2d;
     
-    constructor(pos:Vector){
+    constructor(pos:Vector, mask_?:Array2d){
         this.pos = pos;
+        if (mask_){
+            this.mask = mask_;
+        } else {
+            this.mask = mask;
+        }
     }
 }
 
@@ -91,11 +97,12 @@ export class MiniMapTestScene {
     render = (ctx: CanvasRenderingContext2D, delta:number)=>{
         const tileSize = 3;
         if (this.map){
-
+            const buildInfo = tech.builds[Math.floor(Math.random() * tech.builds.length)];
+                const mask = buildInfo.mtx.map(it=> it.map(jt=> jt=='0'?0:1));
             const bp = getBuildingPoints(this.map, this.buildings);
             const rnp = bp[Math.floor(Math.random() * bp.length)];
             if (rnp){
-                const building = new Building(rnp);
+                const building = new Building(rnp, mask);
                 this.buildings.push(building);
             }
             
@@ -104,6 +111,7 @@ export class MiniMapTestScene {
             //const rnd = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
             const rnv = Math.random()<0.95;
                 this.buildings = this.buildings.filter(it=> Math.random()<0.95);
+               
             try {
                 const rnd1 = this.buildPositions[Math.floor(Math.random() * this.buildPositions.length)];
                 
@@ -117,10 +125,13 @@ export class MiniMapTestScene {
                     }
                 })
                 const rnd = rndAr[Math.floor(Math.random() * rndAr.length)];
-                const bld = checkMap(this.mpb, mask, rnd);
+               /* const bld = checkMap(this.mpb, mask, rnd);
                 const blc = checkMap(this.mpc, mask, rnd);
                 if (-1 ==(bld.findIndex(it=> -1 != it.findIndex(jt=> jt == 1))) && -1 !=(blc.findIndex(it=> -1 != it.findIndex(jt=> jt == 1)))){
-                    const building = new Building(rnd)
+                */  
+               if (rnd){  
+                const building = new Building(rnd, mask)
+               }
                     //this.buildings.push(building);
                     
                     /*building.mask.forEach((row, y)=>{
@@ -133,7 +144,7 @@ export class MiniMapTestScene {
                             }
                         })
                     })*/
-                }
+               // }
                 
                 /*const rem = this.buildings.filter(it=> !(rnv));
                 rem.forEach(building=>{
