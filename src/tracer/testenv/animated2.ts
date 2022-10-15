@@ -316,18 +316,27 @@ export class Game{
 
             //this.drawMarker(canvas, pos, 2, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][playerIndex]);
             //this.drawUnit(canvas, unit);
-            unit.render(canvas);
+            
+        })
+
+        this.utracer && updatedTree && this.utracer.updateTree(ps.map(it=> ({pos:it.pos, val:0})))
+        this.processBuilds(canvas, delta);
+        units.items.forEach((unit)=>{
+            this.renderUnit(unit, canvas, delta);
+        })
+    }
+
+    renderUnit(unit: Unit, canvas: Canvas, delta: number){
+        unit.render(canvas);
             const drawPath = this.model.data.drawPath;
             if (unit.path && drawPath){
                 unit.path.forEach((pos)=>{
                     canvas.canvasBack[(pos.y)][(pos.x)] = '#fffe';
                 });
             }
-            
-            
-        })
-        this.utracer && updatedTree && this.utracer.updateTree(ps.map(it=> ({pos:it.pos, val:0})))
+    }
 
+    processBuilds(canvas: Canvas, delta: number){
         this.builds.forEach(build=>{
             build.tick(delta);
             build.render(canvas);
