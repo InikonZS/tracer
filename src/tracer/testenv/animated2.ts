@@ -23,6 +23,7 @@ import { Unit, Build, BuildOreFactory, BuildAttack, mask } from "./unit";
 import { UnitSoldier, UnitTruck } from "./unitTruck";
 import { getBuildingPoints } from "../tracelib/buildPlacing";
 import { DefaultUnit } from "./defaultUnit";
+import { techController } from "./techController";
 const mapSize = 512;
 
 class Player{
@@ -111,13 +112,30 @@ class Player{
             //spawned.items.forEach(it=>{
             //    this.units.addItem(it);
             //});
-            const bp = this.game.getBuildingPoints(mask, this.builds);
-            const rnp = bp[Math.floor(Math.random() * bp.length)];
-            if (rnp){
-                const building = new BuildAttack(rnp, this.id, this.game);
-                this.builds.push(building);
-            }
             
+            this.generateBuildings();
+        }
+    }
+
+    generateBuildings(){
+        let avb = techController.getAvailableBuilds(this.builds.map(it=> it.ti).filter(it=>it));
+            const energy = this.builds.reduce((energy, bld)=> energy + (bld.ti? bld.ti.energy : 0) , 0)
+            console.log(energy);
+            if (energy >=0){
+                avb = avb.filter(it=> it.energy < 0);
+            };
+            if (!avb.length){
+                console.log('nolen')
+                return;
+            }
+            const buildInfo = avb[Math.floor(Math.random() * avb.length)];
+            const mask = buildInfo.mtx.map(it=> it.map(jt=> jt=='0'?0:1));
+            
+        const bp = this.game.getBuildingPoints(mask, this.builds);
+        const rnp = bp[Math.floor(Math.random() * bp.length)];
+        if (rnp){
+            const building = new BuildAttack(rnp, this.id, this.game, buildInfo);
+            this.builds.push(building);
         }
     }
 }

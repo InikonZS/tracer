@@ -368,6 +368,9 @@ export class BuildAttack extends Build{
         this.pos = pos;
         this.game = game;
         this.ti = ti;
+        if (ti){
+            this.mask = ti.mtx.map(row=>row.map(cell=> cell=='0'?0:1));
+        }
     }
 
     tick(delta:number){
