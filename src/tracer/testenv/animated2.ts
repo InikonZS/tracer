@@ -67,6 +67,10 @@ class Player{
         }
     }
 
+    getEnergy(){
+        return this.builds.reduce((energy, bld)=> energy + (bld.ti? bld.ti.energy : 0) , 0)
+    }
+
     getPlayers(){
         return this.game.players.filter(_player=> _player != this)
     };

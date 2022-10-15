@@ -7,6 +7,7 @@ import { TwoLevelHPA } from "../tracelib/tracePacks/TwoLevelHPA";
 import { Game } from "./animated2";
 import { Canvas } from "./canvasRenderer";
 import { MenuModel } from "./menu-model";
+import { ITechBuild } from "./techController";
 
 export class Unit{
     tracer: TwoLevelHPA;
@@ -269,6 +270,7 @@ export class Build{
     onDestroy: (by:Unit)=>void;
     playerId: number;
     mask = mask;
+    ti: ITechBuild;
     //map: number[][];
     constructor(pos: Vector, playerId:number){
         this.health = 100;
@@ -357,12 +359,14 @@ export class BuildAttack extends Build{
     private game: Game;
     enemy: Unit;
     attactCounter: number =0;
+    
     //map: number[][];
-    constructor(pos: Vector, playerId: number, game: Game){
+    constructor(pos: Vector, playerId: number, game: Game, ti?:ITechBuild){
         super(pos, playerId);
         this.health = 100;
         this.pos = pos;
         this.game = game;
+        this.ti = ti;
     }
 
     tick(delta:number){
