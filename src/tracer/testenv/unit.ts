@@ -6,6 +6,7 @@ import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
 import { TwoLevelHPA } from "../tracelib/tracePacks/TwoLevelHPA";
 import { Game } from "./animated2";
 import { Canvas } from "./canvasRenderer";
+import { DefaultUnit } from "./defaultUnit";
 import { MenuModel } from "./menu-model";
 import { ITechBuild } from "./techController";
 
@@ -13,27 +14,27 @@ export class Unit{
     tracer: TwoLevelHPA;
     pos: Vector;
     path: Array<Vector>;
-    tm:number = 0;
+    tm?:number = 0;
     wait: boolean = false;
     noCorrectCounter: number = 0;
     indMap: Array2d;
     finishPoint: Vector;
     clickedPoint: Vector;
     noRetraceCounter: any;
-    enemy: Build | Unit;
+    enemy: Build | Unit | DefaultUnit;
     health: number = 100;
-    onIdle: ()=>void;
+    protected onIdle: ()=>void;
     onDestroy: ()=>void;
     destroyed: boolean = false;
     model: MenuModel;
-    type: number;
+    type?: number;
     playerId: number;
     rescount:number = 0;
     onReload: ()=>void;
-    tp: number;
+    tp?: number;
     initialHealth: number;
     //map: number[][];
-    constructor(game: Game, tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number, playerId:number, tp:number =0){
+    constructor(game: Game, tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type?:number, playerId?:number, tp:number =0){
         this.tracer = tracer;
         this.playerId = playerId;
         //this.map = map;
@@ -317,7 +318,7 @@ export class BuildOreFactory extends Build{
     tm:number = 0;
     destroyed: boolean = false;
     //onDestroy: (by:Unit)=>void;
-    onDamage: (by:Unit)=>void;
+    onDamage: (by:Unit | DefaultUnit)=>void;
     //map: number[][];
     constructor(pos: Vector, playerId: number){
         super(pos, playerId);
@@ -376,7 +377,7 @@ export class BuildAttack extends Build{
                 const enemies = it.units.getWithClosestItems(this.pos);
                 const enemy = enemies.find(en=> en.playerId != this.playerId && (en.pos.clone().sub(this.pos).abs() < 20));
                 if (enemy){
-                    this.enemy = enemy;
+                    this.enemy = enemy as Unit;
                     //console.log('enemy in radius');
                 }
             })   

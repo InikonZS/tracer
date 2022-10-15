@@ -20,11 +20,13 @@ import { Menu } from "./menu";
 import { MenuModel } from "./menu-model";
 import {Indexed} from "./indexed";
 import { Unit, Build, BuildOreFactory, BuildAttack, mask } from "./unit";
+import { UnitSoldier, UnitTruck } from "./unitTruck";
 import { getBuildingPoints } from "../tracelib/buildPlacing";
+import { DefaultUnit } from "./defaultUnit";
 const mapSize = 512;
 
 class Player{
-    units:ChunkedArray<Unit> = new ChunkedArray<Unit>([], mapSize);
+    units:ChunkedArray<Unit | DefaultUnit> = new ChunkedArray<Unit>([], mapSize);
     builds:Array<Build> =[];
     tracer: TwoLevelHPA;
     indMap: Array2d;
@@ -216,7 +218,7 @@ export class Game{
         }
     }
 
-    debugIntersectUnitsValidate(units: ChunkedArray<Unit>){
+    debugIntersectUnitsValidate(units: ChunkedArray<Unit | DefaultUnit>){
         units.items.forEach(unit=>{
             units.items.forEach(unit2=>{
                 if  (unit == unit2) {
@@ -265,7 +267,7 @@ export class Game{
         }
     }*/
 
-    processUnits(canvas:Canvas, delta:number, units:ChunkedArray<Unit>, playerIndex: number){
+    processUnits(canvas:Canvas, delta:number, units:ChunkedArray<Unit | DefaultUnit>, playerIndex: number){
         this.debugIntersectUnitsValidate(units);
 
         const map1 = this.fillUnitsMap();
@@ -326,7 +328,7 @@ export class Game{
         })
     }
 
-    renderUnit(unit: Unit, canvas: Canvas, delta: number){
+    renderUnit(unit: Unit | DefaultUnit, canvas: Canvas, delta: number){
         unit.render(canvas);
             const drawPath = this.model.data.drawPath;
             if (unit.path && drawPath){
@@ -364,9 +366,9 @@ function generateUnitsB(model: MenuModel, player:Player, tracer:TwoLevelHPA, ind
             i--;
             continue;
         }
-        const unit = new Unit(player.game, tracer, pos, indMap, model, Math.random()<0.5? 0: 1, player.id, tp);
+        const unit = new UnitSoldier(player.game, tracer, pos, indMap, model, player.id);
         model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
-        unit.onReload = ()=>{
+        /*unit.onReload = ()=>{
             if (unit.enemy!=player.builds[0]){
                 unit.trace(player.builds[0]);
             }
@@ -403,7 +405,7 @@ function generateUnitsB(model: MenuModel, player:Player, tracer:TwoLevelHPA, ind
                 }
             })
             model.setData((last)=> ({...last, destroyed: last.destroyed+1, count: last.count-1}));
-        }
+        }*/
         player.units.addItem(unit);
         //units.push(unit);
     }
@@ -413,9 +415,9 @@ function generateUnitsB(model: MenuModel, player:Player, tracer:TwoLevelHPA, ind
 
 function generateUnitsA(model: MenuModel, player:Player, tracer:TwoLevelHPA, indMap:Array2d, map:Array2d, count:number/*, getEnemies: ()=>Array<Build | Unit>, defendEnemies: ()=>Array<Build | Unit>,*/){
     //const units: Array<Unit> = [];
-    const tp = 1;
-    const getEnemies = ()=>player.getRes();
-    const defendEnemies = ()=>player.getEnemies();
+    //const tp = 1;
+    //const getEnemies = ()=>player.getRes();
+    //const defendEnemies = ()=>player.getEnemies();
     const bp = player.game.getBuildingPoints(mask, player.builds);
     for (let i=0; i<count; i++){
         const rnp = bp[Math.floor(Math.random() * bp.length)];
@@ -426,9 +428,9 @@ function generateUnitsA(model: MenuModel, player:Player, tracer:TwoLevelHPA, ind
             i--;
             continue;
         }
-        const unit = new Unit(player.game, tracer, pos, indMap, model, Math.random()<0.5? 0: 1, player.id, tp);
+        const unit = new UnitTruck(player.game, tracer, pos, indMap, model, player.id);
         model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
-        unit.onReload = ()=>{
+        /*unit.onReload = ()=>{
             if (unit.enemy!=player.builds[0]){
                 unit.trace(player.builds[0]);
             }
@@ -465,7 +467,8 @@ function generateUnitsA(model: MenuModel, player:Player, tracer:TwoLevelHPA, ind
                 }
             })
             model.setData((last)=> ({...last, destroyed: last.destroyed+1, count: last.count-1}));
-        }
+        }*/
+        //@ts-ignore
         player.units.addItem(unit);
         //units.push(unit);
     }

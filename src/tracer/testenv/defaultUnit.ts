@@ -6,9 +6,9 @@ import { TwoLevelHPA } from "../tracelib/tracePacks/TwoLevelHPA";
 import { Game } from "./animated2";
 import { Canvas } from "./canvasRenderer";
 import { MenuModel } from "./menu-model";
-import { Build } from "./unit";
+import { Build, Unit } from "./unit";
 
-export class Unit{
+export class DefaultUnit{
     tracer: TwoLevelHPA;
     pos: Vector;
     path: Array<Vector>;
@@ -21,30 +21,32 @@ export class Unit{
     noRetraceCounter: any;
     enemy: Build | Unit;
     health: number = 100;
-    onIdle: ()=>void;
-    onDestroy: ()=>void;
+    //onIdle: ()=>void;
+    //onDestroy: ()=>void;
     destroyed: boolean = false;
     model: MenuModel;
     type: number;
     playerId: number;
     rescount:number = 0;
-    onReload: ()=>void;
+    //onReload: ()=>void;
     tp: number;
     initialHealth: number;
+    game: Game;
     //map: number[][];
-    constructor(game: Game, tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, type:number, playerId:number, tp:number =0){
+    constructor(game: Game, tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, playerId:number){
         this.tracer = tracer;
         this.playerId = playerId;
         //this.map = map;
         this.pos = pos;
         this.path = [];
         this.model = model;
-        this.tp = tp;
+        //this.tp = tp;
 
         this.indMap = indMap;
-        this.type = type;
-        this.health = 100 * (this.type==0?1 : 5)
-        this.initialHealth = 100 * (this.type==0?1 : 5);
+        this.game = game;
+        //this.type = type;
+        this.health = 100 //* (this.type==0?1 : 5)
+        this.initialHealth = 100 //* (this.type==0?1 : 5);
     }
 
     tick(delta:number, map:number[][], getUtracer:()=>TwoLevelHPA){
@@ -54,7 +56,7 @@ export class Unit{
         }
         
         this.tm+=delta;
-        if (this.tm>this.model.data.unitStepTime * (this.type==0?1 : 15)){
+        if (this.tm>this.model.data.unitStepTime){ //* (this.type==0?1 : 15)){
             this.tm = 0;
             if (this.rescount>=3){
                 this.onReload();
@@ -69,6 +71,7 @@ export class Unit{
                     //this.path = null;
                 //    return;
                 //}
+                //@ts-ignore
                 this.enemy.damage(this);
                 //return;
                 //if (this.enemy.health == 0){
@@ -233,11 +236,11 @@ export class Unit{
         }
     }
 
-    drawUnit(canvas:Canvas, unit:Unit){
+    drawUnit(canvas:Canvas, unit:Unit | DefaultUnit){
         const colorType1 = ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"];
-        const colorType2 = ["#0fa", "#a90", "#90a", "#fa0", "#f0a", "#9fa"];
+        //const colorType2 = ["#0fa", "#a90", "#90a", "#fa0", "#f0a", "#9fa"];
         
-        this.drawMarker(canvas, unit.pos, 2, (unit.tp==1? colorType1 : colorType2)[unit.playerId]);
+        this.drawMarker(canvas, unit.pos, 2, colorType1[unit.playerId]);
         /*if (unit.rescount){
             this.drawMarker(canvas, unit.pos, 1, "#f00");
         }*/
@@ -251,5 +254,28 @@ export class Unit{
         for (let i = 0; i< hlth; i++){
             this.drawMarker(canvas, new Vector(unit.pos.x + (i-2)*3, unit.pos.y-3), 1, "#0f0");
         }
+    }
+
+    getOwnPlayer(){
+        return this.game.players.find(player=> player.id == this.playerId);
+    }
+
+    getEnemies = ()=>this.getOwnPlayer().getRes();
+    defendEnemies = ()=>this.getOwnPlayer().getEnemies();
+
+    protected onReload(){
+   
+    }
+
+    protected onIdle(){
+  
+    }
+
+    protected onDestroy(){
+        
+    }
+
+    static spawn(){
+        
     }
 }
