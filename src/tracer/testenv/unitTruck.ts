@@ -146,3 +146,13 @@ export class UnitSoldier extends DefaultUnit{
         
     }
 }
+
+class A<T extends keyof HTMLElementTagNameMap>{
+    node: HTMLElementTagNameMap[T];
+    constructor(tag: T){
+       this.node = document.createElement(tag); 
+    }
+}
+
+const el = new A("a");
+//el.node
