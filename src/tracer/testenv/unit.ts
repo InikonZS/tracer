@@ -380,7 +380,7 @@ export class BuildAttack extends Build{
                 const enemies = it.units.getWithClosestItems(this.pos);
                 const enemy = enemies.find(en=> en.playerId != this.playerId && (en.pos.clone().sub(this.pos).abs() < 20));
                 if (enemy){
-                    this.enemy = enemy as Unit;
+                    this.enemy = enemy as any as Unit;
                     //console.log('enemy in radius');
                 }
             })   
@@ -421,7 +421,7 @@ export class BuildAttack extends Build{
         if (this.health<=0){
             this.health = 0;
             this.destroyed = true;
-            deleteElementFromArray(this.game.players.find(pl => pl.id == this.playerId).builds, this);
+            deleteElementFromArray(this.game.players.find(pl => pl.id == this.playerId).builds, this as any);
             this.onDestroy?.(by);
         }
         this.onDamage?.(by);

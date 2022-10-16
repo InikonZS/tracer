@@ -19,15 +19,16 @@ import { Canvas } from "./canvasRenderer";
 import { Menu } from "./menu";
 import { MenuModel } from "./menu-model";
 import {Indexed} from "./indexed";
-import { Unit, Build, BuildOreFactory, BuildAttack, mask } from "./unit";
+import { Build, BuildOreFactory, BuildAttack, BuildRes } from "./build2";
+import { mask } from "./unit";
 import { UnitSoldier, UnitTruck } from "./unitTruck";
 import { getBuildingPoints } from "../tracelib/buildPlacing";
-import { DefaultUnit } from "./defaultUnit";
+import { DefaultGameObject, DefaultUnit } from "./defaultUnit";
 import { techController } from "./techController";
 const mapSize = 512;
 
 class Player{
-    units:ChunkedArray<Unit | DefaultUnit> = new ChunkedArray<Unit>([], mapSize);
+    units:ChunkedArray<DefaultUnit> = new ChunkedArray<DefaultUnit>([], mapSize);
     builds:Array<Build> =[];
     tracer: TwoLevelHPA;
     indMap: Array2d;
@@ -51,9 +52,9 @@ class Player{
         this.generateUnits(1);  
         //this.getRes = getRes;   
         
-        const base = new BuildOreFactory(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)), id);
+        const base = new BuildOreFactory(this.game, new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)), id);
         this.builds.push(base);
-        base.onDamage = (by)=>{
+        /*base.onDamage = (by)=>{
             if (by.rescount>0){
                 this.money += by.rescount;
                 this.model.setPlayerData(by.playerId, (last)=>({...last, money: this.money}));
@@ -62,7 +63,7 @@ class Player{
                 //console.log(by.rescount);
             }
             
-        }
+        }*/
 
         //for (let i = 0; i< 30; i++){
         //    const base = new BuildAttack(new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize)), id, game);
@@ -129,7 +130,7 @@ class Player{
         const bp = this.game.getBuildingPoints(mask, this.builds);
         const rnp = bp[Math.floor(Math.random() * bp.length)];
         if (rnp){
-            const building = new BuildAttack(rnp, this.id, this.game, buildInfo);
+            const building = new BuildAttack(this.game, rnp, this.id, buildInfo);
             this.builds.push(building);
         }
     }
@@ -155,7 +156,7 @@ export class Game{
     tracer: TwoLevelHPA;
     players: Player[];
     model: MenuModel;
-    builds: Build[];
+    builds: BuildRes[];
     buildCounter: number =0;
     utracer: any;
 
@@ -229,8 +230,8 @@ export class Game{
                 i--;
                 continue;
             }
-            const build = new Build(pos, 0);
-            build.onDestroy = (by)=>{
+            const build = new BuildRes(this, pos, 0);
+            /*build.onDestroy = (by)=>{
                 deleteElementFromArray(this.builds, build);
                 //this.players[by.playerId].money+=1;
                 by.rescount +=1;
@@ -241,12 +242,12 @@ export class Game{
                         unit.enemy = null;
                     }
                 }))
-            }
+            }*/
             this.builds.push(build);
         }
     }
 
-    debugIntersectUnitsValidate(units: ChunkedArray<Unit | DefaultUnit>){
+    debugIntersectUnitsValidate(units: ChunkedArray<DefaultUnit>){
         units.items.forEach(unit=>{
             units.items.forEach(unit2=>{
                 if  (unit == unit2) {
@@ -295,7 +296,7 @@ export class Game{
         }
     }*/
 
-    processUnits(canvas:Canvas, delta:number, units:ChunkedArray<Unit | DefaultUnit>, playerIndex: number){
+    processUnits(canvas:Canvas, delta:number, units:ChunkedArray<DefaultUnit>, playerIndex: number){
         this.debugIntersectUnitsValidate(units);
 
         const map1 = this.fillUnitsMap();
@@ -356,7 +357,7 @@ export class Game{
         })
     }
 
-    renderUnit(unit: Unit | DefaultUnit, canvas: Canvas, delta: number){
+    renderUnit(unit: DefaultUnit, canvas: Canvas, delta: number){
         unit.render(canvas);
             const drawPath = this.model.data.drawPath;
             if (unit.path && drawPath){
@@ -521,7 +522,7 @@ export class TestScene {
     traceTreeInitial2: Record<string | number, IChunk>;
     chunkPath2: IChunk[];
     tracers: (TwoLevelHPA | ThreeLevelHPA | SimpleWave)[] = [];
-    units: Array<Unit>;
+    units: Array<DefaultUnit>;
     builds: Build[];
     //cUnits: ChunkedArray<Unit>;
     buildCounter: number = 0;

@@ -7,7 +7,7 @@ import { Game } from "./animated2";
 import { Canvas } from "./canvasRenderer";
 import { MenuModel } from "./menu-model";
 import { Build, Unit } from "./unit";
-import { DefaultUnit } from "./defaultUnit"; 
+import { DefaultGameObject, DefaultUnit } from "./defaultUnit"; 
 
 export class UnitTruck extends DefaultUnit{
 
@@ -15,11 +15,13 @@ export class UnitTruck extends DefaultUnit{
     defendEnemies = ()=>this.getOwnPlayer().getEnemies();
 
     protected onReload(){
-        console.log('reload');
+        //console.log('reload');
         const player = this.getOwnPlayer();
         const oreFactory = player.getOreFactory();
         if (oreFactory){
-            this.trace(oreFactory);
+            if (this.enemy != oreFactory){
+                this.trace(oreFactory);
+            }
         }
         /*if (this.enemy!=player.builds[0]){
             this.trace(player.builds[0]);
@@ -27,7 +29,7 @@ export class UnitTruck extends DefaultUnit{
     }
 
     protected onIdle(){
-        let closestEnemy:Build|Unit = null;
+        let closestEnemy:DefaultGameObject = null;
         let unit = this;
         const player = this.getOwnPlayer();
             let dist = maxValue;
@@ -83,7 +85,7 @@ export class UnitSoldier extends DefaultUnit{
     }
 
     protected onIdle(){
-        let closestEnemy:Build|Unit = null;
+        let closestEnemy:DefaultGameObject = null;
         let unit = this;
         const player = this.getOwnPlayer();
             let dist = maxValue;

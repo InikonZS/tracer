@@ -5,19 +5,21 @@ import { Canvas } from "./canvasRenderer";
 import { DefaultBuild, DefaultGameObject } from "./defaultUnit";
 import { ITechBuild } from "./techController";
 import { mask } from "./unit";
+import { UnitTruck } from "./unitTruck";
 
 export class Build extends DefaultBuild{
-    pos: Vector;
-    health: number;
+    //pos: Vector;
+    //health: number;
     tm:number = 0;
     destroyed: boolean = false;
     //onDestroy: (by:Unit)=>void;
-    playerId: number;
+    //playerId: number;
     mask = mask;
-    ti: ITechBuild;
+    //ti: ITechBuild;
     //map: number[][];
     constructor(game: Game, pos: Vector, playerId:number){
         super(game, pos, playerId);
+        this.game = game;
         this.health = 100;
         this.pos = pos;
         this.playerId = playerId;
@@ -56,6 +58,23 @@ export class Build extends DefaultBuild{
     }
 }
 
+export class BuildRes extends Build{
+    onDestroy(by: DefaultGameObject){
+        if (by instanceof UnitTruck){
+            deleteElementFromArray(this.game.builds, this);
+            //this.players[by.playerId].money+=1;
+            by.rescount +=1;
+            //console.log(by.rescount);
+            //this.model.setPlayerData(by.playerId, (last)=>({...last, money: this.players[by.playerId].money}));
+            this.game.players.forEach(it=>it.units.items.forEach(unit=>{
+                if (unit.enemy == this){
+                    unit.enemy = null;
+                }
+            }))
+        }
+    }
+}
+
 export class BuildOreFactory extends Build{
     //pos: Vector;
     //health: number;
@@ -78,7 +97,7 @@ export class BuildOreFactory extends Build{
         this.drawMarker(canvas, this.pos, 4, ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"][this.playerId])
     }
 
-    damage(by:){
+    damage(by:DefaultGameObject){
         if (this.destroyed){
             console.log('damage destroyed')
             return;
@@ -93,7 +112,16 @@ export class BuildOreFactory extends Build{
     }
 
     onDamage(by: DefaultGameObject){
-
+        if (by instanceof UnitTruck){
+            const player = this.getOwnPlayer();
+            if (by.rescount>0){
+                player.money += by.rescount;
+                player.model.setPlayerData(by.playerId, (last)=>({...last, money: player.money}));
+                by.rescount = 0;
+                by.enemy = null;
+                //console.log(by.rescount);
+            }
+        }
     }
 }
 
@@ -175,6 +203,6 @@ export class BuildAttack extends Build{
     }
 
     onDamage(by: DefaultGameObject){
-        
+
     }
 }

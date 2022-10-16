@@ -13,6 +13,7 @@ export class DefaultGameObject{
     game: Game;
     playerId: number;
     pos: Vector;
+    health: number;
 
     constructor(game:Game, pos: Vector, playerId:number){
 
@@ -29,11 +30,14 @@ export class DefaultGameObject{
     damage(by:DefaultGameObject){
 
     }
+    getOwnPlayer(){
+        return this.game.players.find(player=> player.id == this.playerId);
+    }
 }
 
 export class DefaultBuild extends DefaultGameObject{
     //pos: Vector;
-    health: number;
+   // health: number;
     tm:number = 0;
     destroyed: boolean = false;
     //onDestroy: (by:Unit)=>void;
@@ -97,7 +101,7 @@ export class DefaultUnit extends DefaultGameObject{
     finishPoint: Vector;
     clickedPoint: Vector;
     noRetraceCounter: any;
-    enemy: Build | Unit;
+    enemy: DefaultGameObject;
     health: number = 100;
     //onIdle: ()=>void;
     //onDestroy: ()=>void;
@@ -278,7 +282,7 @@ export class DefaultUnit extends DefaultGameObject{
         this.path = smoothPath(this.path, map)
     }
 
-    trace(/*point:Vector*/enemy: Build | Unit){
+    trace(/*point:Vector*/enemy: DefaultGameObject){
         this.enemy = enemy;
         const point = enemy.pos.clone();
         this.clickedPoint = point;
