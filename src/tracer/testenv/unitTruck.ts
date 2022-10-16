@@ -17,9 +17,13 @@ export class UnitTruck extends DefaultUnit{
     protected onReload(){
         console.log('reload');
         const player = this.getOwnPlayer();
-        if (this.enemy!=player.builds[0]){
-            this.trace(player.builds[0]);
+        const oreFactory = player.getOreFactory();
+        if (oreFactory){
+            this.trace(oreFactory);
         }
+        /*if (this.enemy!=player.builds[0]){
+            this.trace(player.builds[0]);
+        }*/
     }
 
     protected onIdle(){

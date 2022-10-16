@@ -6,11 +6,89 @@ import { TwoLevelHPA } from "../tracelib/tracePacks/TwoLevelHPA";
 import { Game } from "./animated2";
 import { Canvas } from "./canvasRenderer";
 import { MenuModel } from "./menu-model";
-import { Build, Unit } from "./unit";
+import { ITechBuild } from "./techController";
+import { Build, mask, Unit } from "./unit";
 
-export class DefaultUnit{
-    tracer: TwoLevelHPA;
+export class DefaultGameObject{
+    game: Game;
+    playerId: number;
     pos: Vector;
+
+    constructor(game:Game, pos: Vector, playerId:number){
+
+    }
+
+    tick(delta:number, map:number[][]){
+
+    }
+
+    render(canvas: Canvas){
+
+    }
+
+    damage(by:DefaultGameObject){
+
+    }
+}
+
+export class DefaultBuild extends DefaultGameObject{
+    //pos: Vector;
+    health: number;
+    tm:number = 0;
+    destroyed: boolean = false;
+    //onDestroy: (by:Unit)=>void;
+    //playerId: number;
+    mask = mask;
+    ti: ITechBuild;
+    //map: number[][];
+    constructor(game: Game, pos: Vector, playerId:number){
+        super(game, pos, playerId)
+        this.health = 100;
+        this.pos = pos;
+        this.playerId = playerId;
+    }
+
+    tick(delta:number){
+        
+    }
+
+    render(canvas: Canvas){
+        const pos = this.pos;
+        this.drawMarker(canvas, pos, 2, "#909");
+    }
+
+    damage(by:DefaultGameObject){
+        if (this.destroyed){
+            console.log('damage destroyed')
+            return;
+        }
+        this.health -=10;
+        if (this.health<=0){
+            this.health = 0;
+            this.destroyed = true;
+            this.onDestroy?.(by);
+        }
+    }
+
+    onDestroy(by:DefaultGameObject){
+
+    }
+
+    drawMarker(canvas: Canvas, pos:Vector, size:number, color:string){
+        for (let y = -size; y<size; y++){
+            for (let x = -size; x<size; x++){
+                if (canvas.canvasBack[ (pos.y + y)]){
+                    canvas.canvasBack[ (pos.y + y)][ (pos.x + x)] = color;
+                }
+            }
+        }
+    }
+}
+
+
+export class DefaultUnit extends DefaultGameObject{
+    tracer: TwoLevelHPA;
+    //pos: Vector;
     path: Array<Vector>;
     tm:number = 0;
     wait: boolean = false;
@@ -26,14 +104,15 @@ export class DefaultUnit{
     destroyed: boolean = false;
     model: MenuModel;
     type: number;
-    playerId: number;
+    //playerId: number;
     rescount:number = 0;
     //onReload: ()=>void;
     tp: number;
     initialHealth: number;
-    game: Game;
+    //game: Game;
     //map: number[][];
     constructor(game: Game, tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, playerId:number){
+        super(game, pos, playerId);
         this.tracer = tracer;
         this.playerId = playerId;
         //this.map = map;
@@ -49,7 +128,7 @@ export class DefaultUnit{
         this.initialHealth = 100 //* (this.type==0?1 : 5);
     }
 
-    tick(delta:number, map:number[][], getUtracer:()=>TwoLevelHPA){
+    tick(delta:number, map:number[][], getUtracer?:()=>TwoLevelHPA){
         const verbose = false;
         if (!this.indMap){
             //
