@@ -4,6 +4,7 @@ import { Game } from "./animated2";
 import { Canvas } from "./canvasRenderer";
 import { DefaultBuild, DefaultGameObject } from "./defaultUnit";
 import { ITechBuild } from "./techController";
+import { tech } from "./techTree";
 import { mask } from "./unit";
 import { UnitTruck } from "./unitTruck";
 
@@ -87,6 +88,28 @@ export class BuildOreFactory extends Build{
         super(game, pos, playerId);
         this.health = 100;
         this.pos = pos;
+        setTimeout(()=>{
+          this.onBuild();  
+        }, 0)
+        
+    }
+
+    onBuild(){
+        const player = this.getOwnPlayer();
+        const bp = this.game.getBuildingPoints([[1]],  player.builds);
+        const rnp = bp[Math.floor(Math.random() * bp.length)];
+        if (!rnp) {
+            console.log('unit spawn error');
+            return;
+        }
+        const buildInfo = tech.units.find(it=>it.name == 'truck');
+        if (!buildInfo){
+            return;
+        }
+        const unit = new UnitTruck(this.game, player.tracer, rnp, player.indMap, player.model, player.id);
+        player.model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
+    
+        player.units.addItem(unit);
     }
 
     tick(delta:number){
