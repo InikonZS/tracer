@@ -107,22 +107,50 @@ class Player{
     }
 
     generateUnits(count:number){
-
-        /*const avl = techController.getAvailableUnits(this.builds.map(it=> it.ti).filter(it=>it));
-        console.log(avl);*/
-        // unit mapping
-
         if (this.money<-100){
             return;
         }
-        this.money -= 30;
+        const avl = techController.getAvailableUnits(this.builds.map(it=> it.ti).filter(it=>it));
+
+        const bp = this.game.getBuildingPoints([[1]], this.builds);
+        //for (let i=0; i<count; i++){
+        const rnp = bp[Math.floor(Math.random() * bp.length)];
+        //const pos = rnp;
+        if (!rnp) {
+            console.log('unit spawn error');
+            return;
+        }
+        //const pos = new Vector(Math.floor(Math.random() * mapSize), Math.floor(Math.random() * mapSize));
+        //if (map[pos.y][pos.x]!=0){
+        //    i--;
+        //    continue;
+        //}
+        const buildInfo = avl[Math.floor(Math.random() * avl.length)];
+        if (!buildInfo){
+            return;
+        }
+        const mapa = {
+            "solder": UnitSoldier,
+            "truck": UnitTruck,
+        }
+        
+        const Ctor = mapa[buildInfo.name as keyof typeof mapa] || UnitSoldier;
+        //const Ctor = 
+        const unit = new Ctor(this.game, this.tracer, rnp, this.indMap, this.model, this.id);
+        this.model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
+        //console.log(avl);
+        // unit mapping
+
+        
+        this.money -= 3;
         this.model.setPlayerData(this.id, (last)=>({...last, money: this.money}));
+        this.units.addItem(unit);
         //const getEnemies = ()=>
-        if (Math.random()<0.5){
+        /*if (Math.random()<0.5){
             return generateUnitsA(this.model, this, this.tracer, this.indMap, this.map, count);  
         } else {
             return generateUnitsB(this.model, this, this.tracer, this.indMap, this.map, count);  
-        }
+        }*/
     }
 
     tick(delta:number){
