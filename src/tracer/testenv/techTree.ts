@@ -108,8 +108,8 @@ const buildingCenter = {
   
   const bigEnergyPlant = {
     deps: ['buildingCenter', 'energyPlant'],
-    desc: ['energyCenter'],
-    name: 'energyCenter',
+    desc: ['bigEnergyPlant'],
+    name: 'bigEnergyPlant',
     energy: -12,
     cost: 400,
     time: 20,

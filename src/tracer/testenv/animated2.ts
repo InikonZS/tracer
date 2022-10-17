@@ -19,7 +19,7 @@ import { Canvas } from "./canvasRenderer";
 import { Menu } from "./menu";
 import { MenuModel } from "./menu-model";
 import {Indexed} from "./indexed";
-import { Build, BuildOreFactory, BuildAttack, BuildRes } from "./build2";
+import { Build, BuildOreFactory, BuildAttack, BuildRes, BuildBarrack, BuildCarFactory, BuildW } from "./build2";
 import { mask } from "./unit";
 import { UnitSoldier, UnitTruck } from "./unitTruck";
 import { getBuildingPoints } from "../tracelib/buildPlacing";
@@ -76,6 +76,16 @@ class Player{
         return oreFactory;
     }
 
+    getBarrack(){
+        const building = this.builds.find(build=> build instanceof BuildBarrack);
+        return building;
+    }
+
+    getCarFactory(){
+        const building = this.builds.find(build=> build instanceof BuildCarFactory);
+        return building;
+    }
+
     getEnergy(){
         return this.builds.reduce((energy, bld)=> energy + (bld.ti? bld.ti.energy : 0) , 0)
     }
@@ -97,6 +107,11 @@ class Player{
     }
 
     generateUnits(count:number){
+
+        /*const avl = techController.getAvailableUnits(this.builds.map(it=> it.ti).filter(it=>it));
+        console.log(avl);*/
+        // unit mapping
+
         if (this.money<-100){
             return;
         }
@@ -130,7 +145,24 @@ class Player{
         const bp = this.game.getBuildingPoints(mask, this.builds);
         const rnp = bp[Math.floor(Math.random() * bp.length)];
         if (rnp){
-            const building = new BuildAttack(this.game, rnp, this.id, buildInfo);
+
+            //buildmapping
+            const mapa = {
+                "buildingCenter": BuildW,
+                "barracs": BuildBarrack,
+                "energyPlant": BuildW,
+                "bigEnergyPlant": BuildW,
+                "dogHouse": BuildW,
+                "carFactory": BuildCarFactory,
+                "techCenter": BuildW,
+                "radar": BuildW,
+                "repairStation": BuildW,
+                "oreBarrel": BuildW,
+                "oreFactory": BuildOreFactory,
+                "defendTower": BuildAttack
+            }
+            const Ctor = mapa[buildInfo.name as keyof typeof mapa];
+            const building = new Ctor(this.game, rnp, this.id, buildInfo);
             this.builds.push(building);
         }
     }
@@ -182,6 +214,10 @@ export class Game{
     getBuildingPoints(mask:Array2d, playerBuilds: Array<Build>){
         return getBuildingPoints(this.map, [...this.builds, ...this.players.map(it=>it.builds).flat()], playerBuilds, mask);
     }
+
+    /*getUnitSpawnPoints(mask:Array2d, playerBuilds: Array<Build>){
+        return getBuildingPoints(this.map, [], playerBuilds, mask);
+    }*/
 
     updateTracers(changed:{pos: Vector, val:number}[]){
         this.tracer.updateTree(changed);
