@@ -14,6 +14,7 @@ export class DefaultGameObject{
     playerId: number;
     pos: Vector;
     health: number;
+    selected: boolean;
 
     constructor(game:Game, pos: Vector, playerId:number){
 
@@ -113,6 +114,7 @@ export class DefaultUnit extends DefaultGameObject{
     //onReload: ()=>void;
     tp: number;
     initialHealth: number;
+    mode: string;
     //game: Game;
     //map: number[][];
     constructor(game: Game, tracer: TwoLevelHPA, pos: Vector, indMap:Array2d, model: MenuModel, playerId:number){
@@ -162,7 +164,7 @@ export class DefaultUnit extends DefaultGameObject{
                     //this.path = null;
                 //}
             } else
-            if (!this.enemy || (this.enemy && (!this.path || this.path.length<=0))){
+            if (this.mode == "attack" && !this.enemy || (this.enemy && (!this.path || this.path.length<=0))){
                 if (!this.enemy){
                    // console.log('no enemy')
                 }
@@ -293,7 +295,22 @@ export class DefaultUnit extends DefaultGameObject{
         this.finishPoint = this.path[0];
     }
 
+    move(point:Vector){//enemy: DefaultGameObject){
+        //this.enemy = enemy;
+        //const point = enemy.pos.clone();
+        this.wait = false;
+        this.clickedPoint = point;
+        this.path = this.tracer.trace(this.pos, point).ph;
+        if (!this.path[0]){
+            console.log('path 0 error');
+        }
+        this.finishPoint = this.path[0];
+    }
+
     render(canvas:Canvas){
+        if (this.selected){
+            this.drawMarker(canvas, this.pos, 3, "#00f");
+        }
         this.drawUnit(canvas, this);
        // ctx.fillRect()
     }
@@ -320,6 +337,7 @@ export class DefaultUnit extends DefaultGameObject{
     }
 
     drawUnit(canvas:Canvas, unit:Unit | DefaultUnit){
+        
         const colorType1 = ["#0ff", "#f90", "#90f", "#ff0", "#f0f", "#9ff"];
         //const colorType2 = ["#0fa", "#a90", "#90a", "#fa0", "#f0a", "#9fa"];
         

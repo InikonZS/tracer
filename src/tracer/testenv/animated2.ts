@@ -9,7 +9,7 @@ import {createTracer, ITracer} from '../tracelib/tracePack';
 import {TwoLevelHPA} from '../tracelib/tracePacks/TwoLevelHPA';
 import {ThreeLevelHPA} from '../tracelib/tracePacks/ThreeLevelHPA';
 import {SimpleWave} from '../tracelib/tracePacks/SimpleWave';
-import { iteration } from "../tracelib/traceCore/tracerBase";
+import { inBox, iteration } from "../tracelib/traceCore/tracerBase";
 import { Array2d, maxValue } from "../tracelib/traceCore/traceTools";
 import { steps } from "../tracelib/traceCore/traceSteps";
 import { ChunkedArray, deleteElementFromArray, IPositioned} from "../tracelib/traceCore/chunkedArray";
@@ -594,6 +594,7 @@ export class TestScene {
     model: MenuModel;
     menu: Menu;
     game: Game;
+    selected: DefaultUnit[];
     //eUnits: ChunkedArray<Unit>;
 
     constructor(parentNode: HTMLElement) {        
@@ -628,12 +629,51 @@ export class TestScene {
 
         this.canvas.onClick = (e)=>{
             const vector = this.getMouseVector(e, tileSize);
-            this.drawRectOnMap(vector);
+            //this.drawRectOnMap(vector);
         }
 
-        this.canvas.onMove = (e)=>{
-            const vector = this.getMouseVector(e, tileSize);
+        this.canvas.node.onmousedown = (e)=>{
+            const startVector = this.getMouseVector(e, tileSize).scale(1);
+            console.log('startSel')
+            this.canvas.onMove = (e)=>{
+                const currentVector = this.getMouseVector(e, tileSize);
+                this.canvas.node.onmouseup = (e)=>{
+                    const stopVector = this.getMouseVector(e, tileSize).scale(1);
+                    
+                    const selected = this.game.players[0].units.items.filter(it=>{
+                        const sl = inBox(it.pos, startVector, stopVector);
+                        //if (sl){
+                        it.selected = sl;
+                        //}
+                        return sl;
+                    });
+                    this.selected = selected;
+                    console.log(selected);
+                    
+                    this.canvas.onMove = ()=>{};
+                    this.canvas.node.onmouseup = null; 
+                    console.log('endSel')
+                }
+            }
+            this.canvas.node.onmouseup = (e)=>{
+                if (this.selected){
+                        this.selected.forEach(it=>{
+                            it.enemy = null;
+                            it.move(startVector);
+                            //it.trace()
+                        })
+                    }
+                this.game.players[0].units.items.forEach(it=>{
+                    it.selected = false;
+                })
+                this.canvas.onMove = ()=>{};
+                this.canvas.node.onmouseup = null; 
+            }
+
+            
         }
+
+        
     }
 
     getMouseVector(e: MouseEvent, tileSize:number){
