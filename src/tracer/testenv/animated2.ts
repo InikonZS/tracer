@@ -248,6 +248,7 @@ export class Game{
     }*/
 
     updateTracers(changed:{pos: Vector, val:number}[]){
+        console.log('tracer update');
         this.tracer.updateTree(changed);
         this.utracer.updateTree(changed);
     }

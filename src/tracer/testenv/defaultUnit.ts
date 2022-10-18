@@ -299,7 +299,7 @@ export class DefaultUnit extends DefaultGameObject{
         //this.enemy = enemy;
         //const point = enemy.pos.clone();
         this.wait = false;
-        this.clickedPoint = point;
+        this.clickedPoint = point.clone();
         this.path = this.tracer.trace(this.pos, point).ph;
         if (!this.path[0]){
             console.log('path 0 error');

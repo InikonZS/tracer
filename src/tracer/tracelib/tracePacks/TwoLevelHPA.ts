@@ -18,7 +18,7 @@ export class TwoLevelHPA{
     reverseTreeInitial: Record<string, IChunk>;
 
     constructor(map: number[][]){
-        this.map = map;
+        this.map = map.map(it=>it.map(jt=>jt));
         this.chunks = getIsolatedChunks(map, 16)
         this.traceTreeInitial = getChunkTree(this.chunks);
         
