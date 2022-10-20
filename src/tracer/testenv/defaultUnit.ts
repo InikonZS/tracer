@@ -101,6 +101,7 @@ export class DefaultUnit extends DefaultGameObject{
     indMap: Array2d;
     finishPoint: Vector;
     clickedPoint: Vector;
+    returnPoint: Vector;
     noRetraceCounter: any;
     enemy: DefaultGameObject;
     health: number = 100;
@@ -164,12 +165,19 @@ export class DefaultUnit extends DefaultGameObject{
                     //this.path = null;
                 //}
             } else
-            if (this.mode == "attack" && !this.enemy || (this.enemy && (!this.path || this.path.length<=0))){
+            if (/*this.mode == "attack" && */!this.enemy || (this.enemy && (!this.path || this.path.length<=0))){
                 if (!this.enemy){
                    // console.log('no enemy')
                 }
-                this.onIdle?.();
-                return;
+                if (this.mode != 'attack'){
+                    if (!this.enemy && !this.path.length){ //if (!this.enemy || !this.path.length){
+                        this.onIdle?.();
+                    }
+                    //return;
+                } else {
+                    this.onIdle?.();
+                    return;
+                }
             }
             if ((!this.path || !this.path.length) && this.clickedPoint && this.clickedPoint.clone().sub(this.pos).abs()>10){
                 //return;
@@ -369,7 +377,7 @@ export class DefaultUnit extends DefaultGameObject{
     }
 
     protected onIdle(){
-  
+       
     }
 
     protected onDestroy(){

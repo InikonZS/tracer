@@ -137,6 +137,9 @@ class Player{
         const Ctor = mapa[buildInfo.name as keyof typeof mapa] || UnitSoldier;
         //const Ctor = 
         const unit = new Ctor(this.game, this.tracer, rnp, this.indMap, this.model, this.id);
+        if (this.id !=1){
+            unit.mode = 'attack';
+        }
         this.model.setData(last=>({...last, spawned: last.spawned+1, count: last.count+1}))
         //console.log(avl);
         // unit mapping

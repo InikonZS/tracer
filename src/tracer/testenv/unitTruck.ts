@@ -94,15 +94,38 @@ export class UnitSoldier extends DefaultUnit{
                     const dst = enemy.pos.clone().sub(unit.pos).abs();
                     const atks = player.units.items.reduce(((ac, it)=>ac + (it.enemy == enemy ? 1 : 0)), 0);
                     //if (atks<3) {
-                    dist = dst + atks * 50;
-                    closestEnemy = enemy;
+                    
                     //}
+                    if (this.mode == 'attack'){
+                        dist = dst + atks * 50;
+                        closestEnemy = enemy;
+                    } else {
+                        dist = dst;
+                        if (dst<=10){
+                            closestEnemy = enemy;
+                           /* if (!this.returnPoint){
+                                this.returnPoint = this.pos.clone();
+                                console.log('set return');
+                            }*/
+                        } else {
+                           /* if (this.returnPoint){
+                                this.move(this.returnPoint.clone());
+                                this.returnPoint = null;
+                            }*/
+                        }
+                    }
                 }
             });
-            if (closestEnemy){
-                this.trace(closestEnemy);
+            if (this.mode == 'attack'){
+                if (closestEnemy){
+                    this.trace(closestEnemy);
+                } else {
+                    this.path = [];
+                }
             } else {
-                this.path = [];
+                if (closestEnemy){
+                    this.trace(closestEnemy);
+                }
             }
     }
 
