@@ -6,14 +6,17 @@ export class TodoApp extends Control{
         super(parentNode);
         const el = new Control(this.node, 'div', '', 'hi');
 
-        const appModel = new AppModel({});
+        const appModel = new AppModel({
+            items: [{title: 'wert'}, {title: 'werweerstet'},]
+        });
         ///const appController = new MyServiceAppController(appModel, {});
         const appView = new AppView(this.node, appModel, /*appController*/ {
-            add() {
-                el.node.textContent = 'ewrtry'
+            add(itemData: IItemData) {
+                //el.node.textContent = 'ewrtry'
+                appModel.setData((last)=> ({...last, items: [...last.items, itemData]}))
             },
-            remove() {
-                
+            remove(itemData: IItemData) {
+                appModel.setData((last)=> ({...last, items: last.items.filter(it=> it !== itemData)}))
             },
             edit() {
                 
@@ -24,12 +27,12 @@ export class TodoApp extends Control{
 }
 
 interface IAppData{
-
+    items: Array<IItemData>
 }
 
 interface IAppController{ 
-    add: ()=>void;
-    remove: ()=>void;
+    add: (itemData: IItemData)=>void;
+    remove: (itemData: IItemData)=>void;
     edit: ()=>void;
 }
 
@@ -44,7 +47,7 @@ class LocalAppController implements IAppController{
     }
 
     add=()=>{
-        this.model.setData((last=> ({...last, items: res}))) 
+        //this.model.setData((last=> ({...last, items: res}))) 
     }
 
     remove=()=>{
@@ -67,9 +70,9 @@ class MyServiceAppController implements IAppController{
     }
 
     add=()=>{
-        this.myApi.sendRequest().then(res=>{
+        /*this.myApi.sendRequest().then(res=>{
             this.model.setData((last=> ({...last, items: res})))
-        }) 
+        }) */
     }
 
     remove=()=>{
@@ -85,12 +88,19 @@ export class AppView extends Control{
     el: Control<HTMLElement>;
     buttonAdd: Control<HTMLButtonElement>;
     model: AppModel;
+    listWrapper: Control<HTMLElement>;
+    controller: IAppController;
     constructor(parentNode: HTMLElement, model: AppModel, controller: IAppController){
         super(parentNode);
-        this.el = new Control(this.node, 'div', '', 'hi');
-        this.buttonAdd = new Control(this.node, 'button');
-        this.buttonAdd.node.onclick = ()=>controller.add();//this.handleAdd;
         this.model = model;
+        this.controller = controller;
+        this.el = new Control(this.node, 'div', '', 'hi');
+
+        this.buttonAdd = new Control(this.node, 'button', '', 'add');
+        this.buttonAdd.node.onclick = ()=>controller.add({title: 'wertrew'});//this.handleAdd;
+
+        this.listWrapper = new Control(this.node, 'div');
+
         model.onChange.add(this.update);
         this.update(model.data);
     }
@@ -99,12 +109,42 @@ export class AppView extends Control{
     }*/
 
     update=(data: IAppData)=>{
-
+        this.listWrapper.node.textContent = '';
+        data.items.map(itemData=>{
+            const item = new TodoItem(this.listWrapper.node);
+            item.onRemoveClick = ()=>{
+                this.controller.remove(itemData);
+                //this.model.setData((last)=> ({...last, items: last.items.filter(it=> it !== itemData)}))
+            }
+            item.update(itemData);
+        })
     }
 
     destroy(): void {
         this.model.onChange.remove(this.update)
         super.destroy();
+    }
+}
+
+interface IItemData{
+    title: string
+}
+
+class TodoItem extends Control{
+    title: Control<HTMLElement>;
+    buttonRemove: Control<HTMLElement>;
+    onRemoveClick: any;
+    constructor(parentNode:HTMLElement){
+        super(parentNode);
+        this.title = new Control(this.node, 'div');
+        this.buttonRemove = new Control(this.node, 'button', '', 'remove');
+        this.buttonRemove.node.onclick = ()=>{
+            this.onRemoveClick();
+        }
+    }
+
+    update(data: IItemData){
+        this.title.node.textContent = data.title;
     }
 }
 
