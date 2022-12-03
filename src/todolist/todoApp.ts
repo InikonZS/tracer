@@ -4,6 +4,7 @@ import Signal from '../common/signal';
 
 class ItemData implements IItemData{
     title: string;
+    price: number;
     id: string;
 
     static currentId = 1000000;
@@ -14,6 +15,7 @@ class ItemData implements IItemData{
 
     constructor(data:IItemData){
         this.title = data.title;
+        this.price = data.price;
         this.id = /*this.id || */ItemData.nextId(); 
     }
 }
@@ -24,7 +26,7 @@ export class TodoApp extends Control{
         const el = new Control(this.node, 'div', '', 'hi');
 
         const appModel = new AppModel({
-            items: [{title: 'wert'}, {title: 'werweerstet'},]
+            items: [{title: 'wert', price: 12}, {title: 'werweerstet', price: 34},]
         });
         ///const appController = new MyServiceAppController(appModel, {});
         const appView = new AppView(this.node, appModel, /*appController*/ {
@@ -132,7 +134,8 @@ class InputPopup extends Control{
 
     getInputData(){
         return {
-            title: this.titleInput.node.value
+            title: this.titleInput.node.value,
+            price: 23
         }
     }
 }
@@ -144,12 +147,14 @@ export class AppView extends Control{
     listWrapper: Control<HTMLElement>;
     controller: IAppController;
     itemViews: Record<string, TodoItem> = {};
+    price: Control<HTMLElement>;
 
     constructor(parentNode: HTMLElement, model: AppModel, controller: IAppController){
         super(parentNode);
         this.model = model;
         this.controller = controller;
         this.el = new Control(this.node, 'div', '', 'hi');
+        this.price = new Control(this.node, 'div', '', 'hi');
 
         this.buttonAdd = new Control(this.node, 'button', '', 'add');
         this.buttonAdd.node.onclick = ()=>{
@@ -193,6 +198,9 @@ export class AppView extends Control{
 
     update=(data: IAppData)=>{
         //this.listWrapper.node.textContent = '';
+        this.el.node.textContent = this.model.itemsCount.toString();
+        this.price.node.textContent = this.model.itemsPrice.toString();
+
         const dataMap: Record<string, IItemData> = {};
         data.items.forEach(it=>{
             dataMap[it.id] = it;
@@ -221,6 +229,7 @@ export class AppView extends Control{
 
 interface IItemData{
     title: string,
+    price: number,
     id?: string
 }
 
@@ -265,6 +274,14 @@ class AppModel{
 
     get data(){
         return this._data;
+    }
+
+    get itemsCount(){
+        return this._data.items.length;
+    }
+
+    get itemsPrice(){
+        return this._data.items.reduce((acc, it)=> acc + it.price, 0);
     }
 }
 
