@@ -231,7 +231,7 @@ mp['dsffs'] = 4324;
 */
 //f(0);
 
-const ob = {sd:43, fd:453} 
+/*const ob = {sd:43, fd:453} 
 const sdf: keyof typeof ob = 'sd'
 
 addEventListener
@@ -242,4 +242,4 @@ const r: ReturnType<string> = (sd:number)=>{
 
 }
 
-const res = r()
+const res = r()*/

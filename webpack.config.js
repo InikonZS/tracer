@@ -37,7 +37,7 @@ const config = {
                 exclude: ['/node_modules/'],
             },
             {
-                test: /\.css$/i,
+                test: (name)=>{return (/\.css$/i).test(name)},///\.css$/i,
                 use: [stylesHandler,'css-loader'],
             },
             {
