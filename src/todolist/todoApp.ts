@@ -286,4 +286,81 @@ class AppModel{
 }
 
 
-//setData((last)=> ({...last, field: 4}))
+class M{
+    data: number = 2;
+    //lastData: number;
+    //cachedDouble: any;
+    
+    other: number = 32;
+    _doubled: CachedValue;
+    //doubled: number = this.data * 2;
+
+    constructor(){
+        this._doubled = new CachedValue(()=>{
+            return this.data * 2;
+        }, ()=>[this.data])
+
+        this._doubled.value;
+    }
+
+    setData(a: number, b: number){
+        //this.lastData = this.data;
+        this.data = a;
+        this.other = b;
+    }
+
+    get doubled(){
+        return this._doubled.value;//getValue(/*[this.data]*/)
+    }
+
+    /*get doubled(){
+        if (this.lastData == this.data){
+            this.lastData = this.data;
+            this.cachedDouble = this.data * 2;
+        } 
+        return this.cachedDouble;
+    }*/
+}
+
+class CachedValue{
+    //data: number = 0;
+    //lastData: number;
+    private deps: Array<any>;
+    private cached: any;
+    private func: () => any;
+    private getDeps: () => Array<any>;
+
+    constructor(func: ()=>any, deps: ()=>Array<any>){
+        this.getDeps = deps;
+        this.func = func;
+    }
+
+    private getValue(/*deps:Array<any>*/){
+        console.log (this.deps);
+        let deps = this.getDeps();
+        this.deps != null &&console.log(this.deps.findIndex((it, i)=> it != deps[i]));
+        if (this.deps == null || ( this.deps.length == deps.length && this.deps.findIndex((it, i)=> it != deps[i]) !== -1)){
+            this.deps = deps;
+            this.cached = this.func();
+            console.log('updated');
+            //this.cachedDouble = this.data * 2;
+        } 
+        return this.cached;
+    }
+
+    get value(){
+        return this.getValue();
+    }
+}
+
+const m = new M();
+
+console.log(m.doubled)
+console.log(m.doubled)
+console.log(m.doubled)
+
+m.data = 4345;
+
+console.log(m.doubled)
+console.log(m.doubled)
+console.log(m.doubled)
