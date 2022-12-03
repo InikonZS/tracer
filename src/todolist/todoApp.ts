@@ -114,6 +114,7 @@ class InputPopup extends Control{
     formWrapper: Control<HTMLFormElement>;
     submitButton: Control<HTMLElement>;
     onSubmit: (data:IItemData)=>void;
+    id: string;
     constructor(parentNode: HTMLElement){
         super(parentNode);
 
@@ -129,13 +130,15 @@ class InputPopup extends Control{
     }
 
     setInputData(data: IItemData){
+        this.id  = data.id;
         this.titleInput.node.value = data.title
     }
 
     getInputData(){
         return {
             title: this.titleInput.node.value,
-            price: 23
+            price: 23,
+            id: this.id
         }
     }
 }
@@ -184,7 +187,7 @@ export class AppView extends Control{
 
         item.onEditClick = ()=>{
             const popup = new InputPopup(this.node);
-            popup.setInputData(itemData);
+            popup.setInputData(this.model.data.items.find(it=> it.id == itemData.id));
             popup.onSubmit = (data)=>{
                 this.controller.edit(itemData.id, data);//this.handleAdd;
                 popup.destroy();
@@ -288,14 +291,11 @@ class AppModel{
 
 class M{
     data: number = 2;
-    //lastData: number;
-    //cachedDouble: any;
-    
     other: number = 32;
     _doubled: CachedValue;
-    //doubled: number = this.data * 2;
 
     constructor(){
+        // y = a + b + c; [a, b, c]
         this._doubled = new CachedValue(()=>{
             return this.data * 2;
         }, ()=>[this.data])
@@ -304,27 +304,16 @@ class M{
     }
 
     setData(a: number, b: number){
-        //this.lastData = this.data;
         this.data = a;
         this.other = b;
     }
 
     get doubled(){
-        return this._doubled.value;//getValue(/*[this.data]*/)
+        return this._doubled.value;
     }
-
-    /*get doubled(){
-        if (this.lastData == this.data){
-            this.lastData = this.data;
-            this.cachedDouble = this.data * 2;
-        } 
-        return this.cachedDouble;
-    }*/
 }
 
 class CachedValue{
-    //data: number = 0;
-    //lastData: number;
     private deps: Array<any>;
     private cached: any;
     private func: () => any;
