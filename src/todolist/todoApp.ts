@@ -143,6 +143,8 @@ export class AppView extends Control{
     model: AppModel;
     listWrapper: Control<HTMLElement>;
     controller: IAppController;
+    itemViews: Record<string, TodoItem> = {};
+
     constructor(parentNode: HTMLElement, model: AppModel, controller: IAppController){
         super(parentNode);
         this.model = model;
@@ -168,27 +170,47 @@ export class AppView extends Control{
        this.onAdd();     
     }*/
 
-    update=(data: IAppData)=>{
-        this.listWrapper.node.textContent = '';
-        data.items.map(itemData=>{
-            const item = new TodoItem(this.listWrapper.node);
-            item.onRemoveClick = ()=>{
-                this.controller.remove(itemData.id);
-                //this.model.setData((last)=> ({...last, items: last.items.filter(it=> it !== itemData)}))
-            }
+    private addItem(itemData: IItemData){
+        const item = new TodoItem(this.listWrapper.node);
+        item.onRemoveClick = ()=>{
+            this.controller.remove(itemData.id);
+            //this.model.setData((last)=> ({...last, items: last.items.filter(it=> it !== itemData)}))
+        }
 
-            item.onEditClick = ()=>{
-                const popup = new InputPopup(this.node);
-                popup.setInputData(itemData);
-                popup.onSubmit = (data)=>{
-                    this.controller.edit(itemData.id, data);//this.handleAdd;
-                    popup.destroy();
-                }
-                //this.controller.remove(itemData);
-                //this.model.setData((last)=> ({...last, items: last.items.filter(it=> it !== itemData)}))
+        item.onEditClick = ()=>{
+            const popup = new InputPopup(this.node);
+            popup.setInputData(itemData);
+            popup.onSubmit = (data)=>{
+                this.controller.edit(itemData.id, data);//this.handleAdd;
+                popup.destroy();
             }
-            item.update(itemData);
-        })
+            //this.controller.remove(itemData);
+            //this.model.setData((last)=> ({...last, items: last.items.filter(it=> it !== itemData)}))
+        }
+        item.update(itemData);
+        this.itemViews[itemData.id] = item;
+    }
+
+    update=(data: IAppData)=>{
+        //this.listWrapper.node.textContent = '';
+        const dataMap: Record<string, IItemData> = {};
+        data.items.forEach(it=>{
+            dataMap[it.id] = it;
+        });
+        //Object.keys(data.items)
+        Object.keys(dataMap).forEach(itemId=>{
+            const itemData = dataMap[itemId];
+            if (this.itemViews[itemData.id]){
+                this.itemViews[itemData.id].update(itemData);
+            } else {
+                this.addItem(itemData);
+            } 
+        });
+        Object.keys(this.itemViews).forEach(itemId=>{
+            if (!dataMap[itemId]){
+                this.itemViews[itemId].destroy();  
+            }
+        });
     }
 
     destroy(): void {
