@@ -353,3 +353,48 @@ m.data = 4345;
 console.log(m.doubled)
 console.log(m.doubled)
 console.log(m.doubled)
+
+function typeNumber(value: any): value is number{
+    if (typeof value == 'number'){
+        return true;
+    }
+    return false;
+    //throw new Error('Interface checker: not a number');
+}
+
+function typeString(value: any): value is string{
+    if (typeof value == 'string'){
+        return true;
+    }
+    return false;
+    //throw new Error('Interface checker: not a string');
+}
+
+interface IMyRecord{
+    a: number,
+    b: string,
+}
+
+const myRecord = {
+    a: typeNumber,
+    b: typeString
+}
+
+function checkInterface<T>(obj: T ,objType: Record<string, (value: any)=> value is any>): obj is T{
+    try{
+        const keys = Object.keys(objType);
+        for (const it of keys){
+            const val = (obj as any)[it]
+            const res = objType[it](val); 
+            if (!res){
+                throw new Error('Interface is not correct');
+            }       
+        }
+        return true;
+    } catch (e){
+        return false;
+    }
+}
+
+console.log('IC ', checkInterface<IMyRecord>(JSON.parse(JSON.stringify({a: 1, b: 432})), myRecord))
+console.log('IC ',checkInterface<IMyRecord>(JSON.parse(JSON.stringify({a: 1, b: ''})), myRecord));
