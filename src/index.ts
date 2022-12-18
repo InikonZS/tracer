@@ -10,6 +10,7 @@ import {Demo} from './mvcdemo/testenv/test';
 import {MainRouter, IRoute, IRouteScene} from './router';
 import {DemoWComponent} from './webcomponent/demo';
 import {TodoApp} from './todolist/todoApp';
+import {Dem1} from './dem1/dem1';
 
 //runBabylonExample(rootWrapper.node);
 //const testScene = new TestScene(rootWrapper.node);
@@ -81,6 +82,13 @@ const routes: Array<IRoute> = [
         name: 'todo list',
         component: (parent: HTMLElement)=>{
             const scene = new TodoApp(parent);
+            return scene
+        }
+    },
+    {
+        name: 'dem1',
+        component: (parent: HTMLElement)=>{
+            const scene = new Dem1(parent);
             return scene
         }
     },

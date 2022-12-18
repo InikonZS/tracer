@@ -398,3 +398,20 @@ function checkInterface<T>(obj: T ,objType: Record<string, (value: any)=> value 
 
 console.log('IC ', checkInterface<IMyRecord>(JSON.parse(JSON.stringify({a: 1, b: 432})), myRecord))
 console.log('IC ',checkInterface<IMyRecord>(JSON.parse(JSON.stringify({a: 1, b: ''})), myRecord));
+
+
+class Aa2{
+    count: number;
+
+    constructor(count: number){
+        this.count = count;
+    }
+
+    static getSum(){
+
+    }
+    static e1(){
+        
+    }
+}
+var a = [new Aa2(1), new Aa2(2)];

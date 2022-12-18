@@ -87,3 +87,34 @@ export class DemoWComponent extends Control{
         }
     }
 }
+
+function getObjectKeys<T>(obj: T): (keyof T)[]{
+    return Object.keys(obj) as (keyof T)[];
+}
+
+const ks = getObjectKeys({a:'43a4', b:43});
+ks.forEach(it=>{
+    const f = {a:'43a4', b:43}[it]
+})
+
+class Iter1{
+    *[Symbol.iterator](){
+        console.log('iter')
+            yield 23;
+            yield 3453;
+    }
+}
+
+const ff =  new Iter1();
+enum A{
+    a = 1,
+    b = 2
+  }
+  
+  enum B{
+    a = '1',
+    b = '2'
+  }
+  
+ // let a: A = 4 //correct
+ // let b: B = '1' //incorrect

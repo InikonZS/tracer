@@ -50,4 +50,11 @@ export class Vector {
       return Math.pow((Math.pow(this.x, 2) + Math.pow(this.y, 2)), 0.5);
   }
 
+  dot(v:Vector){
+    return this.x*v.x + this.y*v.y
+  }
+
+  reflect(n:Vector){
+    return this.sub( n.clone().scale(2.0 * this.dot(n)));
+  }
 }
