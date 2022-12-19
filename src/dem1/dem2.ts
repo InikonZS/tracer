@@ -18,37 +18,10 @@ export class Dem1 extends Control{
         this.iterInput.node.oninput = ()=>{
             
         }
-        this.objects = new Array(100).fill(null).map((it, i)=>{
+        this.objects = new Array(5).fill(null).map(it=>{
             const obj = new PhysicPoint();
-            obj.position = new Vector(Math.random()* 600, Math.random()*500);
-            obj.speed = new Vector((Math.random()-0.5)* 0.1 , (Math.random()-0.5)*0.1)
-            obj.radius = 2;
-            obj.mass = 0.001
-            if (i<4){
-                obj.mass = 1;
-                obj.radius = 5;
-            }
-            if (i<1){
-                obj.mass = 30;
-                obj.radius = 8;
-            }
-            
-            /*obj.position = new Vector((i+1) *200, 200 + i *0);
-            if (i==0){
-            obj.speed = new Vector(0.03, 0)
-            } else {
-                obj.speed = new Vector(-0.07, 0)
-            }*/
-           /* obj.position = new Vector((i+1) *200, (i+1) *200);
-            if (i==0){
-                obj.speed = new Vector(-0.005, -0.005)
-            } else {
-                obj.speed = new Vector(-0.07, -0.070 )
-            }*/
-           /* if (i==3){
-                obj.speed = new Vector(-0.02, 0)
-                }*/
-            //obj.radius = 10//10*(i+1);
+            obj.position = new Vector(Math.random()* 200, Math.random()*200);
+            obj.radius = 10;
             /*const editor = new PointEditor(this.node);
             editor.massInput.node.value = obj.mass.toString();
             editor.data.mass = obj.mass;
@@ -101,33 +74,15 @@ export class Dem1 extends Control{
                             ctx.fill();
                             const c1 = new Vector(collision[0], collision[1]);
                             const c2 = new Vector(collision[2], collision[3]);
-                            //const res = it.speed.clone().reflect(c1.clone().sub(c2).normalize())
-                            //if (!Number.isNaN(res.x) && !Number.isNaN(res.y)){
+                            const res = it.speed.clone().reflect(c1.clone().sub(c2).normalize())
+                            if (!Number.isNaN(res.x) && !Number.isNaN(res.y)){
 
-                                //acc.add(it.speed.clone().reflect(c1.clone().sub(c2).normalize()).normalize().scale(0.05));
-                                //it.speed.reflect(c1.clone().sub(c2).normalize()).scale(1);
-                                /*const spd1 = jt.speed.clone().add(it.speed).normalize().scale(jt.speed.abs()+it.speed.abs()).reflect(c2.clone().sub(c1).normalize()).scale(1)
-                                const spd2 = it.speed.clone().add(jt.speed).normalize().scale(jt.speed.abs()+it.speed.abs()).reflect(c2.clone().sub(c1).normalize()).scale(-1)
-                                console.log(spd1, spd2, c2.clone().sub(c1).normalize(), c1.clone().sub(c2).normalize())
-                                if (it.position.clone().add(it.speed.clone().add(spd1)).sub(jt.position.clone().add(jt.speed.clone().add(spd2))).abs() < (it.position.clone().add(it.speed.clone().add(spd2)).sub(jt.position.clone().add(jt.speed.clone().add(spd1))).abs())){
-                                    it.speed.add(spd2);
-                                    jt.speed.add(spd1);
-                                } else {
-                                    it.speed.add(spd1);
-                                    jt.speed.add(spd2);
-                                }*/
-                                const dt1 = it.speed.clone().sub(jt.speed).dot(it.position.clone().sub(jt.position));
-                                const s1 = it.speed.clone().sub(it.position.clone().sub(jt.position).scale((2*jt.mass/(it.mass + jt.mass)) * dt1/(it.position.clone().sub(jt.position).abs()**2)));
-                                const dt2 = jt.speed.clone().sub(it.speed).dot(jt.position.clone().sub(it.position));
-                                const s2 =jt.speed.clone().sub(jt.position.clone().sub(it.position).scale((2*it.mass/(jt.mass + it.mass)) * dt2/(jt.position.clone().sub(it.position).abs()**2)));
-                                it.speed = s1.scale(1.00);
-                                jt.speed = s2.scale(1.00);
-                                //console.log(c2.clone().sub(c1).normalize(), c1.clone().sub(c2).normalize())
-                                //.add(it.speed.clone().reflect(c2.clone().sub(c1).normalize()).scale(1)
-                                
-                            //} else {
+                                acc.add(it.speed.clone().reflect(c1.clone().sub(c2).normalize()).normalize().scale(0.05));
+                                //it.speed.reflect(c1.clone().sub(c2).normalize()).scale(0.95);
+                                //jt.speed.reflect(c2.clone().sub(c1).normalize()).scale(1);
+                            } else {
                                 //it.speed.scale(-0.6);
-                            //}
+                            }
                             //it.speed.scale(-1);
                             //console.log(i);
                             //it.speed.reflect(c2.clone().sub(c1).normalize());
@@ -283,41 +238,27 @@ function getCirclesCollision(p11: Vector, p12: Vector, r1: number, p21: Vector, 
     - x11 * x11 - x21 * x21 - y11 * y11 - y21 * y21 +
     x11 * x12 + y11 * y12 + x21 * x22 + y21 * y22 - x11 * x22 - y11 * y22 - x12 * x21 - y12 * y21 + 2 * x11 * x21 + 2 * y11 * y21)
     const c = x11 * x11 - 2 * x11 * x21 + x21 * x21 + y11 * y11 - 2 * y11 * y21 + y21 * y21 - (r1 + r2) * (r1 + r2);
-    const times1 = solveSquare(a, b, c)//
-    if (times1.length){
-    //console.log(times1)
-    }
-    const times = times1.filter(it=> !((it<= 0) || (it>=1)) );
-    if (a==0){
-        //return null;
-    }
+    const times = solveSquare(a, b, c).filter(it=> !(it<= 0) || (it>=1) );
     if (times.length == 0){
-        //console.log('null')
         return null;
     }
 
     const t = Math.min(...times);
-    /*if ((t<= 0) || (t>=1)){
-        //console.log('null')
+    if ((t<= 0) || (t>=1)){
         return null;
-    }*/
+    }
 
     const x1 = x11 + (x12 - x11) * t
     const y1 = y11 + (y12 - y11) * t
 
     const x2 = x21 + (x22 - x21) * t
     const y2 = y21 + (y22 - y21) * t
-    //console.log([x1, y1, x2, y2])
     return [x1, y1, x2, y2];
 }
 
 function solveSquare(a: number, b:number, c:number){
     const d = b**2 - 4*a*c;
     const res: Array<number> = [];
-    if (a == 0){
-        res.push(-c/b);
-        return res;
-    }
     if (d==0){
         res.push(-b/(2*a));
 
